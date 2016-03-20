@@ -17,7 +17,20 @@ or add
 
 to the `require` section of your `composer.json` file.
 
-## Usage
+## Installation
 
-This extension is under development. Use it not in production.
+### 1. Run Migrations
+Run `$ yii migrate migrationPath=@vendor/kmergen/yii2-media/migrations`
+
+### 2. Configuration
+In your modules configuration:
+```php
+'modules' => [
+    'media' => [
+        'class' => 'kmergen\media\Module'
+    ]
+]
+```
+
+> Note: This extension is under development. Use it not in production.
 
