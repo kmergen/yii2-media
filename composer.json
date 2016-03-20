@@ -1,0 +1,22 @@
+{
+    "name": "kmergen/yii2-media",
+    "description": "A Yii2 Media management extension",
+    "type": "yii2-extension",
+    "license": "BSD-3-Clause",
+    "keywords": ["yii", "yii2", "extension", "media", "fileupload"],
+    "authors": [
+        {
+            "name": "Klaus Megen",
+            "email": "kmergenweb@gmail.com"
+
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "kmergen\\media\\": ""
+        }
+    },
+    "require": {
+        "yiisoft/yii2": "2.*"
+    }
+}

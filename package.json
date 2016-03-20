@@ -1,0 +1,17 @@
+{
+  "name": "kmergen/yii2-media",
+  "description": "Yii2 extension to manage media files",
+  "version": "1.0.0",
+  "license": "BSD-3-Clause",
+  "repository": "https://github.com/kmergen/yii2-media",
+  "author": "Klaus Mergen <kmergenweb@gmail.com>",
+  "devDependencies": {
+    "gulp": "^3.8.10",
+    "gulp-concat": "^2.4.3",
+    "gulp-cssnano": "^2.1.1",
+    "gulp-less": "^3.0.5",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-uglify": "^1.5.1",
+    "gulp-util": "^3.0.7"
+  }
+}
