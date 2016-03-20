@@ -54,7 +54,7 @@ class ModelFileUpload extends FileUpload
         }
         //The status for new uploaded files must be Media::STATUS_TEMP, because if you upload a file with status Media::STATUS_PERMANENT and
         // the user abort the form without submitting it then then the files are without any reference to the model and useless stored in the media table.
-        $this->mediaOptions['status'] = \app\models\Media::STATUS_TEMP;
+        $this->mediaOptions['status'] = \kmergen\media\models\Media::STATUS_TEMP;
     }
 
     /**
@@ -137,7 +137,7 @@ JS;
         if (!empty($this->model->{$this->attribute})) {
             $files = [];
             if (is_string($this->model->{$this->attribute})) {
-                $files[] = \app\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->asArray()->one();
+                $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->asArray()->one();
             } else {
                 $files = $this->model->{$this->attribute};
             }

@@ -1,12 +1,11 @@
 <?php
 
-namespace app\behaviors;
+namespace kmergen\media\behaviors;
 
 use Yii;
 use yii\behaviors\AttributeBehavior;
 use yii\db\ActiveRecord;
-use app\models\Media;
-use app\models\MediaAlbum;
+use kmergen\media\models\Media;
 
 /**
  * MediaOne handles an uploaded file for the specific attribute.

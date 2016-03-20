@@ -92,10 +92,10 @@ class FileUpload extends BaseUpload
 
         //Messages i18n
         $messages = [
-            'maxNumberOfFiles' => Yii::t('fileupload', 'You can only upload {n,plural,=1{one file} other{# files}}.', ['n' => $this->clientOptions['maxNumberOfFiles']]),
-            'acceptFileTypes' => Yii::t('fileupload', 'Only {filetypes} are allowed.', ['filetypes' => $this->acceptFileExtensions]),
-            'maxFileSize' => Yii::t('fileupload', 'The maximum filesize is {filesize}.', ['filesize' => $this->clientOptions['maxFileSize']]),
-            'minFileSize' => Yii::t('fileupload', 'The minimum filesize is {filesize}.', ['filesize' => $this->clientOptions['minFileSize']])
+            'maxNumberOfFiles' => Yii::t('media', 'You can only upload {n,plural,=1{one file} other{# files}}.', ['n' => $this->clientOptions['maxNumberOfFiles']]),
+            'acceptFileTypes' => Yii::t('media', 'Only {filetypes} are allowed.', ['filetypes' => $this->acceptFileExtensions]),
+            'maxFileSize' => Yii::t('media', 'The maximum filesize is {filesize}.', ['filesize' => $this->clientOptions['maxFileSize']]),
+            'minFileSize' => Yii::t('media', 'The minimum filesize is {filesize}.', ['filesize' => $this->clientOptions['minFileSize']])
         ];
 
         if (array_key_exists('messages', $this->clientOptions) && isArray($this->clientOptions['messages'])) {

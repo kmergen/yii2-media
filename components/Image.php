@@ -4,7 +4,7 @@
  * fly image manipulation.
  */
 
-namespace app\components;
+namespace kmergen\media\components;
 
 use Yii;
 use yii\base\Exception;

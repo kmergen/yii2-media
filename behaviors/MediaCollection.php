@@ -1,12 +1,12 @@
 <?php
 
-namespace app\behaviors;
+namespace kmergen\media\behaviors;
 
 use Yii;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
-use app\models\Media;
-use app\models\MediaAlbum;
+use kmergen\media\models\Media;
+use kmergen\media\models\MediaAlbum;
 
 /**
  * MediaCollection handles the uploaded images in a specific model.

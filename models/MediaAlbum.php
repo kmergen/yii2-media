@@ -41,9 +41,9 @@ class MediaAlbum extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('app', 'ID'),
-            'name' => Yii::t('app', 'Name'),
-            'parent' => Yii::t('app', 'Parent ID'),
+            'id' => Yii::t('media', 'ID'),
+            'name' => Yii::t('media', 'Name'),
+            'parent' => Yii::t('media', 'Parent ID'),
         ];
     }
 

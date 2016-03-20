@@ -112,16 +112,16 @@ class Media extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('app', 'ID'),
-            'album_id' => Yii::t('app', 'Album ID'),
-            'album_position' => Yii::t('app', 'Album position'),
-            'user_id' => Yii::t('app', 'Uid'),
-            'name' => Yii::t('app', 'Filename'),
-            'url' => Yii::t('app', 'Url'),
-            'type' => Yii::t('app', 'Filetype'),
-            'size' => Yii::t('app', 'Filesize'),
-            'created' => Yii::t('app', 'Created'),
-            'status' => Yii::t('app', 'Status'),
+            'id' => Yii::t('media', 'ID'),
+            'album_id' => Yii::t('media', 'Album ID'),
+            'album_position' => Yii::t('media', 'Album position'),
+            'user_id' => Yii::t('media', 'Uid'),
+            'name' => Yii::t('media', 'Filename'),
+            'url' => Yii::t('media', 'Url'),
+            'type' => Yii::t('media', 'Filetype'),
+            'size' => Yii::t('media', 'Filesize'),
+            'created' => Yii::t('media', 'Created'),
+            'status' => Yii::t('media', 'Status'),
         ];
     }
 

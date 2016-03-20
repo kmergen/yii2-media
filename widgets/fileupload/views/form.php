@@ -13,21 +13,21 @@ $context = $this->context;
         <!-- The fileinput-button span is used to style the file input field as button -->
         <span class="btn btn-success fileinput-button">
             <i class="glyphicon glyphicon-plus"></i>
-            <span><?= Yii::t('fileupload', 'Add files') ?>...</span>
+            <span><?= Yii::t('media', 'Add files') ?>...</span>
             <?= Html::fileInput($context->fileInputName, null, $context->fileInputOptions); ?>
         </span>
         <?php if ($context->clientOptions['autoUpload'] === false): ?>
             <a class="btn btn-primary start">
                 <i class="glyphicon glyphicon-upload"></i>
-                <span><?= Yii::t('fileupload', 'Start upload') ?></span>
+                <span><?= Yii::t('media', 'Start upload') ?></span>
             </a>
             <a class="btn btn-warning cancel">
                 <i class="glyphicon glyphicon-ban-circle"></i>
-                <span><?= Yii::t('fileupload', 'Cancel upload') ?></span>
+                <span><?= Yii::t('media', 'Cancel upload') ?></span>
             </a>
             <a class="btn btn-danger delete">
                 <i class="glyphicon glyphicon-trash"></i>
-                <span><?= Yii::t('fileupload', 'Delete') ?></span>
+                <span><?= Yii::t('media', 'Delete') ?></span>
             </a>
             <input type="checkbox" class="toggle">
         <?php endif; ?>
