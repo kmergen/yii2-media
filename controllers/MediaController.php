@@ -8,8 +8,6 @@ use kmergen\media\models\MediaSearch;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
-use yii\web\UploadedFile;
-use yii\helpers\Url;
 
 /**
  * MediaController implements the CRUD actions for Media model.
@@ -25,8 +23,6 @@ class MediaController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
-                    'upload' => ['POST'], //Do this to prevent a direct call from the browser. We can not choose ajaxOnly because the upload process is not a real ajax request.
-                    'upload-delete' => ['POST'],
                 ],
             ],
             'access' => [
@@ -39,81 +35,6 @@ class MediaController extends Controller
                 ],
             ],
         ];
-    }
-
-    /**
-     * Upload a file via ajax.
-     * @return string JSON string will return with uploaded file information or if upload failed an error message.
-     */
-    public function actionUpload()
-    {
-        $model = new Media();
-        $model->scenario = Media::SCENARIO_UPLOAD;
-        $request = Yii::$app->getRequest();
-
-        try {
-            $model->mediaFile = UploadedFile::getInstanceByName('mediaUploadFile');
-            $model->load($request->post());
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            if ($model->upload()) {
-                $items['baseUrl'] = Yii::getAlias('@web');
-                $items['files'] = [
-                    [
-                        'id' => $model->id,
-                        'name' => $model->name,
-                        'size' => $model->size,
-                        'url' => $model->url,
-                        'thumbnailUrl' => $model->isImage ? Yii::$app->image->thumb($model->url, $model->thumbStyle) : null,
-                        'deleteUrl' => Url::to(['/media/upload-delete', 'id' => $model->id]),
-                        'deleteType' => 'POST',
-                        'status' => $model->status,
-                        'type' => $model->type
-                    ]
-                ];
-            } else {
-                if ($model->hasErrors()) {
-                    $errorMessage = '';
-                    foreach ($model->getFirstErrors() as $error) {
-                        $errorMessage .= "$error\n";
-                    }
-                    $items['files'] = [
-                        ['error' => $errorMessage]
-                    ];
-                }
-            }
-        } catch (\Exception $e) {
-            $items['files'] = [
-                ['error' => $e->getMessage()]
-            ];
-        }
-
-        return $items;
-    }
-
-    public function actionUploadDelete($id)
-    {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-        $items['files'] = [];
-
-        if (($model = Media::findOne($id)) !== null) {
-            try {
-
-                $model->delete();
-                $items['files'][][$model->name] = true;
-                $items['files'][][$id] = true;
-                return $items;
-            } catch (\Exception $e) {
-                $items['files'][][$model->name] = false;
-                $items['files'][][$id] = false;
-                $items['files'][]['error'] = $e->getMessage();
-                return $items;
-            }
-        } else {
-            $items['files'][][$id] = false;
-            $items['files'][]['error'] = 'The requested image file does not exist.';
-            return $items;
-        }
     }
 
     /**

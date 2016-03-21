@@ -25,10 +25,15 @@ Run `$ yii migrate migrationPath=@vendor/kmergen/yii2-media/migrations`
 ### 2. Configuration
 In your modules configuration:
 ```php
+'bootstrap' => [
+    'kmergen\media\Bootstrap',
+    ...
+],
 'modules' => [
     'media' => [
         'class' => 'kmergen\media\Module'
-    ]
+    ],
+    ...
 ]
 ```
 

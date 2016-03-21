@@ -180,8 +180,8 @@ class Media extends \yii\db\ActiveRecord
             list($width, $height) = $this->_imageInfo;
             if ($width > $rule['maxWidth'] || $height > $rule['maxHeight']) {
                 $this->resize = [];
-                $this->resize['width'] = $rule['maxWidth'];
-                $this->resize['height'] = $rule['maxHeight'];
+                $this->resize[] = $rule['maxWidth'];
+                $this->resize[] = $rule['maxHeight'];
                 unset($rule['maxWidth'], $rule['maxHeight']);
             }
         } else {
@@ -200,18 +200,20 @@ class Media extends \yii\db\ActiveRecord
      */
     protected function saveUploadedFile()
     {
-        $randomToken = mt_rand(1, 9) . time();
+        $randomToken = mt_rand(1, 100) . time();
         $newName = $this->mediaFile->baseName . '_' . $randomToken . '.' . $this->mediaFile->extension;
         $webroot = Yii::getAlias('@webroot');
-        $path = $webroot . DIRECTORY_SEPARATOR . $this->targetUrl . DIRECTORY_SEPARATOR . $newName;
-        
+        $dir = $webroot . DIRECTORY_SEPARATOR . $this->targetUrl;
+        FileHelper::createDirectory($dir);
+        $path = $dir . DIRECTORY_SEPARATOR . $newName;
         $this->name = $this->mediaFile->name;
         $this->url = $this->targetUrl . '/' . $newName;
         $this->type = $this->mediaFile->type;
         
         // resize the file (Check is done by [[addMediaRules]]
         if (is_array($this->resize)) {
-            $image = \yii\imagine\Image::thumb($this->mediaFile->tempName, $this->resize['width'], $this->resize['height'])->save($path);
+            list($width, $height) = $this->resize;
+            $image = \yii\imagine\Image::thumb($this->mediaFile->tempName, $width, $height)->save($path);
             $this->size = filesize($path);
         } else {
             $this->size = $this->mediaFile->size;

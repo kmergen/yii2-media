@@ -28,8 +28,6 @@ class Bootstrap implements BootstrapInterface
     /** @inheritdoc */
     public function bootstrap($app)
     {
-        /** @var Module $module */
-        /** @var \yii\db\ActiveRecord $modelName */
         if ($app->hasModule('media') && ($module = $app->getModule('media')) instanceof Module) {
 
             $app->get('i18n')->translations['media*'] = [
