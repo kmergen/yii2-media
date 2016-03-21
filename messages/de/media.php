@@ -21,7 +21,6 @@ return [
     'Album ID' => 'Album ID',
     'Album position' => 'Album Position',
     'Cancel' => 'Abbrechen',
-    'Cancel upload' => 'Upload abbrechen',
     'Created' => 'Erstellt',
     'Delete' => 'Löschen',
     'Error' => 'Fehler',

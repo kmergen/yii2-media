@@ -4,7 +4,7 @@
  * @license http://opensource.org/licenses/BSD-3-Clause
  */
 
-namespace kmergen\fileupload;
+namespace kmergen\media\widgets\fileupload;
 
 use Yii;
 use yii\base\Widget;
@@ -94,15 +94,14 @@ class BaseUpload extends Widget
      */
     public function initI18N()
     {
-        Yii::setAlias('@fileupload', dirname(__FILE__));
-        if (empty($this->i18n)) {
-            $this->i18n = [
-                'sourceLanguage' => 'en',
-                'basePath' => '@fileupload/messages',
-                'class' => 'yii\i18n\PhpMessageSource',
-            ];
-        }
-        Yii::$app->i18n->translations['fileupload'] = $this->i18n;
+//        if (empty($this->i18n)) {
+//            $this->i18n = [
+//                'sourceLanguage' => 'en-US',
+//                'basePath' =>  '@vendor/kmergen/yii2-media/messages',
+//                'class' => 'yii\i18n\PhpMessageSource',
+//            ];
+//        }
+//        Yii::$app->i18n->translations['media'] = $this->i18n;
     }
 
 }

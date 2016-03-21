@@ -4,7 +4,7 @@
  * @license http://opensource.org/licenses/BSD-3-Clause
  */
 
-namespace kmergen\fileupload;
+namespace kmergen\media\widgets\fileupload;
 
 use yii\web\AssetBundle;
 
@@ -17,7 +17,7 @@ use yii\web\AssetBundle;
 class FileUploadAsset extends AssetBundle
 {
 
-    public $sourcePath = '@vendor/kmergen/yii2-fileupload/assets';
+    public $sourcePath = '@vendor/kmergen/yii2-media/widgets/fileupload/assets';
     public $css = [
         'css/fileupload.min.css',
     ];

@@ -4,8 +4,10 @@ namespace kmergen\media\controllers;
 
 use Yii;
 use kmergen\media\models\Media;
+use kmergen\media\models\MediaSearch;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 use yii\web\UploadedFile;
 use yii\helpers\Url;
 
@@ -32,7 +34,7 @@ class MediaController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['admin'],
+                        //'roles' => ['admin'],
                     ],
                 ],
             ],

@@ -4,7 +4,7 @@
  * @license http://opensource.org/licenses/BSD-3-Clause
  */
 
-namespace kmergen\fileupload;
+namespace kmergen\media\widgets\fileupload;
 
 use Yii;
 use yii\helpers\Json;
