@@ -5,6 +5,7 @@ namespace kmergen\media\controllers;
 use Yii;
 use kmergen\media\models\Media;
 use kmergen\media\models\MediaSearch;
+use kmergen\media\models\ThumbResetForm;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -30,7 +31,7 @@ class MediaController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        //'roles' => ['admin'],
+                    //'roles' => ['admin'],
                     ],
                 ],
             ],
@@ -124,6 +125,36 @@ class MediaController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Reset thumbs from a given thumbstyle
+     * @return mixed
+     */
+    public function actionThumbReset()
+    {
+        $model = new ThumbResetForm();
+        $request = Yii::$app->getRequest();
+
+        if (Yii::$app->request->isAjax && $model->load($request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return \yii\bootstrap\ActiveForm::validate($model);
+        }
+
+
+        if ($model->load($request->post())) {
+            $preview = (array_key_exists('resetRun-button', $request->post())) ? false : true;
+            if ($model->resetThumbs($preview)) {
+               
+            }
+             return $this->render('thumbReset', [
+                        'model' => $model
+                ]);
+        } else {
+            return $this->render('thumbReset', [
+                    'model' => $model
+            ]);
+        }
     }
 
     /**

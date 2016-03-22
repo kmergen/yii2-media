@@ -1,7 +1,7 @@
 <?php
 /**
  * Image component provides an application wide access to images and on the
- * fly image manipulation.
+ * fly image manipulation e.g. thumbnail creation.
  */
 
 namespace kmergen\media\components;
@@ -41,7 +41,7 @@ class Image extends \yii\base\Object
     /**
      * @var boolean 
      * If true the thumb will created in an extra subdirectory under the [[thumbDirectoryName]] with the given thumbStyle.
-     * If false the thumbnail will save under the [[thumbDirectory]] directory with the suffix of the keys width and height. e.g images/image_100x75.jpg
+     * If false the thumbnail will save under the [[thumbDirectory]] directory with the suffix of the keys from [[thumbStyles]] e.g images/thumbs/image_small.jpg or if it is a configuration with the width and height. e.g images/image_100x75.jpg
      */
     public $thumbExtraDirectory = true;
 
@@ -137,6 +137,9 @@ class Image extends \yii\base\Object
             if ($this->thumbExtraDirectory === true) {
                 $thumbDirectory = $this->thumbDirectory . DIRECTORY_SEPARATOR . $config;
                 $suffix = '';
+            } else {
+                $thumbDirectory = $this->thumbDirectory;
+                $suffix = '_' . $config;
             }
             $config = $this->thumbStyles[$config];
         } elseif ($this->thumbExtraDirectory === false || isArray($config)) {
@@ -193,5 +196,5 @@ class Image extends \yii\base\Object
         }
         return $files;
     }
-
+    
 }
