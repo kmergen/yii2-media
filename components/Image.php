@@ -86,7 +86,7 @@ class Image extends \yii\base\Object
     protected function resolveConfig($config)
     {
         if (isset($config[0])) {
-            if (!is_int($config[0]) ||  $config[0] < 1) {
+            if (!is_int($config[0]) || $config[0] < 1) {
                 throw new Exception('Width should be an integer and equal or greater than 1.');
             }
         } else {
@@ -94,21 +94,21 @@ class Image extends \yii\base\Object
         }
 
         if (isset($config[1])) {
-            if (!is_int($config[1]) ||  $config[1] < 1) {
+            if (!is_int($config[1]) || $config[1] < 1) {
                 throw new Exception('Height should be an integer and equal or greater than 1.');
             }
         } else {
             throw new InvalidConfigException('Height is not defined.');
         }
-        
+
         if (isset($config[2])) {
-            if (!is_int($config[2]) ||  $config[2] < 1) {
+            if (!is_int($config[2]) || $config[2] < 1) {
                 throw new Exception('Qualtity should be an integer and equal or greater than 1.');
             }
         } else {
             $config[2] = $this->defaultQuality;
         }
-        
+
         return $config;
     }
 
@@ -120,7 +120,11 @@ class Image extends \yii\base\Object
     public function placeholder($name = 'default', $config = null)
     {
         if (array_key_exists($name, $this->placeholder)) {
-            return $this->thumb($this->placeholder[$name], $config);
+            if ($config === null) {
+                return '@web/' . $this->placeholder[$name];
+            } else {
+                return $this->thumb($this->placeholder[$name], $config);
+            }
         } else {
             throw new InvalidConfigException(sprintf('The placeholder name %s does not exist.', $name));
         }
@@ -146,8 +150,8 @@ class Image extends \yii\base\Object
             $thumbDirectory = $this->thumbDirectory;
             $suffix = '_' . $config[0] . 'x' . $config[1];
         }
-       
-        $url = ltrim($url, '/\\');       
+
+        $url = ltrim($url, '/\\');
         $info = pathinfo($url);
         $thumbName = $info['filename'] . $suffix . '.' . $info['extension'];
         $thumbPath = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $info['dirname'] . DIRECTORY_SEPARATOR . $thumbDirectory;
@@ -166,7 +170,7 @@ class Image extends \yii\base\Object
         }
 
         $thumbDirectory = str_replace('\\', '/', $thumbDirectory);
-        return Yii::getAlias('@web') . '/' . $info['dirname'] . '/' . $thumbDirectory . '/' . $thumbName;
+        return '@web/' . $info['dirname'] . '/' . $thumbDirectory . '/' . $thumbName;
     }
 
     /**
@@ -196,5 +200,5 @@ class Image extends \yii\base\Object
         }
         return $files;
     }
-    
+
 }

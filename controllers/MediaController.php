@@ -126,37 +126,7 @@ class MediaController extends Controller
 
         return $this->redirect(['index']);
     }
-
-    /**
-     * Reset thumbs from a given thumbstyle
-     * @return mixed
-     */
-    public function actionThumbReset()
-    {
-        $model = new ThumbResetForm();
-        $request = Yii::$app->getRequest();
-
-        if (Yii::$app->request->isAjax && $model->load($request->post())) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            return \yii\bootstrap\ActiveForm::validate($model);
-        }
-
-
-        if ($model->load($request->post())) {
-            $preview = (array_key_exists('resetRun-button', $request->post())) ? false : true;
-            if ($model->resetThumbs($preview)) {
-               
-            }
-             return $this->render('thumbReset', [
-                        'model' => $model
-                ]);
-        } else {
-            return $this->render('thumbReset', [
-                    'model' => $model
-            ]);
-        }
-    }
-
+    
     /**
      * Finds the Media model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

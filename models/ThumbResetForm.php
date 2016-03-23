@@ -69,28 +69,34 @@ class ThumbResetForm extends Model
     public function resetThumbs($preview)
     {
         if ($this->validate()) {
+            Yii::beginProfile('fileIterate');
+            $cacheKey = ['thumbreset', $this->startPath, Yii::$app->image->thumbDirectory, Yii::$app->image->thumbExtraDirectory];
             $webroot = Yii::getAlias('@webroot');
             $path = $webroot . '/' . $this->startPath;
-
             if (Yii::$app->image->thumbExtraDirectory) {
-                $iterator = new \RecursiveIteratorIterator(
-                    new \RecursiveDirectoryIterator($path), \RecursiveIteratorIterator::SELF_FIRST);
+                if (($data = Yii::$app->cache->get($cacheKey)) === false) {
+                    $iterator = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($path), \RecursiveIteratorIterator::SELF_FIRST);
 
-                foreach ($iterator as $file) {
-                    if ($file->isDir()) {
-                        $filename = $file->getFilename();
-                        if ($filename === $this->thumbstyle) {
-                            $realpath = $file->getRealpath();
-                            if (!empty(Yii::$app->image->thumbDirectory)) {
-                                //The directory is only affected if the parent directory is the thumbDirectory
-                                if (basename(dirname($realpath)) === Yii::$app->image->thumbDirectory) {
+                    foreach ($iterator as $file) {
+                        if ($file->isDir()) {
+                            $filename = $file->getFilename();
+                            if ($filename === $this->thumbstyle) {
+                                $realpath = $file->getRealpath();
+                                if (!empty(Yii::$app->image->thumbDirectory)) {
+                                    //The directory is only affected if the parent directory is the thumbDirectory
+                                    if (basename(dirname($realpath)) === Yii::$app->image->thumbDirectory) {
+                                        $this->_affectedFiles[] = $realpath;
+                                    }
+                                } else {
                                     $this->_affectedFiles[] = $realpath;
                                 }
-                            } else {
-                                $this->_affectedFiles[] = $realpath;
                             }
                         }
                     }
+                    Yii::$app->cache->set($cacheKey, $this->_affectedFiles, 180);
+                } else {
+                    $this->_affectedFiles = $data;
                 }
 
                 //Remove all affected directories
@@ -105,22 +111,27 @@ class ThumbResetForm extends Model
                     }
                 }
             } else {
-                if (!empty(Yii::$app->image->thumbDirectory)) {
-                    $iterator = new \RecursiveIteratorIterator(
-                        new \RecursiveDirectoryIterator($path), \RecursiveIteratorIterator::SELF_FIRST);
+                if (($data = Yii::$app->cache->get($cacheKey)) === false) {
+                    if (!empty(Yii::$app->image->thumbDirectory)) {
+                        $iterator = new \RecursiveIteratorIterator(
+                            new \RecursiveDirectoryIterator($path), \RecursiveIteratorIterator::SELF_FIRST);
 
-                    foreach ($iterator as $file) {
-                        if (!$file->isDir()) {
-                            $realpath = $file->getRealpath();
-                            if (basename(dirname($realpath)) === Yii::$app->image->thumbDirectory) {
-                                if (strpos($file->getFilename(), '_' . $this->thumbstyle)) {
-                                    $this->_affectedFiles[] = $realpath;
+                        foreach ($iterator as $file) {
+                            if (!$file->isDir()) {
+                                $realpath = $file->getRealpath();
+                                if (basename(dirname($realpath)) === Yii::$app->image->thumbDirectory) {
+                                    if (strpos($file->getFilename(), '_' . $this->thumbstyle)) {
+                                        $this->_affectedFiles[] = $realpath;
+                                    }
                                 }
                             }
                         }
+                    } else {
+                        $this->_affectedFiles = FileHelper::findFiles($path, ['only' => ['*_' . $this->thumbstyle . '.*']]);
                     }
+                    Yii::$app->cache->set($cacheKey, $this->_affectedFiles, 180);
                 } else {
-                    $this->_affectedFiles = FileHelper::findFiles($path, ['only' => ['*_' . $this->thumbstyle . '.*']]);
+                    $this->_affectedFiles = $data;
                 }
 
                 //Delete all affected files
@@ -135,6 +146,7 @@ class ThumbResetForm extends Model
                     }
                 }
             }
+            Yii::endProfile('fileIterate');
             return true;
         } else {
             return false;
