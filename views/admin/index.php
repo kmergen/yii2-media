@@ -18,7 +18,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <h2><?= Yii::t('media', 'Filename') ?></h2>
 
     <p>
-        <?= Yii::t('media', 'Hello') ?>
         <?= Html::a(Yii::t('app', 'Create Media'), ['create'], ['class' => 'btn btn-success']) ?>
     </p>
     <?=

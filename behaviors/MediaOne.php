@@ -50,10 +50,6 @@ class MediaOne extends AttributeBehavior
      */
     public function beforeUpdate($event)
     {
-        $user = Yii::$app->user;
-        $ident = $user->identity;
-        
-        
         $file = $this->owner->{$this->attribute};
         $oldUrl = $this->owner->getOldAttribute($this->attribute);
 

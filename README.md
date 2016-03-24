@@ -23,7 +23,7 @@ to the `require` section of your `composer.json` file.
 Run `$ yii migrate migrationPath=@vendor/kmergen/yii2-media/migrations`
 
 ### 2. Configuration
-In your modules configuration:
+In your configuration set the following:
 ```php
 'bootstrap' => [
     'kmergen\media\Bootstrap',
@@ -36,6 +36,30 @@ In your modules configuration:
     ...
 ]
 ```
+### 3. Different layouts
+If you you want to switch between different layouts
+e.g. in basic-template between a default and an admin layout you can do it as follows:
+
+```php
+'modules' => [
+    'media' => [
+        'class' => 'kmergen\media\Module',
+        'on beforeAction' => function ($event) {
+            if ($event->action->controller->id === 'admin') {
+                if (\Yii::$app->user->can('admin')) {
+                    $event->sender->module->layoutPath = 'path/to/your/layout';
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        },
+    ],
+    ...
+]
+```
+For theming views see [Yii2 Theming](http://www.yiiframework.com/doc-2.0/guide-output-theming.html)
+
 
 > Note: This extension is under development. Use it not in production.
 

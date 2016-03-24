@@ -121,7 +121,7 @@ class Image extends \yii\base\Object
     {
         if (array_key_exists($name, $this->placeholder)) {
             if ($config === null) {
-                return '@web/' . $this->placeholder[$name];
+                return Yii::getAlias('@web') . '/' . $this->placeholder[$name];
             } else {
                 return $this->thumb($this->placeholder[$name], $config);
             }
@@ -170,7 +170,7 @@ class Image extends \yii\base\Object
         }
 
         $thumbDirectory = str_replace('\\', '/', $thumbDirectory);
-        return '@web/' . $info['dirname'] . '/' . $thumbDirectory . '/' . $thumbName;
+        return Yii::getAlias('@web') . '/' . $info['dirname'] . '/' . $thumbDirectory . '/' . $thumbName;
     }
 
     /**
