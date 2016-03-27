@@ -200,8 +200,8 @@ class Media extends \yii\db\ActiveRecord
      */
     protected function saveUploadedFile()
     {
-        $randomToken = mt_rand(1, 100) . time();
-        $newName = $this->mediaFile->baseName . '_' . $randomToken . '.' . $this->mediaFile->extension;
+        $uniqueId = uniqid(mt_rand(1, 1000));
+        $newName = $this->mediaFile->baseName . '_' . $uniqueId . '.' . $this->mediaFile->extension;
         $webroot = Yii::getAlias('@webroot');
         $dir = $webroot . DIRECTORY_SEPARATOR . $this->targetUrl;
         FileHelper::createDirectory($dir);

@@ -23,7 +23,7 @@ to the `require` section of your `composer.json` file.
 Run `$ yii migrate migrationPath=@vendor/kmergen/yii2-media/migrations`
 
 ### 2. Configuration
-In your configuration set the following:
+In your configuration file set the following:
 ```php
 'bootstrap' => [
     'kmergen\media\Bootstrap',
@@ -46,7 +46,7 @@ e.g. in basic-template between a default and an admin layout you can do it as fo
         'class' => 'kmergen\media\Module',
         'on beforeAction' => function ($event) {
             if ($event->action->controller->id === 'admin') {
-                if (\Yii::$app->user->can('admin')) {
+                if (Yii::$app->user->can('admin')) {
                     $event->sender->module->layoutPath = 'path/to/your/layout';
                     return true;
                 } else {

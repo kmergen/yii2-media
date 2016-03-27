@@ -3,20 +3,20 @@
 use yii\bootstrap\ActiveForm;
 
 /* @var $this yii\web\View */
-/* @var $model app\modules\backend\models\Media */
+/* @var $model app\modules\media\models\Media */
 /* @var $form ActiveForm */
 
 
-$this->title = Yii::t('backend', 'Media Center');
-$this->params['titleSuffix'] = Yii::t('backend', 'Manage and upload your Media Files');
+$this->title = Yii::t('media', 'Media Center');
+$this->params['titleSuffix'] = Yii::t('media', 'Manage and upload your Media Files');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<div class="backend-media-upload">
+<div class="admin-media-upload">
     <div class="row form">
         <div class="col-md-12 col-lg-9">
             <div class="box box-info">
-                <div class="box-header with-border"><h3 class="box-title"><?= Yii::t('backend', 'Upload Form') ?></h3></div>
+                <div class="box-header with-border"><h3 class="box-title"><?= Yii::t('media', 'Upload Form') ?></h3></div>
                     <?php $form = ActiveForm::begin(); ?>
                 <div class="box-body">
                     <?= $form->field($model, 'album_id') ?>
@@ -30,8 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
                     <?php
-                    echo \kmergen\fileupload\FileUpload::widget([
-                        'url' => ['upload'],
+                    echo \kmergen\media\widgets\fileupload\FileUpload::widget([
                         'acceptFileExtensions' => 'jpg,jpeg,png',
                         'fileInputOptions' => [
                             'accept' => 'image/*'

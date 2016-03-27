@@ -81,24 +81,6 @@ class AdminController extends Controller
     }
 
     /**
-     * Creates a new Media model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     */
-    public function actionCreate()
-    {
-        $model = new Media();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        } else {
-            return $this->render('create', [
-                    'model' => $model,
-            ]);
-        }
-    }
-
-    /**
      * Updates an existing Media model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
@@ -159,7 +141,6 @@ class AdminController extends Controller
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return \yii\bootstrap\ActiveForm::validate($model);
         }
-
 
         if ($model->load($request->post())) {
             $preview = (array_key_exists('resetRun-button', $request->post())) ? false : true;

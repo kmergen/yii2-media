@@ -23,9 +23,9 @@ class ThumbResetForm extends Model
     public $startPath;
 
     /**
-     * @var array From the reset affected files
+     * @var null|array From the reset affected files
      */
-    private $_affectedFiles = [];
+    private $_affectedFiles;
 
     /**
      * @return array the validation rules.
@@ -70,7 +70,8 @@ class ThumbResetForm extends Model
     {
         if ($this->validate()) {
             Yii::beginProfile('fileIterate');
-            $cacheKey = ['thumbreset', $this->startPath, Yii::$app->image->thumbDirectory, Yii::$app->image->thumbExtraDirectory];
+            $this->_affectedFiles = [];
+            $cacheKey = ['thumbreset', $this->startPath, $this->thumbstyle, Yii::$app->image->thumbDirectory, Yii::$app->image->thumbExtraDirectory];
             $webroot = Yii::getAlias('@webroot');
             $path = $webroot . '/' . $this->startPath;
             if (Yii::$app->image->thumbExtraDirectory) {
