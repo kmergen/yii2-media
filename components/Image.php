@@ -166,7 +166,7 @@ class Image extends \yii\base\Object
             list($width, $height, $quality) = $config;
 
             $func = ($width === $height) ? 'cropCenter' : 'thumb';
-            \yii\imagine\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
+            \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
         }
 
         $thumbDirectory = str_replace('\\', '/', $thumbDirectory);

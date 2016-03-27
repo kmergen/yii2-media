@@ -200,7 +200,7 @@ class Media extends \yii\db\ActiveRecord
      */
     protected function saveUploadedFile()
     {
-        $uniqueId = uniqid(mt_rand(1, 1000));
+        $uniqueId = uniqid(mt_rand(1000));
         $newName = $this->mediaFile->baseName . '_' . $uniqueId . '.' . $this->mediaFile->extension;
         $webroot = Yii::getAlias('@webroot');
         $dir = $webroot . DIRECTORY_SEPARATOR . $this->targetUrl;
@@ -213,7 +213,7 @@ class Media extends \yii\db\ActiveRecord
         // resize the file (Check is done by [[addMediaRules]]
         if (is_array($this->resize)) {
             list($width, $height) = $this->resize;
-            $image = \yii\imagine\Image::thumb($this->mediaFile->tempName, $width, $height)->save($path);
+            $image = \kmergen\media\helpers\Image::thumb($this->mediaFile->tempName, $width, $height)->save($path);
             $this->size = filesize($path);
         } else {
             $this->size = $this->mediaFile->size;
