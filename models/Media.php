@@ -55,11 +55,16 @@ class Media extends \yii\db\ActiveRecord
      * @var boolean If true the image will be risized if it is too big (width > ´maxWidth´ or height > ´maxHeight´ or size > maxSize).
      */
     public $resize = true;
-    
+
     /**
      * @var string the style for the preview thumbnails. That must be a predefined thumbstyle from [[app\components\Image]]
      */
     public $thumbStyle = 'small';
+    
+    /**
+     * @var integer the style for the preview thumbnails. That must be a predefined thumbstyle from [[app\components\Image]]
+     */
+    public $tempFileExpire = 86400; //24 hours
 
     /**
      * @var array The validation rules
@@ -90,11 +95,11 @@ class Media extends \yii\db\ActiveRecord
      */
     public function scenarios()
     {
-        
+
         $scenarios = [
             'upload' => ['status', 'targetUrl', 'resize', 'thumbStyle', 'mediaRules', 'mediaFile']
         ];
-        
+
         return array_merge(parent::scenarios(), $scenarios);
     }
 
@@ -151,7 +156,7 @@ class Media extends \yii\db\ActiveRecord
     protected function addMediaRules()
     {
         $this->mediaRules = Json::decode($this->mediaRules);
-        
+
         $rule = ['mediaFile'];
         $fileDefaultProperties = ['skipOnEmpty' => false, 'extensions' => 'jpg,jpeg,png', 'maxSize' => 10000000, 'minSize' => 50, 'mimeTypes' => 'image/*', 'maxFiles' => 1];
         $imageDefaultProperties = ['skipOnEmpty' => false, 'maxWidth' => 1920, 'maxHeight' => 1080, 'minWidth' => 50, 'minHeight' => 50];
@@ -186,7 +191,6 @@ class Media extends \yii\db\ActiveRecord
             }
         } else {
             $this->resize = false;
-            
         }
         //We must set the maxFiles key to 1 if the media_file is not an array because FileValidator accepts only an array of file objects if maxFiles > 1
         if (!is_array($this->mediaFile)) {
@@ -209,7 +213,7 @@ class Media extends \yii\db\ActiveRecord
         $this->name = $this->mediaFile->name;
         $this->url = $this->targetUrl . '/' . $newName;
         $this->type = $this->mediaFile->type;
-        
+
         // resize the file (Check is done by [[addMediaRules]]
         if (is_array($this->resize)) {
             list($width, $height) = $this->resize;
@@ -253,7 +257,7 @@ class Media extends \yii\db\ActiveRecord
             return false;
         }
     }
-    
+
     /**
      * Is the uploaded file an image.
      */
@@ -264,6 +268,46 @@ class Media extends \yii\db\ActiveRecord
         } else {
             return false;
         }
+    }
+
+    /**
+     * Delete deleted files and thumbnails from file system
+     * Use this function in a cronjob or in a cron action
+     * We use it in this application in [[component\Cron.php]]
+     */
+    public static function deleteDeletedFiles()
+    {
+        $webroot = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR;
+        $files = Yii::$app->db->createCommand("Select url, type FROM media_deleted")->queryAll();
+
+        foreach ($files as $file) {
+            //Delete file from path.
+            $path = $webroot . $file['url'];
+            @unlink($path);
+            //We check if the file is an image. If so we delete the thumbnails of the image.
+            //Note that we only check the mime type whether the file is an image. The big check whether the file is really an image has been done during upload.
+            if (preg_match('/image\/\w*/', $file['type'])) {
+                Yii::$app->image->deleteThumbs($file['url']);
+            }
+        }
+        return Yii::$app->db->createCommand()->delete('media_deleted')->execute();
+    }
+
+     /**
+     * Move temporary files into "media_deleted" table
+     * Use this function in a cronjob or in a cron action
+     * We use it in this application in [[component\Cron.php]]
+     */
+    public static function deleteTemporaryFiles($expire = null)
+    {
+        $status = self::STATUS_TEMP;
+        if ($expire === null) {
+            $expire = static::tempFileExpire;
+        }
+        $expired = time() - $expire;
+        $strExpired = date("Y-m-d H:i:s", $expired);
+        Yii::$app->db->createCommand("INSERT INTO media_deleted (url, type) SELECT url, type FROM media WHERE status=$status AND created<'$strExpired'")->execute();
+        return Yii::$app->db->createCommand()->delete('media', "status=$status AND created<'$strExpired'")->execute();
     }
 
 }
