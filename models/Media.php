@@ -60,12 +60,7 @@ class Media extends \yii\db\ActiveRecord
      * @var string the style for the preview thumbnails. That must be a predefined thumbstyle from [[app\components\Image]]
      */
     public $thumbStyle = 'small';
-    
-    /**
-     * @var integer the style for the preview thumbnails. That must be a predefined thumbstyle from [[app\components\Image]]
-     */
-    private static $tempFileExpire = 86400; //24 hours
-
+        
     /**
      * @var array The validation rules
      * We save the rules in a property because we add during upload process file and image rules.
@@ -302,7 +297,7 @@ class Media extends \yii\db\ActiveRecord
     {
         $status = self::STATUS_TEMP;
         if ($expire === null) {
-            $expire = static::tempFileExpire;
+            $expire = 86400; //24 hours
         }
         $expired = time() - $expire;
         $strExpired = date("Y-m-d H:i:s", $expired);
