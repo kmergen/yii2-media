@@ -42,7 +42,7 @@ class Media extends \yii\db\ActiveRecord
     /**
      * @var string The path where to save the file
      */
-    public $targetUrl = 'images/furzenhuber';
+    public $targetUrl = 'images';
 
     /**
      * @var array mediaRules are send when a file is uploaded.
@@ -64,7 +64,7 @@ class Media extends \yii\db\ActiveRecord
     /**
      * @var integer the style for the preview thumbnails. That must be a predefined thumbstyle from [[app\components\Image]]
      */
-    public $tempFileExpire = 86400; //24 hours
+    private static $tempFileExpire = 86400; //24 hours
 
     /**
      * @var array The validation rules
@@ -302,7 +302,7 @@ class Media extends \yii\db\ActiveRecord
     {
         $status = self::STATUS_TEMP;
         if ($expire === null) {
-            $expire = self::tempFileExpire;
+            $expire = static::tempFileExpire;
         }
         $expired = time() - $expire;
         $strExpired = date("Y-m-d H:i:s", $expired);
