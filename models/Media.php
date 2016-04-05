@@ -302,7 +302,7 @@ class Media extends \yii\db\ActiveRecord
     {
         $status = self::STATUS_TEMP;
         if ($expire === null) {
-            $expire = static::tempFileExpire;
+            $expire = self::tempFileExpire;
         }
         $expired = time() - $expire;
         $strExpired = date("Y-m-d H:i:s", $expired);

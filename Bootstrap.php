@@ -10,11 +10,8 @@
 
 namespace kmergen\media;
 
-use Yii;
 use yii\base\BootstrapInterface;
-use yii\console\Application as ConsoleApplication;
 use yii\i18n\PhpMessageSource;
-use yii\web\GroupUrlRule;
 
 /**
  * Bootstrap class registers media module and image application component. It also implement the translation for the module also for the fileupload
