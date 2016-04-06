@@ -36,7 +36,20 @@ In your configuration file set the following:
     ...
 ]
 ```
-### 3. Different layouts
+
+### 3. Image component
+```php
+'components' => [
+    'image' => [
+        'class' => 'kmergen\media\components\Image'
+    ],
+    ...
+]
+```
+Now you can everywhere in your application e.g. get a thumb with "Yii::$app->image->thumb('path/to/original/image', '$thumbStyle')".
+
+
+### 4. Different layouts
 If you you want to switch between different layouts
 e.g. in basic-template between a default and an admin layout you can do it as follows:
 
