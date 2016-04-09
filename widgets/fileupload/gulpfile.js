@@ -16,7 +16,7 @@ var gulp = require('gulp'),
 /**
  * @var string The directory of the distribution
  */
-var distributionDir = '../../../vendor/bower';
+var distributionDir = '../../vendor/bower';
 
 /**
  * @var string The public directory or the assets directory that will published.
@@ -57,24 +57,24 @@ var fileuplodCss = [
 gulp.task('build-fileupload-css', ['build-fileupload-custom-css'], function () {
 
     var src = fileuplodCss;
-    src.push('build/fileupload/css/**/*.css');
+    src.push('build/css/**/*.css');
 
     return gulp.src(src)
         .pipe(sourcemaps.init())
         .pipe(concat('fileupload.css'))
         .pipe(sourcemaps.write())
-        .pipe(gulp.dest(publicDir + '/fileupload/css')).on('error', gutil.log)
+        .pipe(gulp.dest(publicDir + '/css')).on('error', gutil.log)
         .pipe(concat('fileupload.min.css'))
         .pipe(cssnano())
-        .pipe(gulp.dest(publicDir + '/fileupload/css')).on('error', gutil.log);
+        .pipe(gulp.dest(publicDir + '/css')).on('error', gutil.log);
 
 });
 
 gulp.task('build-fileupload-custom-css', function () {
 
-    return gulp.src('build/fileupload/less/*.less')
+    return gulp.src('build/less/*.less')
         .pipe(less())
-        .pipe(gulp.dest('build/fileupload/css'));
+        .pipe(gulp.dest('build/css'));
 
 });
 
@@ -88,10 +88,10 @@ gulp.task('build-fileupload-js', function () {
         .pipe(sourcemaps.init())
         .pipe(concat('fileupload.js'))
         .pipe(sourcemaps.write())
-        .pipe(gulp.dest(publicDir + '/fileupload/js')).on('error', gutil.log)
+        .pipe(gulp.dest(publicDir + '/js')).on('error', gutil.log)
         .pipe(concat('fileupload.min.js'))
         .pipe(uglify())
-        .pipe(gulp.dest(publicDir + '/fileupload/js')).on('error', gutil.log);
+        .pipe(gulp.dest(publicDir + '/js')).on('error', gutil.log);
 
 });
 

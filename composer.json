@@ -17,6 +17,7 @@
         }
     },
     "require": {
-        "yiisoft/yii2": "2.*"
+        "yiisoft/yii2": "2.*",
+        "bower-asset/blueimp-file-upload": "~9.9"
     }
 }
