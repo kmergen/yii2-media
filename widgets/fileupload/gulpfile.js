@@ -16,7 +16,7 @@ var gulp = require('gulp'),
 /**
  * @var string The directory of the distribution
  */
-var distributionDir = '../../vendor/bower';
+var distributionDir = '../../../../vendor/bower';
 
 /**
  * @var string The public directory or the assets directory that will published.
