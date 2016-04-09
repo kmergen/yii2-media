@@ -16,7 +16,7 @@ var gulp = require('gulp'),
 /**
  * @var string The directory of the distribution
  */
-var distributionDir = '../../vendor/bower';
+var distributionDir = '../../../vendor/bower';
 
 /**
  * @var string The public directory or the assets directory that will published.
@@ -47,7 +47,7 @@ var fileuplodFullJs = [
  */
 var fileuplodCss = [
     distributionDir + '/blueimp-file-upload/css/jquery.fileupload.css',
-    distributionDir + '/blueimp-file-upload/css/jquery.fileupload-ui.css',
+    distributionDir + '/blueimp-file-upload/css/jquery.fileupload-ui.css'
 ];
 
 

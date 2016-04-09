@@ -1,6 +1,6 @@
 {
-  "name": "kmergen/yii2-media",
-  "description": "Yii2 extension to manage media files",
+  "name": "kmergen-yii2-media-widgets-fileupload",
+  "description": "Yii2 extension to provide fileupload for models",
   "version": "1.0.0",
   "license": "BSD-3-Clause",
   "repository": "https://github.com/kmergen/yii2-media",
