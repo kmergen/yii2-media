@@ -10,6 +10,7 @@ use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
+use yii\helpers\Url;
 
 class Image extends \yii\base\Object
 {
@@ -62,8 +63,8 @@ class Image extends \yii\base\Object
 
     /**
      * Return the thumb url for a given original image and create and save the thumbnail
-     * @param string $url The $url from the original image it should be something like this 'images/bild.jpg'
-     * @param string|array $config  That can be a thumbnail style name or a thumbnail configuration array 
+     * @param string $url The $url from the original image. It can be a relative url e.g. 'images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
+     * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format is the same as the value from [[thumbStyles]] 
      * 
      */
     public function thumb($url, $config)
@@ -151,10 +152,16 @@ class Image extends \yii\base\Object
             $suffix = '_' . $config[0] . 'x' . $config[1];
         }
 
-        $url = ltrim($url, '/\\');
-        $info = pathinfo($url);
+        if (!Url::isRelative($url)) {
+            $info = pathinfo(parse_url($url, PHP_URL_PATH));
+            $dirname = ltrim($info['dirname'], '/\\');
+        } else {
+            $info = pathinfo($url);
+            $dirname = $info['dirname'];
+        }
+
+        $thumbPath = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $dirname . DIRECTORY_SEPARATOR . $thumbDirectory;
         $thumbName = $info['filename'] . $suffix . '.' . $info['extension'];
-        $thumbPath = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $info['dirname'] . DIRECTORY_SEPARATOR . $thumbDirectory;
 
         if (!file_exists($thumbPath . DIRECTORY_SEPARATOR . $thumbName)) {
 
@@ -170,16 +177,19 @@ class Image extends \yii\base\Object
         }
 
         $thumbDirectory = str_replace('\\', '/', $thumbDirectory);
-        return Yii::getAlias('@web') . '/' . $info['dirname'] . '/' . $thumbDirectory . '/' . $thumbName;
+        return Yii::getAlias('@web') . '/' . $dirname . '/' . $thumbDirectory . '/' . $thumbName;
     }
 
     /**
      * Delete all thumbs from the thumbs directorys
      * You should use this function in conjunction with the [[deleteFile]] call function within a cron job.
-     * @param string The url from the original file.
+     * @param string The url from the original file. This must be a relative url.
      */
     public function deleteThumbs($url)
     {
+        if (!Url::isRelative($url)) {
+            throw new \yii\base\InvalidParamException('Url must be relative');
+        }
         $info = pathinfo($url);
         $webroot = Yii::getAlias('@webroot');
         $thumbStyles = array_keys($this->thumbStyles);
