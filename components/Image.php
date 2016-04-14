@@ -152,14 +152,9 @@ class Image extends \yii\base\Object
             $suffix = '_' . $config[0] . 'x' . $config[1];
         }
 
-        if (!Url::isRelative($url)) {
-            $info = pathinfo(parse_url($url, PHP_URL_PATH));
-            $dirname = ltrim($info['dirname'], '/\\');
-        } else {
-            $info = pathinfo($url);
-            $dirname = $info['dirname'];
-        }
-
+        $info = !Url::isRelative($url) ? pathinfo(parse_url($url, PHP_URL_PATH)) : pathinfo($url);
+                
+        $dirname = ltrim($info['dirname'], '/\\');
         $thumbPath = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $dirname . DIRECTORY_SEPARATOR . $thumbDirectory;
         $thumbName = $info['filename'] . $suffix . '.' . $info['extension'];
 
