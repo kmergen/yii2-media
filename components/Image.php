@@ -168,7 +168,11 @@ class Image extends \yii\base\Object
             list($width, $height, $quality) = $config;
 
             $func = ($width === $height) ? 'cropCenter' : 'thumb';
-            \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
+            try {
+                \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
+            } catch (Exception $ex) {
+                throw new Exception('Das Bild ist nicht da ha ha!');
+            }
         }
 
         $thumbDirectory = str_replace('\\', '/', $thumbDirectory);
