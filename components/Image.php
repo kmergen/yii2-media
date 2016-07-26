@@ -7,7 +7,7 @@
 namespace kmergen\media\components;
 
 use Yii;
-use yii\base\Exception;
+use Exception;
 use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
@@ -135,6 +135,7 @@ class Image extends \yii\base\Object
      * Creates a thumbnail and save it to the given url. This function is called from [[thumb]] function
      * @param string $url The url to the original image file 
      * @param array A thumbnail configuration array or a [[thumbStyle]]
+     * @return The thumbnail url
      */
     protected function createThumb($url, $config)
     {
@@ -153,7 +154,7 @@ class Image extends \yii\base\Object
         }
 
         $info = !Url::isRelative($url) ? pathinfo(parse_url($url, PHP_URL_PATH)) : pathinfo($url);
-                
+
         $dirname = ltrim($info['dirname'], '/\\');
         $thumbPath = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $dirname . DIRECTORY_SEPARATOR . $thumbDirectory;
         $thumbName = $info['filename'] . $suffix . '.' . $info['extension'];
@@ -171,7 +172,12 @@ class Image extends \yii\base\Object
             try {
                 \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
             } catch (Exception $ex) {
-                throw new Exception('Das Bild ist nicht da ha ha!');
+                if ($ex instanceof \Imagine\Exception\InvalidArgumentException) {
+                    Yii::info('Imagine Invalid Argument Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
+                } else {
+                    Yii::info('Imagine Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
+                }
+                throw new Exception($ex->getMessage());
             }
         }
 
