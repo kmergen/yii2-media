@@ -53,61 +53,64 @@ class Image extends \yii\base\Object
 
     /**
      * @var array A set of Placeholder images.
-     * The key is the placeholder name and the value is the placeholder url
-     * To create a thumbnail from the placeholder image you can use [[placeholder()]].
+     * You can use:
+     *  1. A placeholder provider to get a placeholder image. Use it in the following format: 'http://placehold.it/{width}x{height}'
+     *  2. A local image from your public web directory e.g. 'images/bild1.jpg'
+     *  To create a thumbnail or if you use a placeholder provider you should use [[placeholder()]].
      */
     public $placeholder = [
-        'default' => 'images/placeholder/default.png',
-        'profile' => 'images/placeholder/profile.png'
+        'default' => 'http://placehold.it/{width}x{height}',
+        'profile' => 'http://placehold.it/{width}x{height}',
     ];
 
     /**
      * Return the thumb url for a given original image and create and save the thumbnail
      * @param string $url The $url from the original image. It can be a relative url e.g. 'images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
-     * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format is the same as the value from [[thumbStyles]] 
+     * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format must be the same as the value from [[thumbStyles]] 
      * 
      */
     public function thumb($url, $config)
     {
-        if (is_array($config)) {
-            $config = $this->resolveConfig($config);
-        } else {
-            if (!array_key_exists($config, $this->thumbStyles)) {
-                throw new InvalidConfigException(sprintf('The thumb style %s does not exist.', $config));
-            }
-        }
+        $config = $this->resolveConfig($config);
+
         return $this->createThumb($url, $config);
     }
 
     /**
      * Resolve the thumb configuration
      * 
-     * @param array $config The thumb configuration.
+     * @param string|array $config The thumb configuration.
      */
     protected function resolveConfig($config)
     {
-        if (isset($config[0])) {
-            if (!is_int($config[0]) || $config[0] < 1) {
-                throw new Exception('Width should be an integer and equal or greater than 1.');
+        if (is_string($config)) {
+            if (!array_key_exists($config, $this->thumbStyles)) {
+                throw new InvalidConfigException(sprintf('The thumb style %s does not exist.', $config));
             }
         } else {
-            throw new InvalidConfigException('Width is not defined.');
-        }
+            if (isset($config[0])) {
+                if (!is_int($config[0]) || $config[0] < 1) {
+                    throw new Exception('Width should be an integer and equal or greater than 1.');
+                }
+            } else {
+                throw new InvalidConfigException('Width is not defined.');
+            }
 
-        if (isset($config[1])) {
-            if (!is_int($config[1]) || $config[1] < 1) {
-                throw new Exception('Height should be an integer and equal or greater than 1.');
+            if (isset($config[1])) {
+                if (!is_int($config[1]) || $config[1] < 1) {
+                    throw new Exception('Height should be an integer and equal or greater than 1.');
+                }
+            } else {
+                throw new InvalidConfigException('Height is not defined.');
             }
-        } else {
-            throw new InvalidConfigException('Height is not defined.');
-        }
 
-        if (isset($config[2])) {
-            if (!is_int($config[2]) || $config[2] < 1) {
-                throw new Exception('Qualtity should be an integer and equal or greater than 1.');
+            if (isset($config[2])) {
+                if (!is_int($config[2]) || $config[2] < 1) {
+                    throw new Exception('Qualtity should be an integer and equal or greater than 1.');
+                }
+            } else {
+                $config[2] = $this->defaultQuality;
             }
-        } else {
-            $config[2] = $this->defaultQuality;
         }
 
         return $config;
@@ -121,7 +124,17 @@ class Image extends \yii\base\Object
     public function placeholder($name = 'default', $config = null)
     {
         if (array_key_exists($name, $this->placeholder)) {
-            if ($config === null) {
+            if (strpos($this->placeholder[$name], '{width}')) { //Check if it is a placeholder provider
+                if ($config === null) {
+                    throw new InvalidConfigException('As second parameter you must set either a configuration array or a thumbstyle');
+                } else {
+                    $config = $this->resolveConfig($config);
+                    if (is_string($config)) {
+                        $config = $this->thumbStyles[$config];
+                    }
+                    return strtr($this->placeholder[$name], ['{width}' => $config[0], '{height}' => $config[1]]);
+                }
+            } elseif ($config === null) {
                 return Yii::getAlias('@web') . '/' . $this->placeholder[$name];
             } else {
                 return $this->thumb($this->placeholder[$name], $config);
