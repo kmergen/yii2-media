@@ -61,6 +61,11 @@ class Image extends \yii\base\Object
     public $placeholder = [
         'default' => 'http://placehold.it/{width}x{height}',
         'profile' => 'http://placehold.it/{width}x{height}',
+        //'example' => 'https://placeimg.com/{width}/{height}/any',
+        //'animal' => 'https://placeimg.com/{width}/{height}/animals',
+        //'animal_grayscale' => 'https://placeimg.com/{width}/{height}/animals/grayscale',
+        //'architecture' => 'https://placeimg.com/{width}/{height}/arch',
+        //ipsum_placeholder => 'https://ipsumimage.appspot.com/{width}x{height},ff7700.png?l=Das ist nur ein Platzhalter'
     ];
 
     /**
@@ -135,7 +140,7 @@ class Image extends \yii\base\Object
                     return strtr($this->placeholder[$name], ['{width}' => $config[0], '{height}' => $config[1]]);
                 }
             } elseif ($config === null) {
-                return Yii::getAlias('@web') . '/' . $this->placeholder[$name];
+                return Url::isRelative($this->placeholder[$name]) ? Yii::getAlias('@web') . '/' . $this->placeholder[$name] : $this->placeholder[$name];
             } else {
                 return $this->thumb($this->placeholder[$name], $config);
             }

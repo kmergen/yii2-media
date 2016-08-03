@@ -3,7 +3,7 @@
 namespace kmergen\media\behaviors;
 
 use Yii;
-use yii\behaviors\AttributeBehavior;
+use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use kmergen\media\models\Media;
 
@@ -13,7 +13,7 @@ use kmergen\media\models\Media;
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
-class MediaOne extends AttributeBehavior
+class MediaOne extends Behavior
 {
 
     /**
@@ -29,7 +29,7 @@ class MediaOne extends AttributeBehavior
         return [
             ActiveRecord::EVENT_BEFORE_INSERT => 'beforeInsert',
             ActiveRecord::EVENT_BEFORE_UPDATE => 'beforeUpdate',
-            ActiveRecord::EVENT_AFTER_DELETE => 'beforeDelete',
+            ActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
         ];
     }
 
@@ -38,10 +38,14 @@ class MediaOne extends AttributeBehavior
      */
     public function beforeInsert($event)
     {
-        $file = $this->owner->{$this->attribute};
-        if (!empty($file)) {
+        if (!empty($this->owner->{$this->attribute})) {
+            $file = $this->owner->{$this->attribute}[0];
             Yii::$app->db->createCommand()->update('media', ['status' => 1], ['url' => $file['url']])->execute();
+            $this->owner->{$this->attribute} = $file['url'];
         }
+        
+        //Note that you should set the default value for this attribute to NULL
+        
         return true;
     }
 
@@ -85,7 +89,7 @@ class MediaOne extends AttributeBehavior
             $media->delete();
             return true;
         } else {
-            Yii::warning('Cannot delete Media File.');
+            Yii::warning('Cannot find Media File ' . $url . '.');
             return false;
         }
     }
