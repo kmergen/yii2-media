@@ -41,6 +41,11 @@
             {% } %}
         </td>
     </tr>
+     <tr>
+         <td id="media-translation-{%=file.id%}">
+           
+        </td>
+    </tr>
 {% } %}
 
 </script>

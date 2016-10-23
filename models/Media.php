@@ -6,6 +6,7 @@ use Yii;
 use Exception;
 use yii\helpers\FileHelper;
 use yii\helpers\Json;
+use creocoder\translateable\TranslateableBehavior;
 
 /**
  * This is the model class for table "media".
@@ -60,17 +61,16 @@ class Media extends \yii\db\ActiveRecord
      * @var string the style for the preview thumbnails. That must be a predefined thumbstyle from [[app\components\Image]]
      */
     public $thumbStyle = 'small';
-        
+
     /**
      * @var array The validation rules
      * We save the rules in a property because we add during upload process file and image rules.
      */
     private $_rules = [
-        [['alt', 'caption'], 'string', 'max' => 100],
-        [['album_id', 'album_position', 'user_id', 'status'], 'integer'],
-        [['status'], 'in', 'range' => [self::STATUS_TEMP, self::STATUS_PERMANENT]],
-        [['name', 'targetUrl'], 'string', 'max' => 100],
-        [['url', 'type', 'size', 'mediaRules', 'resize'], 'safe'],
+            [['album_id', 'album_position', 'user_id', 'status'], 'integer'],
+            [['status'], 'in', 'range' => [self::STATUS_TEMP, self::STATUS_PERMANENT]],
+            [['name', 'targetUrl'], 'string', 'max' => 100],
+            [['url', 'type', 'size', 'mediaRules', 'resize'], 'safe'],
     ];
 
     /**
@@ -84,6 +84,21 @@ class Media extends \yii\db\ActiveRecord
     public static function tableName()
     {
         return 'media';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        return [
+            'translateable' => [
+                'class' => TranslateableBehavior::className(),
+                'translationAttributes' => ['alt', 'title'],
+            //'translationRelation' => 'translations',
+            // translationLanguageAttribute => 'language',
+            ],
+        ];
     }
 
     /**
@@ -289,7 +304,7 @@ class Media extends \yii\db\ActiveRecord
         return Yii::$app->db->createCommand()->delete('media_deleted')->execute();
     }
 
-     /**
+    /**
      * Move temporary files into "media_deleted" table
      * Use this function in a cronjob or in a cron action
      * We use it in this application in [[component\Cron.php]]
@@ -304,6 +319,19 @@ class Media extends \yii\db\ActiveRecord
         $strExpired = date("Y-m-d H:i:s", $expired);
         Yii::$app->db->createCommand("INSERT INTO media_deleted (url, type) SELECT url, type FROM media WHERE status=$status AND created<'$strExpired'")->execute();
         return Yii::$app->db->createCommand()->delete('media', "status=$status AND created<'$strExpired'")->execute();
+    }
+    
+//    public function transactions()
+//    {
+//        return [
+//           // self::SCENARIO_DEFAULT => self::OP_INSERT | self::OP_UPDATE,
+//        ];
+//    }
+
+   
+    public function getTranslations()
+    {
+        return $this->hasMany(MediaTranslation::className(), ['media_id' => 'id']);
     }
 
 }

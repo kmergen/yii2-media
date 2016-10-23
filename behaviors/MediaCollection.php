@@ -54,9 +54,10 @@ class MediaCollection extends Behavior
         if ($this->owner->{$this->attribute} !== null) {
             $this->_albumId = $this->owner->{$this->attribute};
             $this->owner->{$this->attribute} = Media::find()
+                ->with('translations')
                 ->where(['album_id' => $this->_albumId])
                 ->orderBy('album_position')
-                ->asArray()
+                //->asArray()
                 ->all();
         }
     }

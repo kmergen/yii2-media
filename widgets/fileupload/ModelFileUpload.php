@@ -53,7 +53,7 @@ class ModelFileUpload extends FileUpload
             $this->inputName = $this->model->formName() . '[' . $this->attribute . ']';
         }
         //The status for new uploaded files must be Media::STATUS_TEMP, because if you upload a file with status Media::STATUS_PERMANENT and
-        // the user abort the form without submitting it then then the files are without any reference to the model and useless stored in the media table.
+        // the user abort the form without submitting it then the files are without any reference to the model and useless stored in the media table.
         $this->mediaOptions['status'] = \kmergen\media\models\Media::STATUS_TEMP;
     }
 
@@ -137,29 +137,49 @@ JS;
         if (!empty($this->model->{$this->attribute})) {
             $files = [];
             if (is_string($this->model->{$this->attribute})) {
-                $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->asArray()->one();
+               // $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->asArray()->one();
+                $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->one();
             } else {
                 $files = $this->model->{$this->attribute};
             }
             
             foreach ($files as $key => $file) {
 
-                $files[$key]['id'] = $file['id'];
-                $files[$key]['name'] = $file['name'];
-                $files[$key]['size'] = (int)$file['size'];
-                $files[$key]['url'] = $file['url'];
-                $files[$key]['status'] = $file['status'];
-                if (strpos($file['type'], 'image/') !== false) {
-                    $files[$key]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+//                $files[$key]['id'] = $file['id'];
+//                $files[$key]['name'] = $file['name'];
+//                $files[$key]['size'] = (int)$file['size'];
+//                $files[$key]['url'] = $file['url'];
+//                $files[$key]['status'] = $file['status'];
+//                if (strpos($file['type'], 'image/') !== false) {
+//                    $files[$key]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+//                   // $files[$key]['alt'] = $file['alt'];
+//                   // $files[$key]['title'] = $file['title'];
+//                }
+//                $files[$key]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file['id']]);
+//                $files[$key]['deleteType'] = 'POST';
+//                
+//                
+                $fuFiles[$key]['id'] = $file->id;
+                $fuFiles[$key]['name'] = $file->name;
+                $fuFiles[$key]['size'] = (int)$file->size;
+                $fuFiles[$key]['url'] = $file->url;
+                $fuFiles[$key]['status'] = $file->status;
+                if (strpos($file->type, 'image/') !== false) {
+                    $fuFiles[$key]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+                    $fuFiles[$key]['alt'] = ($file->alt !== null) ? $file->alt : '';
+                    $fuFiles[$key]['title'] = ($file->title !== null) ? $file->title : '';
                 }
-                $files[$key]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file['id']]);
-                $files[$key]['deleteType'] = 'POST';
+                $fuFiles[$key]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file->id]);
+                $fuFiles[$key]['deleteType'] = 'POST';
+               
+                
+                
             }
         } else {
-            $files = [];
+            $fuFiles = [];
         }
 
-        $fuFiles = Json::encode($files);
+        $fuFiles = Json::encode($fuFiles);
 
         return <<<JS
             addExistFiles();
@@ -190,6 +210,7 @@ JS;
                     data.files = [filedata];
                     $('.files').append(tmpl('template-download', data));  
                     createFileInputs(index, filedata);
+                    createFileTranslationInputs(index, filedata);
                     jQuery('.template-download').addClass('in');
 
                 });
@@ -206,6 +227,24 @@ JS;
                 jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][type]', value: filedata.type}).appendTo('.hidden-file-inputs');
                 jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][status]', value: filedata.status}).appendTo('.hidden-file-inputs');
             }
+                
+            
+            function createFileTranslationInputs(fileIndex, filedata)
+            {
+                var inputName = '{$this->inputName}';
+                //Create alt and title form fields
+                var languages = ['de', 'en', 'es'];
+                jQuery.each( languages, function( index, lang ) {
+                    var formGroupAlt = jQuery(document.createElement('div')).addClass('form-group');
+                    var formGroupTitle = jQuery(document.createElement('div')).addClass('form-group');
+                    jQuery(document.createElement('input')).attr({type: 'text', name: inputName + '[translations][' + fileIndex + '][' + lang + '][alt]', value: filedata.alt}).appendTo(formGroupAlt);
+                    jQuery(document.createElement('input')).attr({type: 'text', name: inputName + '[translations][' + fileIndex + '][' + lang + '][title]', value: filedata.title}).appendTo(formGroupTitle);
+                    
+                    formGroupAlt.appendTo('#media-translation-' + filedata.id);
+                    formGroupTitle.appendTo('#media-translation-' + filedata.id);
+                });
+            }
+            
                 
             function regenerateFileInputs()
             {
