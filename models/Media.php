@@ -66,6 +66,7 @@ class Media extends \yii\db\ActiveRecord
      * We save the rules in a property because we add during upload process file and image rules.
      */
     private $_rules = [
+        [['alt', 'caption'], 'string', 'max' => 100],
         [['album_id', 'album_position', 'user_id', 'status'], 'integer'],
         [['status'], 'in', 'range' => [self::STATUS_TEMP, self::STATUS_PERMANENT]],
         [['name', 'targetUrl'], 'string', 'max' => 100],

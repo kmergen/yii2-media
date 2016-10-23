@@ -20,7 +20,7 @@ to the `require` section of your `composer.json` file.
 ## Installation
 
 ### 1. Run Migrations
-Run `$ yii migrate migrationPath=@vendor/kmergen/yii2-media/migrations`
+Run `$ yii migrate --migrationPath=@vendor/kmergen/yii2-media/migrations`
 
 ### 2. Configuration
 In your configuration file set the following:

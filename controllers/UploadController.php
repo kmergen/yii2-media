@@ -66,7 +66,9 @@ class UploadController extends Controller
                         'deleteUrl' => Url::to(['/media/upload/delete', 'id' => $model->id]),
                         'deleteType' => 'POST',
                         'status' => $model->status,
-                        'type' => $model->type
+                        'type' => $model->type,
+                        'alt' => $model->alt,
+                        'caption' => $model->caption
                     ]
                 ];
             } else {
