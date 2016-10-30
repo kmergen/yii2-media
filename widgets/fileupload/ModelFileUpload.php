@@ -9,6 +9,7 @@ namespace kmergen\media\widgets\fileupload;
 use Yii;
 use yii\helpers\Json;
 use yii\helpers\Url;
+use yii\helpers\ArrayHelper;
 use yii\base\InvalidConfigException;
 
 /**
@@ -28,30 +29,16 @@ class ModelFileUpload extends FileUpload
     public $model;
 
     /**
-     * @var string the attribute that contains the files.
-     */
-    public $attribute;
-
-    /**
-     * @var string The input name of the attribute send as hidden input field with the model form to the model controller.
-     */
-    public $inputName;
-
-    
-    /**
      * @inheritdoc
      */
     public function init()
     {
         parent::init();
 
-        if ($this->model === null || $this->attribute === null) {
-            throw InvalidConfigException('"model" and "attribute" cannot be empty.');
+        if ($this->model === null) {
+            throw InvalidConfigException('"model" cannot be empty.');
         }
 
-        if ($this->inputName === null) {
-            $this->inputName = $this->model->formName() . '[' . $this->attribute . ']';
-        }
         //The status for new uploaded files must be Media::STATUS_TEMP, because if you upload a file with status Media::STATUS_PERMANENT and
         // the user abort the form without submitting it then the files are without any reference to the model and useless stored in the media table.
         $this->mediaOptions['status'] = \kmergen\media\models\Media::STATUS_TEMP;
@@ -105,12 +92,15 @@ class ModelFileUpload extends FileUpload
                         regenerateFileInputs();
                     } 
                 });
+            $('.template-translation').removeClass('in');
             }
 JS;
         $this->clientEvents['fileuploaddestroy'] = <<<JS
             function(e, data) {
                 jQuery.each( data.context, function( key, val ) {
                     var filedata = $(this).data();
+                    //Remove the alt and title row
+                    $(this).next('tr').remove();
                     if (filedata.status == 1) { // Do not really delete the existing images from the model, only remove the table row.
                         e.preventDefault();
                         $(this).fadeOut("slow", function() {
@@ -134,52 +124,64 @@ JS;
     protected function mediaModelJs()
     {
         //Prepair the files array akin the blueimp fileupload.
-        if (!empty($this->model->{$this->attribute})) {
+        if (!empty($this->model->mediaFiles)) {
             $files = [];
-            if (is_string($this->model->{$this->attribute})) {
-               // $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->asArray()->one();
-                $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->{$this->attribute}])->one();
+            if (is_string($this->model->mediaFiles)) {
+                // $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->mediaFiles])->asArray()->one();
+                $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->mediaFiles])->one();
             } else {
-                $files = $this->model->{$this->attribute};
+                $files = $this->model->mediaFiles;
             }
-            
-            foreach ($files as $key => $file) {
 
-//                $files[$key]['id'] = $file['id'];
-//                $files[$key]['name'] = $file['name'];
-//                $files[$key]['size'] = (int)$file['size'];
-//                $files[$key]['url'] = $file['url'];
-//                $files[$key]['status'] = $file['status'];
+            foreach ($files as $file) {
+//                $id = $file['id'];
+//                $fuFiles[$id]['id'] = $file['id'];
+//                $fuFiles[$id]['name'] = $file['name'];
+//                $fuFiles[$id]['size'] = (int)$file['size'];
+//                $fuFiles[$id]['url'] = $file['url'];
+//                $fuFiles[$id]['status'] = $file['status'];
+//                $fuFiles[$id]['type'] = $file['type'];
 //                if (strpos($file['type'], 'image/') !== false) {
-//                    $files[$key]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
-//                   // $files[$key]['alt'] = $file['alt'];
-//                   // $files[$key]['title'] = $file['title'];
+//                    $fuFiles[$id]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+//
+//                    //We need the translation array indexed by language
+//                    $translations = $file['translations'];
+//                    if (isset($translations[0])) {
+//                        $fuFiles[$id]['translations'] = ArrayHelper::index($translations, 'language');
+//                    } else {
+//                        $fuFiles[$id]['translations'] = $file['translations'];
+//                    }
 //                }
-//                $files[$key]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file['id']]);
-//                $files[$key]['deleteType'] = 'POST';
-//                
-//                
-                $fuFiles[$key]['id'] = $file->id;
-                $fuFiles[$key]['name'] = $file->name;
-                $fuFiles[$key]['size'] = (int)$file->size;
-                $fuFiles[$key]['url'] = $file->url;
-                $fuFiles[$key]['status'] = $file->status;
+//                $fuFiles[$id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file['id']]);
+//                $fuFiles[$id]['deleteType'] = 'POST';
+
+
+
+                $fuFiles[$file->id]['id'] = $file->id;
+                $fuFiles[$file->id]['name'] = $file->name;
+                $fuFiles[$file->id]['size'] = (int)$file->size;
+                $fuFiles[$file->id]['url'] = $file->url;
+                $fuFiles[$file->id]['status'] = $file->status;
+                $fuFiles[$file->id]['type'] = $file->type;
                 if (strpos($file->type, 'image/') !== false) {
-                    $fuFiles[$key]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
-                    $fuFiles[$key]['alt'] = ($file->alt !== null) ? $file->alt : '';
-                    $fuFiles[$key]['title'] = ($file->title !== null) ? $file->title : '';
+                    $fuFiles[$file->id]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+                    //We need the translation array indexed by language
+                    $translations = (array)$file->translations;
+                    if (isset($translations[0])) {
+                        $fuFiles[$file->id]['translations'] = ArrayHelper::index($translations, 'language');
+                    } else {
+                        $fuFiles[$file->id]['translations'] = $file->translations;
+                    }
                 }
-                $fuFiles[$key]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file->id]);
-                $fuFiles[$key]['deleteType'] = 'POST';
-               
-                
-                
+                $fuFiles[$file->id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file->id]);
+                $fuFiles[$file->id]['deleteType'] = 'POST';
             }
         } else {
             $fuFiles = [];
         }
 
         $fuFiles = Json::encode($fuFiles);
+        $languages = Json::encode($this->languages);
 
         return <<<JS
             addExistFiles();
@@ -191,6 +193,7 @@ JS;
 
                 var cOpt = $('#{$this->options['id']}').fileupload('option');
                 var data = {};
+                data.languages = $languages
                   data.formatFileSize = function(bytes) {
                     if (typeof bytes !== 'number') {
                         return '';
@@ -205,56 +208,41 @@ JS;
                 };
 
                 jQuery.each( fuFiles, function( index, filedata ) {
+                    //Convert the translations for better handling in download template
                     data.options = cOpt;
                     //Convert filedata to array
                     data.files = [filedata];
-                    $('.files').append(tmpl('template-download', data));  
-                    createFileInputs(index, filedata);
-                    createFileTranslationInputs(index, filedata);
+                    $('.files').append(tmpl('template-download', data));
+                    //Enable all translation input fields they are not empty and check the enable translation checkbox
+                    var translationRows = $('.template-translation').find('.row');
+                    $(translationRows).each(function(){
+                        var inputs = $(this).find('input[type=text]');
+                        if (inputs.eq(0).val() || inputs.eq(1).val()) {
+                            $(inputs).prop('disabled', false);    
+                            $(this).find('input[type=checkbox]').prop('checked', true);   
+                        }
+                    });
+                    createFileInputs(filedata);
                     jQuery('.template-download').addClass('in');
 
                 });
             }
                         
-            function createFileInputs(index, filedata)
+            function createFileInputs(filedata)
             {
-                var inputName = '{$this->inputName}';
-                
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][id]', value: filedata.id}).appendTo('.hidden-file-inputs');
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][name]', value: filedata.name}).appendTo('.hidden-file-inputs');
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][size]', value: filedata.size}).appendTo('.hidden-file-inputs');
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][url]', value: filedata.url}).appendTo('.hidden-file-inputs');
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][type]', value: filedata.type}).appendTo('.hidden-file-inputs');
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName + '[' + index + '][status]', value: filedata.status}).appendTo('.hidden-file-inputs');
+                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'MediaFiles[' + filedata.id + '][id]', value: filedata.id}).appendTo('.hidden-file-inputs');
+                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'MediaFiles[' + filedata.id + '][name]', value: filedata.name}).appendTo('.hidden-file-inputs');
+                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'MediaFiles[' + filedata.id + '][size]', value: filedata.size}).appendTo('.hidden-file-inputs');
+                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'MediaFiles[' + filedata.id + '][url]', value: filedata.url}).appendTo('.hidden-file-inputs');
+                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'MediaFiles[' + filedata.id + '][type]', value: filedata.type}).appendTo('.hidden-file-inputs');
+                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'MediaFiles[' + filedata.id + '][status]', value: filedata.status}).appendTo('.hidden-file-inputs');
             }
-                
-            
-            function createFileTranslationInputs(fileIndex, filedata)
-            {
-                var inputName = '{$this->inputName}';
-                //Create alt and title form fields
-                var languages = ['de', 'en', 'es'];
-                jQuery.each( languages, function( index, lang ) {
-                    var formGroupAlt = jQuery(document.createElement('div')).addClass('form-group');
-                    var formGroupTitle = jQuery(document.createElement('div')).addClass('form-group');
-                    jQuery(document.createElement('input')).attr({type: 'text', name: inputName + '[translations][' + fileIndex + '][' + lang + '][alt]', value: filedata.alt}).appendTo(formGroupAlt);
-                    jQuery(document.createElement('input')).attr({type: 'text', name: inputName + '[translations][' + fileIndex + '][' + lang + '][title]', value: filedata.title}).appendTo(formGroupTitle);
-                    
-                    formGroupAlt.appendTo('#media-translation-' + filedata.id);
-                    formGroupTitle.appendTo('#media-translation-' + filedata.id);
-                });
-            }
-            
                 
             function regenerateFileInputs()
             {
-                var inputName = '{$this->inputName}';
                 jQuery('.hidden-file-inputs').empty();
-                if (jQuery('.template-download').length === 0) {
-                    jQuery(document.createElement('input')).attr({type: 'hidden', name: inputName, value: ""}).appendTo('.hidden-file-inputs');
-                }
                 jQuery('.template-download').each(function(index){
-                    createFileInputs(index, $(this).data());
+                    createFileInputs($(this).data());
                 })  
             }
 JS;

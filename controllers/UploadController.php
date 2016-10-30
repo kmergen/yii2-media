@@ -67,9 +67,6 @@ class UploadController extends Controller
                         'deleteType' => 'POST',
                         'status' => $model->status,
                         'type' => $model->type,
-                        'alt' => $model->alt,
-                        'caption' => $model->caption,
-                        'furzenhuber' => 'hallo ihr da'
                     ]
                 ];
             } else {

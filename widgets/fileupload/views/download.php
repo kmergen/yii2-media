@@ -40,10 +40,68 @@
                 </button>
             {% } %}
         </td>
+        <td>
+           <span class="toggle-translation"><i class="fa fa-arrow-down" aria-hidden="true"></i><span> 
+        </td>
     </tr>
-     <tr>
-         <td id="media-translation-{%=file.id%}">
-           
+    <tr class=" template-translation hidden processing">
+        <td colspan="5">
+            {% if (file.translations) { %}
+                {% for (var i = 0, lang = o.languages, len = lang.length; i < len; i++) { %}
+                    {% 
+                       var valueAlt="", valueTitle=""; 
+                       if  (typeof file.translations[lang[i]] !== 'undefined') {
+                           valueAlt = file.translations[lang[i]].alt;
+                           valueTitle = file.translations[lang[i]].title;
+                       }
+                    %}
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <div class="input-group-addon"><?= Yii::t('media', 'Alt') ?> {%=lang[i]%}</div>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][{%=lang[i]%}][alt]" class="form-control input-sm" value="{%=valueAlt%}" disabled>
+                            </div>
+                        </div>    
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <div class="input-group-addon"><?= Yii::t('media', 'Title') ?> {%=lang[i]%}</div>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][{%=lang[i]%}][title]" class="form-control input-sm" value="{%=valueTitle%}" disabled>
+                            </div>
+                        </div>    
+                        <div class="col-md-2">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" class="enable-translation"> <?= Yii::t('media', 'Enable Translation') ?>
+                                </label>
+                            </div>
+                        </div>    
+                    </div>
+                {% } %}
+            {% } else { %}
+                <?php foreach ($this->context->languages as $lang): ?>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-addon"><?= Yii::t('media', 'Alt') . ' ' . $lang ?></div>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][<?= $lang ?>][alt]" class="form-control input-sm" value="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-addon"><?= Yii::t('media', 'Title') . ' ' . $lang ?></div>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][<?= $lang ?>][title]" class="form-control input-sm" value="">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" class="enable-translation"> <?= Yii::t('media', 'Enable Translation') ?>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            {% } %}
         </td>
     </tr>
 {% } %}

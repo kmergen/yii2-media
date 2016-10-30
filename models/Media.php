@@ -3,7 +3,6 @@
 namespace kmergen\media\models;
 
 use Yii;
-use Exception;
 use yii\helpers\FileHelper;
 use yii\helpers\Json;
 use creocoder\translateable\TranslateableBehavior;

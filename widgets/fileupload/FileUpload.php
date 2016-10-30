@@ -187,6 +187,28 @@ class FileUpload extends BaseUpload
                 jQuery(document.createElement('input')).attr({type: 'hidden', name: 'Media[' + propKey + ']', value: propValue}).appendTo('form');
             });
         }
+        
+        
+                    
+        //Show or hide the media translations for alt and title
+        $( document ).on( "click", ".toggle-translation", function() {
+            var element = $(this).parents('tr').next();
+            if (element.hasClass('hidden')) {
+                    element.removeClass('hidden');
+            } else {
+                element.addClass('hidden');
+            }
+        });
+                    
+        //Disable media translation for specific language
+        $( document ).on( "change", ".enable-translation", function() {
+            var elements = $(this).parents('.row').find('input[type=text]');        
+            if (this.checked) {
+                elements.prop('disabled', false);
+            } else {
+                elements.prop('disabled', true)
+            }
+        });
 JS;
     }
 

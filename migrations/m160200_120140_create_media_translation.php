@@ -16,8 +16,8 @@ class m160200_120140_create_media_translation extends Migration
         $this->createTable('{{%media_translation}}', [
         'media_id' => $this->integer(11)->notNull(),
         'language' => $this->string(16)->notNull(),
-        'alt' => $this->string(100),
-        'title' => $this->string(100),
+        'alt' => $this->string(255),
+        'title' => $this->string(255),
         ], $tableOptions);
     
         // add foreign key for table `media`

@@ -42,6 +42,12 @@ class BaseUpload extends Widget
      * @var string|array upload route. Here you can set optional parameters to handle the request in the controller.
      */
     public $url = ['/media/upload/upload'];
+    
+    /**
+     * @var array An array with languages in which the alt and title tag should be translated. If it is not set only the current application language
+     * will used.
+     */
+    public $languages;
 
     /**
      * @var array the plugin options. For more information see the jQuery File Upload options documentation.
@@ -66,6 +72,10 @@ class BaseUpload extends Widget
 
         if (empty($this->url)) {
             throw new InvalidConfigException('"url" cannot be empty.');
+        }
+        
+        if ($this->languages === null) {
+            $this->languages = (array)Yii::$app->language;
         }
 
         $this->clientOptions['url'] = Url::to($this->url);
