@@ -18,19 +18,19 @@ class Image extends \yii\base\Object
     /**
      * @var array The thumbnail styles configuration
      * [styles] The thumbnail style name as key and the configuration array as value.
-     * The format is as follows: [width, height, quality]
+     * The format is as follows: [width, height, quality, imagineFunction (thumb or cropCenter)]
      */
     public $thumbStyles = [
-        'xsmall' => [60, 45, 80],
-        'small' => [80, 60, 80],
-        'medium' => [100, 75, 80],
-        'large' => [140, 105, 80],
-        'xlarge' => [200, 150, 80],
-        'xsmall_crop' => [60, 60, 80],
-        'small_crop' => [80, 80, 80],
-        'medium_crop' => [100, 100, 80],
-        'large_crop' => [140, 140, 80],
-        'xlarge_crop' => [200, 200, 80]
+        'xsmall' => [60, 45, 80, 'thumb'],
+        'small' => [80, 60, 80, 'thumb'],
+        'medium' => [100, 75, 80, 'thumb'],
+        'large' => [140, 105, 80, 'thumb'],
+        'xlarge' => [200, 150, 80, 'thumb'],
+        'xsmall_crop' => [60, 60, 80, 'cropCenter'],
+        'small_crop' => [80, 80, 80, 'cropCenter'],
+        'medium_crop' => [100, 100, 80, 'cropCenter'],
+        'large_crop' => [140, 140, 80, 'cropCenter'],
+        'xlarge_crop' => [200, 200, 80, 'cropCenter']
     ];
 
     /**
@@ -45,11 +45,6 @@ class Image extends \yii\base\Object
      * If false the thumbnail will save under the [[thumbDirectory]] directory with the suffix of the keys from [[thumbStyles]] e.g images/thumbs/image_small.jpg or if it is a configuration with the width and height. e.g images/image_100x75.jpg
      */
     public $thumbExtraDirectory = true;
-
-    /**
-     * @var integer The default thumb quality
-     */
-    public $defaultQuality = 80;
 
     /**
      * @var array A set of Placeholder images.
@@ -113,8 +108,13 @@ class Image extends \yii\base\Object
                 if (!is_int($config[2]) || $config[2] < 1) {
                     throw new Exception('Qualtity should be an integer and equal or greater than 1.');
                 }
-            } else {
-                $config[2] = $this->defaultQuality;
+            }
+
+            if (isset($config[3])) {
+                $imagineFunctions = ['thumb', 'cropCenter'];
+                if (!in_array($config[3], $imagineFunctions)) {
+                    throw new Exception('You can only choose: "' . implode(',', $imagineFunctions) . '"');
+                }
             }
         }
 
@@ -184,9 +184,8 @@ class Image extends \yii\base\Object
             }
 
             //Create and save the thumbnail
-            list($width, $height, $quality) = $config;
+            list($width, $height, $quality, $func) = $config;
 
-            $func = ($width === $height) ? 'cropCenter' : 'thumb';
             try {
                 \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
             } catch (Exception $ex) {
