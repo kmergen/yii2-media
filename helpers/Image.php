@@ -21,10 +21,22 @@ class Image extends \yii\imagine\BaseImage
      * @param string $mode The mode to create the thumbnail 'inset' or 'outbound'
      * @return ImageInterface
      */
-    public static function thumb($filename, $width, $height, $mode = ManipulatorInterface::THUMBNAIL_INSET)
+    public static function thumb($filename, $width, $height, $mode = ManipulatorInterface::THUMBNAIL_OUTBOUND)
     {
-        return  self::getImagine()->open(Yii::getAlias($filename))
-                    ->thumbnail(new Box($width, $height), $mode);
+        return self::getImagine()->open(Yii::getAlias($filename))
+                ->thumbnail(new Box($width, $height), $mode);
+    }
+    
+    /**
+     * Creates a thumbnail in mode inset
+     * @param string $filename the image file path or path alias.
+     * @param integer $width the width to resize the original image in pixels
+     * @param integer $height the height to resize the original image in pixels
+     * @return ImageInterface
+     */
+    public static function thumbInset($filename, $width, $height)
+    {
+        return self::thumb($filename, $width, $height, ManipulatorInterface::THUMBNAIL_INSET);
     }
 
     /**
