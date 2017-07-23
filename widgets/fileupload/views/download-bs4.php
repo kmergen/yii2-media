@@ -1,7 +1,7 @@
 <!-- The template to display files available for download -->
 <script id="template-download" type="text/x-tmpl">
 {% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-download fade" data-id="{%=file.id%}" data-name="{%=file.name%}" data-size="{%=file.size%}" data-url="{%=file.url%}" data-type="{%=file.type%}" data-status="{%=file.status%}">
+    <tr class="template-download" data-id="{%=file.id%}" data-name="{%=file.name%}" data-size="{%=file.size%}" data-url="{%=file.url%}" data-type="{%=file.type%}" data-status="{%=file.status%}">
         <td>
             <span class="preview">
                 {% if (file.thumbnailUrl) { %}
