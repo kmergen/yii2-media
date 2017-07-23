@@ -46,6 +46,7 @@ class UploadController extends Controller
      */
     public function actionUpload()
     {
+        //klausi mausi
         $model = new Media();
         $model->scenario = Media::SCENARIO_UPLOAD;
         $request = Yii::$app->getRequest();
