@@ -82,17 +82,16 @@ class FileUpload extends BaseUpload
         $aft = str_replace(',', '|', $this->acceptFileExtensions);
         $this->clientOptions['acceptFileTypes'] = new \yii\web\JsExpression("/(\.|\/)($aft)$/i");
         $this->fileInputOptions['multiple'] = true;
-        
+
         //Set default client options
         $clientOptions['maxNumberOfFiles'] = 100;
         $clientOptions['maxFileSize'] = 10000000;
         $clientOptions['minFileSize'] = 100;
-        
+
         $this->clientOptions = array_merge($clientOptions, $this->clientOptions);
 
         //Messages i18n
         $messages = [
-              
             'maxNumberOfFiles' => Yii::t('media', 'You can only upload {n,plural,=1{one file} other{# files}}.', ['n' => $this->clientOptions['maxNumberOfFiles']]),
             'acceptFileTypes' => Yii::t('media', 'Only {filetypes} are allowed.', ['filetypes' => $this->acceptFileExtensions]),
             'maxFileSize' => Yii::t('media', 'The maximum filesize is {filesize}.', ['filesize' => $this->clientOptions['maxFileSize']]),
@@ -104,10 +103,16 @@ class FileUpload extends BaseUpload
         } else {
             $this->clientOptions['messages'] = $messages;
         }
-                
+
         $this->options['id'] = $this->fileInputOptions['id'] . '-fileupload';
-        $this->options['data-upload-template-id'] = $this->uploadTemplateId ? : 'template-upload';
-        $this->options['data-download-template-id'] = $this->downloadTemplateId ? : 'template-download';
+        $this->options['data-upload-template-id'] = $this->uploadTemplateId ?: 'template-upload';
+        $this->options['data-download-template-id'] = $this->downloadTemplateId ?: 'template-download';
+
+        if ($this->bsVersion === 'bs4') {
+            $this->formView .= '-' . $this->bsVersion;
+            $this->uploadTemplateView .= '-' . $this->bsVersion;
+            $this->downloadTemplateView .= '-' . $this->bsVersion;
+        }
     }
 
     /**
@@ -127,7 +132,11 @@ class FileUpload extends BaseUpload
     public function registerClientScript()
     {
         $view = $this->getView();
-        FileUploadAsset::register($view);
+        if ($this->bsVersion === 'bs4') {
+            FileUploadAssetBs4::register($view);
+        } else {
+            FileUploadAsset::register($view);
+        }
 
         $options = Json::encode($this->clientOptions);
         $id = $this->options['id'];
@@ -187,16 +196,15 @@ class FileUpload extends BaseUpload
                 jQuery(document.createElement('input')).attr({type: 'hidden', name: 'Media[' + propKey + ']', value: propValue}).appendTo('form');
             });
         }
-        
-        
+                
                     
         //Show or hide the media translations for alt and title
         $( document ).on( "click", ".toggle-translation", function() {
             var element = $(this).parents('tr').next();
             if (element.hasClass('hidden')) {
-                    element.removeClass('hidden');
+                    element.removeClass('hidden hidden-xl-down');
             } else {
-                element.addClass('hidden');
+                element.addClass('hidden hidden-xl-down');
             }
         });
                     

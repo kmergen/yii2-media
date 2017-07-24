@@ -62,7 +62,11 @@ class ModelFileUpload extends FileUpload
     public function registerClientScript()
     {
         $view = $this->getView();
-        FileUploadAsset::register($view);
+        if ($this->bsVersion === 'bs4') {
+            FileUploadAssetBs4::register($view);
+        } else {
+            FileUploadAsset::register($view);
+        }
 
         $options = Json::encode($this->clientOptions);
         $id = $this->options['id'];

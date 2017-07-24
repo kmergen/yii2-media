@@ -22,6 +22,11 @@ use yii\helpers\Url;
  */
 class BaseUpload extends Widget
 {
+    
+    /**
+     * @var string The supported bootstrap version at this time 'bs3' and 'bs4'
+     */
+    public $bsVersion = 'bs3';
 
     /**
      * @var array The html options for the upload wrapper div tag

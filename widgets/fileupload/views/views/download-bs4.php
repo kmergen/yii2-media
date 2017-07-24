@@ -41,10 +41,10 @@
             {% } %}
         </td>
         <td>
-           <span class="toggle-translation"><i class="fa fa-arrow-down" aria-hidden="true"></i><span> 
+           <span class="toggle-translation"><i class="fa fa-arrow-down" aria-hidden="true"></i>Translate<span> 
         </td>
     </tr>
-    <tr class=" template-translation hidden processing">
+    <tr class=" template-translation hidden hidden-xl-down processing">
         <td colspan="5">
             {% if (file.translations) { %}
                 {% for (var i = 0, lang = o.languages, len = lang.length; i < len; i++) { %}
