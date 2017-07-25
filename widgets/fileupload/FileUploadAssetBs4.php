@@ -19,10 +19,10 @@ class FileUploadAssetBs4 extends AssetBundle
 
     public $sourcePath = '@vendor/kmergen/yii2-media/widgets/fileupload/assets';
     public $css = [
-        'css/fileupload-bs4.min.css',
+        'css/fileupload.min.css',
     ];
     public $js = [
-        'js/fileupload-bs4.min.js'
+        'js/fileupload.min.js'
     ];
     public $depends = [
         'yii\web\JqueryAsset',
