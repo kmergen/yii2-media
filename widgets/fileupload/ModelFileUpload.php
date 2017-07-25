@@ -129,56 +129,50 @@ JS;
     {
         //Prepair the files array akin the blueimp fileupload.
         if (!empty($this->model->mediaFiles)) {
-            $files = [];
-            if (is_string($this->model->mediaFiles)) {
-                // $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->mediaFiles])->asArray()->one();
-                $files[] = \kmergen\media\models\Media::find()->where(['url' => $this->model->mediaFiles])->one();
-            } else {
-                $files = $this->model->mediaFiles;
-            }
 
-            foreach ($files as $file) {
-//                $id = $file['id'];
-//                $fuFiles[$id]['id'] = $file['id'];
-//                $fuFiles[$id]['name'] = $file['name'];
-//                $fuFiles[$id]['size'] = (int)$file['size'];
-//                $fuFiles[$id]['url'] = $file['url'];
-//                $fuFiles[$id]['status'] = $file['status'];
-//                $fuFiles[$id]['type'] = $file['type'];
-//                if (strpos($file['type'], 'image/') !== false) {
-//                    $fuFiles[$id]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
-//
-//                    //We need the translation array indexed by language
-//                    $translations = $file['translations'];
-//                    if (isset($translations[0])) {
-//                        $fuFiles[$id]['translations'] = ArrayHelper::index($translations, 'language');
-//                    } else {
-//                        $fuFiles[$id]['translations'] = $file['translations'];
-//                    }
-//                }
-//                $fuFiles[$id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file['id']]);
-//                $fuFiles[$id]['deleteType'] = 'POST';
+            foreach ($this->model->mediaFiles as $id => $file) {
+                $fuFiles[$id]['id'] = $id;
+                $fuFiles[$id]['name'] = $file['name'];
+                $fuFiles[$id]['size'] = (int)$file['size'];
+                $fuFiles[$id]['url'] = $file['url'];
+                $fuFiles[$id]['status'] = $file['status'];
+                $fuFiles[$id]['type'] = $file['type'];
+                if (strpos($file['type'], 'image/') !== false) {
+                    $fuFiles[$id]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
 
-
-
-                $fuFiles[$file->id]['id'] = $file->id;
-                $fuFiles[$file->id]['name'] = $file->name;
-                $fuFiles[$file->id]['size'] = (int)$file->size;
-                $fuFiles[$file->id]['url'] = $file->url;
-                $fuFiles[$file->id]['status'] = $file->status;
-                $fuFiles[$file->id]['type'] = $file->type;
-                if (strpos($file->type, 'image/') !== false) {
-                    $fuFiles[$file->id]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
                     //We need the translation array indexed by language
-                    $translations = (array)$file->translations;
-                    if (isset($translations[0])) {
-                        $fuFiles[$file->id]['translations'] = ArrayHelper::index($translations, 'language');
-                    } else {
-                        $fuFiles[$file->id]['translations'] = $file->translations;
+                    if (isset($file['translations'])) {
+                        $translations = (array)$file['translations'];
+                        if (isset($translations[0])) {
+                            $fuFiles[$id]['translations'] = ArrayHelper::index($translations, 'language');
+                        } else {
+                            $fuFiles[$id]['translations'] = $file['translations'];
+                        }
                     }
                 }
-                $fuFiles[$file->id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file->id]);
-                $fuFiles[$file->id]['deleteType'] = 'POST';
+                $fuFiles[$id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $id]);
+                $fuFiles[$id]['deleteType'] = 'POST';
+
+
+
+//                $fuFiles[$file->id]['id'] = $file->id;
+//                $fuFiles[$file->id]['name'] = $file->name;
+//                $fuFiles[$file->id]['size'] = (int)$file->size;
+//                $fuFiles[$file->id]['url'] = $file->url;
+//                $fuFiles[$file->id]['status'] = $file->status;
+//                $fuFiles[$file->id]['type'] = $file->type;
+//                if (strpos($file->type, 'image/') !== false) {
+//                    $fuFiles[$file->id]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+//                    //We need the translation array indexed by language
+//                    $translations = (array)$file->translations;
+//                    if (isset($translations[0])) {
+//                        $fuFiles[$file->id]['translations'] = ArrayHelper::index($translations, 'language');
+//                    } else {
+//                        $fuFiles[$file->id]['translations'] = $file->translations;
+//                    }
+//                }
+//                $fuFiles[$file->id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file->id]);
+//                $fuFiles[$file->id]['deleteType'] = 'POST';
             }
         } else {
             $fuFiles = [];

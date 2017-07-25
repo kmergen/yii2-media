@@ -73,7 +73,33 @@ class MediaCollection extends Behavior
     public function beforeValidate($event)
     {
         $this->oldMediaFiles = $this->mediaFiles;
-        $this->preparePostedMediaFiles();
+        $postedFiles = Yii::$app->request->post('MediaFiles');
+        if ($postedFiles !== null) {
+            $this->mediaFiles = [];
+            $activeLanguages = !empty(Yii::$app->urlManager->languages) ? Yii::$app->urlManager->languages : (array)Yii::$app->language;
+            $deleteTranslationLanguages = array_flip($activeLanguages);
+            foreach ($postedFiles as $id => $postedFile) {
+                $file = Media::findOne($id);
+                //Media translations
+                if (isset($postedFile['translations'])) {
+                    foreach ($postedFile['translations'] as $language => $data) {
+                        if ($data['alt'] !== "" || $data['title'] !== "") {
+                            unset($deleteTranslationLanguages[$language]);
+                            foreach ($data as $attribute => $translation) {
+                                $file->translate($language)->$attribute = $translation;
+                            }
+                        }
+                    }
+                }
+                //Delete all empty or not posted translations
+                foreach ($deleteTranslationLanguages as $lang => $val) {
+                    Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file->id, 'language' => $lang])->execute();
+                }
+                $this->mediaFiles[$id] = $file;
+            }
+        } else {
+            $this->mediaFiles = null;
+        }
 
         return true;
     }
@@ -125,41 +151,6 @@ class MediaCollection extends Behavior
             } else {
                 return false;
             }
-        }
-    }
-
-    /**
-     * This function prepare posted media files.
-     * This is also useful when you have a multistep form.
-     */
-    public function preparePostedMediaFiles()
-    {
-        $postedFiles = Yii::$app->request->post('MediaFiles');
-        if ($postedFiles !== null) {
-            $this->mediaFiles = [];
-            $activeLanguages = !empty(Yii::$app->urlManager->languages) ? Yii::$app->urlManager->languages : (array)Yii::$app->language;
-            $deleteTranslationLanguages = array_flip($activeLanguages);
-            foreach ($postedFiles as $id => $postedFile) {
-                $file = Media::findOne($id);
-                //Media translations
-                if (isset($postedFile['translations'])) {
-                    foreach ($postedFile['translations'] as $language => $data) {
-                        if ($data['alt'] !== "" || $data['title'] !== "") {
-                            unset($deleteTranslationLanguages[$language]);
-                            foreach ($data as $attribute => $translation) {
-                                $file->translate($language)->$attribute = $translation;
-                            }
-                        }
-                    }
-                }
-                //Delete all empty or not posted translations
-                foreach ($deleteTranslationLanguages as $lang => $val) {
-                    Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file->id, 'language' => $lang])->execute();
-                }
-                $this->mediaFiles[$id] = $file;
-            }
-        } else {
-            $this->mediaFiles = null;
         }
     }
 
