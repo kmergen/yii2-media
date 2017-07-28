@@ -26,7 +26,7 @@ class Image extends \yii\imagine\BaseImage
         return self::getImagine()->open(Yii::getAlias($filename))
                 ->thumbnail(new Box($width, $height), $mode);
     }
-    
+
     /**
      * Creates a thumbnail in mode inset
      * @param string $filename the image file path or path alias.

@@ -29,6 +29,14 @@ class ModelFileUpload extends FileUpload
     public $model;
 
     /**
+     * @var integer
+     * @inheritdoc
+     * The status for new uploaded files must be Media::STATUS_TEMP, because if you upload a file with status Media::STATUS_PERMANENT and
+     * the user abort the form without submitting it then the files are without any reference to the model and useless stored in the media table.
+     */
+    public $status = \kmergen\media\models\Media::STATUS_TEMP;
+
+    /**
      * @inheritdoc
      */
     public function init()
@@ -38,10 +46,6 @@ class ModelFileUpload extends FileUpload
         if ($this->model === null) {
             throw InvalidConfigException('"model" cannot be empty.');
         }
-
-        //The status for new uploaded files must be Media::STATUS_TEMP, because if you upload a file with status Media::STATUS_PERMANENT and
-        // the user abort the form without submitting it then the files are without any reference to the model and useless stored in the media table.
-        $this->mediaOptions['status'] = \kmergen\media\models\Media::STATUS_TEMP;
     }
 
     /**
@@ -77,7 +81,7 @@ class ModelFileUpload extends FileUpload
                 $js[] = "jQuery('#$id').on('$event', $handler);";
             }
         }
-        $js[] = $this->createMediaJs();
+        $js[] = $this->settingsJs();
         $js[] = $this->mediaModelJs();
 
         $view->registerJs(implode("\n", $js));
@@ -138,7 +142,7 @@ JS;
                 $fuFiles[$id]['status'] = $file['status'];
                 $fuFiles[$id]['type'] = $file['type'];
                 if (strpos($file['type'], 'image/') !== false) {
-                    $fuFiles[$id]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+                    $fuFiles[$id]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
 
                     //We need the translation array indexed by language
                     if (isset($file['translations'])) {
@@ -162,7 +166,7 @@ JS;
 //                $fuFiles[$file->id]['status'] = $file->status;
 //                $fuFiles[$file->id]['type'] = $file->type;
 //                if (strpos($file->type, 'image/') !== false) {
-//                    $fuFiles[$file->id]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->mediaOptions) ? $this->mediaOptions['thumbStyle'] : 'small');
+//                    $fuFiles[$file->id]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->thumbStyle);
 //                    //We need the translation array indexed by language
 //                    $translations = (array)$file->translations;
 //                    if (isset($translations[0])) {

@@ -8,6 +8,7 @@ namespace kmergen\media\widgets\fileupload;
 
 use Yii;
 use yii\helpers\Json;
+use kmergen\media\models\Media;
 
 /**
  * FileUpload
@@ -52,11 +53,19 @@ class FileUpload extends BaseUpload
     public $acceptFileExtensions = 'jpg,jpeg,png';
 
     /**
-     * @var array override public properties from Media model.
-     * This properties will send to the server during uploading a media file.
-     * Do not set here file or image rule properties. This properties will automatically build from widget options and clientOptions.
+     * @var string the url where the file should be saved
      */
-    public $mediaOptions = [];
+    public $targetUrl = 'images';
+
+    /**
+     * @var string The status of the file. permanet 1 or temporär 0. The default is set in [[init]]
+     */
+    public $status = Media::STATUS_PERMANENT;
+
+    /**
+     * @var string A thumbstyle for the thumbnail that shows the uploaded file.
+     */
+    public $thumbStyle = 'small';
 
     /**
      * @inheritdoc
@@ -64,6 +73,10 @@ class FileUpload extends BaseUpload
     public function init()
     {
         parent::init();
+
+        if ($this->status !== Media::STATUS_TEMP && $this->status !== Media::STATUS_TEMP) {
+            throw InvalidConfigException('Status can only be ' . Media::STATUS_TEMP . 'or ' . Media::STATUS_PERMANENT);
+        }
 
         //Convert fileInputOptions[accept] to a string because we need it further more to send as property in file rule see[[createMediaJs()]].
         if (array_key_exists('accept', $this->fileInputOptions)) {
@@ -147,70 +160,49 @@ class FileUpload extends BaseUpload
                 $js[] = "jQuery('#$id').on('$event', $handler);";
             }
         }
-        $js[] = $this->createMediaJs();
+        $js[] = $this->settingsJs();
 
         $view->registerJs(implode("\n", $js));
     }
 
-    public function createMediaJs()
+    public function settingsJs()
     {
-        $mediaProperties = Json::encode($this->mediaOptions);
 
         return <<<JS
-        createMediaRules();
-        setMediaProperties();
         
-        function createMediaRules()
-        {
-            //The clientOptions of the blueimp fileupload  
-            var cOpt = $('#{$this->options['id']}').fileupload('option');
+        //The clientOptions of the blueimp fileupload  
+        var cOpt = $('#{$this->options['id']}').fileupload('option');
+        var params = {
+            thumbStyle: '{$this->thumbStyle}',
+            targetUrl: '{$this->targetUrl}',
+            status: '{$this->status}',
+            acceptFileExtensions: '{$this->acceptFileExtensions}',
+            mimeTypes: '{$this->fileInputOptions['accept']}',
+            maxFileSize: cOpt.maxFileSize,
+            minFileSize: cOpt.minFileSize,
+            maxNumberOfFiles: cOpt.maxNumberOfFiles,
+            imageMaxWidth: cOpt.imageMaxWidth,
+            imageMaxHeight: cOpt.imageMaxHeight
+        }
 
-            //We declare a file rule and an image rule and send it with the form to the server
-            var fileRule  = {
-                extensions: '{$this->acceptFileExtensions}',
-                mimeTypes: '{$this->fileInputOptions['accept']}',
-                maxSize: cOpt.maxFileSize,
-                minSize: cOpt.minFileSize,
-                maxFiles: cOpt.maxNumberOfFiles //Please note that when you set this value > 1 then the uploaded files must be an array otherwise the ´yii\validators\FileValidator´ add an error.
-            }
-                
-            var imageRule = {
-                maxWidth: cOpt.imageMaxWidth,
-                maxHeight: cOpt.imageMaxHeight
-            }
+        //Append parmas to the form
+        jQuery.each(params, function(key, val) {
+            jQuery(document.createElement('input')).attr({type: 'hidden', name: 'WidgetSettings[' + key + ']', value: val}).appendTo('form');
+        });
+        
             
-            var mediaRules = {
-                file: fileRule,
-                image: imageRule
-            }
-            
-            //Append mediaRules to the form
-            jQuery(document.createElement('input')).attr({type: 'hidden', name: 'Media[mediaRules]', value: JSON.stringify(mediaRules)}).appendTo('form');
-        }
-            
-        function setMediaProperties()
-        {
-            var mediaProperties = $mediaProperties;
-            
-            jQuery.each( mediaProperties, function( propKey, propValue ) {
-                jQuery(document.createElement('input')).attr({type: 'hidden', name: 'Media[' + propKey + ']', value: propValue}).appendTo('form');
-            });
-        }
-                
-                    
         //Show or hide the media translations for alt and title
-        $( document ).on( "click", ".toggle-translation", function() {
+        $(document).on("click", ".toggle-translation", function() {
             var element = $(this).parents('tr').next();
             if (element.hasClass('hidden')) {
-                    element.removeClass('hidden hidden-xl-down');
+                element.removeClass('hidden hidden-xl-down');
             } else {
                 element.addClass('hidden hidden-xl-down');
             }
         });
-                    
         //Disable media translation for specific language
-        $( document ).on( "change", ".enable-translation", function() {
-            var elements = $(this).parents('.row').find('input[type=text]');        
+        $(document).on("change", ".enable-translation", function() {
+            var elements = $(this).parents('.row').find('input[type=text]');
             if (this.checked) {
                 elements.prop('disabled', false);
             } else {
