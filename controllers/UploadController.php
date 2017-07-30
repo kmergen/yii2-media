@@ -61,11 +61,6 @@ class UploadController extends Controller
             $params = $request->post('WidgetSettings');
 
 
-            $resize = (isset($params['imageMaxWidth']) && $params['imageMaxWidth'] < $info[0]) ||
-                (isset($params['imageMaxHeight']) && $params['imageMaxHeight'] < $info[1]) ? true : false;
-            $jpeg_quality = isset($params['jpeg_quality']) ? $params['jpeg_quality'] : 75;
-            $png_compression_level = isset($params['png_compression_level']) ? $params['png_compression_level'] : 8;
-
             //Save the uploaded file
             $newFileName = $uploadedFile->getBaseName() . '_' . uniqid(mt_rand(100, 1000)) . '.' . $uploadedFile->getExtension();
             $targetFileDirectory = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $params['targetUrl'];
@@ -73,6 +68,11 @@ class UploadController extends Controller
             $path = $targetFileDirectory . DIRECTORY_SEPARATOR . $newFileName;
 
             //We save the uploaded file
+            $resize = (isset($params['imageMaxWidth']) && $params['imageMaxWidth'] < $info[0]) ||
+                (isset($params['imageMaxHeight']) && $params['imageMaxHeight'] < $info[1]) ? true : false;
+            $jpeg_quality = isset($params['jpeg_quality']) ? $params['jpeg_quality'] : 60;
+            $png_compression_level = isset($params['png_compression_level']) ? $params['png_compression_level'] : 8;
+
             if ($resize) {
                 $image = \kmergen\media\helpers\Image::resize($uploadedFile->tempName, $params['imageMaxWidth'], $params['imageMaxHeight'])
                     ->save($path, ['jpeg_quality' => $jpeg_quality, 'png_compression_level' => $png_compression_level]);

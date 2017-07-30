@@ -41,7 +41,7 @@ class BaseUpload extends Widget
     /**
      * @var array The html options for the file input element
      */
-    public $fileInputOptions = [];
+    public $fileInputOptions = ['accept' => 'image/*'];
 
     /**
      * @var string|array upload route. Here you can set optional parameters to handle the request in the controller.
@@ -83,7 +83,7 @@ class BaseUpload extends Widget
             $this->languages = (array)Yii::$app->language;
         }
 
-        $this->clientOptions['url'] = Url::to($this->url);
+        $this->clientOptions['url'] = Url::toRoute($this->url);
 
         if (empty($this->fileInputOptions['id'])) {
             $this->fileInputOptions['id'] = $this->id;

@@ -45,7 +45,7 @@ class MediaCollection extends Behavior
     {
         return [
             ActiveRecord::EVENT_AFTER_FIND => 'afterFind',
-            ActiveRecord::EVENT_BEFORE_VALIDATE => 'beforeValidate',
+            ActiveRecord::EVENT_AFTER_VALIDATE => 'afterValidate',
             ActiveRecord::EVENT_BEFORE_INSERT => 'beforeSave',
             ActiveRecord::EVENT_BEFORE_UPDATE => 'beforeSave',
             ActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
@@ -58,11 +58,14 @@ class MediaCollection extends Behavior
      */
     public function afterFind($event)
     {
+
         if ($this->owner->{$this->attribute}) {
             $this->mediaFiles = Media::find()
                 ->with('translations')
                 ->where(['album_id' => $this->owner->{$this->attribute}])
                 ->orderBy('album_position')
+                ->asArray()
+                ->indexBy('id')
                 ->all();
         }
     }
@@ -70,7 +73,7 @@ class MediaCollection extends Behavior
     /**
      * @inheritdoc
      */
-    public function beforeValidate($event)
+    public function afterValidate($event)
     {
         $this->oldMediaFiles = $this->mediaFiles;
         $postedFiles = Yii::$app->request->post('MediaFiles');
@@ -93,7 +96,7 @@ class MediaCollection extends Behavior
                 }
                 //Delete all empty or not posted translations
                 foreach ($deleteTranslationLanguages as $lang => $val) {
-                    Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file->id, 'language' => $lang])->execute();
+                    Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file['id'], 'language' => $lang])->execute();
                 }
                 $this->mediaFiles[$id] = $file;
             }
