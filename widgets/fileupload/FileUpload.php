@@ -200,15 +200,6 @@ class FileUpload extends BaseUpload
                 element.addClass('hidden hidden-xl-down');
             }
         });
-        //Disable media translation for specific language
-        $(document).on("change", ".enable-translation", function() {
-            var elements = $(this).parents('.row').find('input[type=text]');
-            if (this.checked) {
-                elements.prop('disabled', false);
-            } else {
-                elements.prop('disabled', true)
-            }
-        });
 JS;
     }
 

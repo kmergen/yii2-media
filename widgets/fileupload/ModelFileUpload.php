@@ -156,27 +156,6 @@ JS;
                 }
                 $fuFiles[$id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $id]);
                 $fuFiles[$id]['deleteType'] = 'POST';
-
-
-
-//                $fuFiles[$file->id]['id'] = $file->id;
-//                $fuFiles[$file->id]['name'] = $file->name;
-//                $fuFiles[$file->id]['size'] = (int)$file->size;
-//                $fuFiles[$file->id]['url'] = $file->url;
-//                $fuFiles[$file->id]['status'] = $file->status;
-//                $fuFiles[$file->id]['type'] = $file->type;
-//                if (strpos($file->type, 'image/') !== false) {
-//                    $fuFiles[$file->id]['thumbnailUrl'] = Yii::$app->image->thumb($file->url, array_key_exists('thumbStyle', $this->thumbStyle);
-//                    //We need the translation array indexed by language
-//                    $translations = (array)$file->translations;
-//                    if (isset($translations[0])) {
-//                        $fuFiles[$file->id]['translations'] = ArrayHelper::index($translations, 'language');
-//                    } else {
-//                        $fuFiles[$file->id]['translations'] = $file->translations;
-//                    }
-//                }
-//                $fuFiles[$file->id]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $file->id]);
-//                $fuFiles[$file->id]['deleteType'] = 'POST';
             }
         } else {
             $fuFiles = [];
@@ -215,15 +194,6 @@ JS;
                     //Convert filedata to array
                     data.files = [filedata];
                     $('.files').append(tmpl('template-download', data));
-                    //Enable all translation input fields they are not empty and check the enable translation checkbox
-                    var translationRows = $('.template-translation').find('.row');
-                    $(translationRows).each(function(){
-                        var inputs = $(this).find('input[type=text]');
-                        if (inputs.eq(0).val() || inputs.eq(1).val()) {
-                            $(inputs).prop('disabled', false);    
-                            $(this).find('input[type=checkbox]').prop('checked', true);   
-                        }
-                    });
                     createFileInputs(filedata);
                     jQuery('.template-download').addClass('in');
 

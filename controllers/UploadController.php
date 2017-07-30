@@ -47,18 +47,17 @@ class UploadController extends Controller
      */
     public function actionUpload()
     {
-        try {
-            $uploadedFile = UploadedFile::getInstanceByName('mediaUploadFile');
-            if ($uploadedFile->hasError) {
-                throw new Exception('Fileupload Error: ' . $uploadedFile->error);
-            }
+        $uploadedFile = UploadedFile::getInstanceByName('mediaUploadFile');
+        if ($uploadedFile->hasError) {
+            throw new Exception('Fileupload Error: ' . $uploadedFile->error);
+        }
 
+        try {
             $model = new Media();
-            $request = Yii::$app->getRequest();
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
             $info = getimagesize($uploadedFile->tempName);
-            $params = $request->post('WidgetSettings');
+            $params = Yii::$app->getRequest()->post('WidgetSettings');
 
 
             //Save the uploaded file
@@ -67,28 +66,32 @@ class UploadController extends Controller
             FileHelper::createDirectory($targetFileDirectory);
             $path = $targetFileDirectory . DIRECTORY_SEPARATOR . $newFileName;
 
-            //We save the uploaded file
-            $resize = (isset($params['imageMaxWidth']) && $params['imageMaxWidth'] < $info[0]) ||
-                (isset($params['imageMaxHeight']) && $params['imageMaxHeight'] < $info[1]) ? true : false;
-            $jpeg_quality = isset($params['jpeg_quality']) ? $params['jpeg_quality'] : 60;
-            $png_compression_level = isset($params['png_compression_level']) ? $params['png_compression_level'] : 8;
-
-            if ($resize) {
-                $image = \kmergen\media\helpers\Image::resize($uploadedFile->tempName, $params['imageMaxWidth'], $params['imageMaxHeight'])
-                    ->save($path, ['jpeg_quality' => $jpeg_quality, 'png_compression_level' => $png_compression_level]);
-                $model->size = filesize($path);
-            } else {
-                $this->size = $uploadedFile->size;
-                $uploadedFile->saveAs($path);
-            }
 
             $model->name = $uploadedFile->name;
             $model->type = $uploadedFile->type;
             $model->url = $params['targetUrl'] . '/' . $newFileName;
             $model->status = $params['status'];
 
-            //We save the media model
-            if ($model->save()) {
+            //We save the media model and the uploaded file
+            if ($model->validate()) {
+
+                //We save the uploaded file
+                $resize = (isset($params['imageMaxWidth']) && $params['imageMaxWidth'] < $info[0]) ||
+                    (isset($params['imageMaxHeight']) && $params['imageMaxHeight'] < $info[1]) ? true : false;
+                $jpeg_quality = isset($params['jpeg_quality']) ? $params['jpeg_quality'] : 60;
+                $png_compression_level = isset($params['png_compression_level']) ? $params['png_compression_level'] : 8;
+
+                if ($resize) {
+                    \kmergen\media\helpers\Image::resize($uploadedFile->tempName, $params['imageMaxWidth'], $params['imageMaxHeight'])
+                        ->save($path, ['jpeg_quality' => $jpeg_quality, 'png_compression_level' => $png_compression_level]);
+                    $model->size = filesize($path);
+                } else {
+                    $model->size = $uploadedFile->size;
+                    $uploadedFile->saveAs($path);
+                }
+
+                $model->save();
+
                 $items['baseUrl'] = Yii::getAlias('@web');
                 $items['files'] = [
                     [

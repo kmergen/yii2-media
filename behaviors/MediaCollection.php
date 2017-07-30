@@ -84,16 +84,15 @@ class MediaCollection extends Behavior
             foreach ($postedFiles as $id => $postedFile) {
                 $file = Media::findOne($id);
                 //Media translations
-                if (isset($postedFile['translations'])) {
-                    foreach ($postedFile['translations'] as $language => $data) {
-                        if ($data['alt'] !== "" || $data['title'] !== "") {
-                            unset($deleteTranslationLanguages[$language]);
-                            foreach ($data as $attribute => $translation) {
-                                $file->translate($language)->$attribute = $translation;
-                            }
+                foreach ($postedFile['translations'] as $language => $data) {
+                    if ($data['alt'] !== "" || $data['title'] !== "") {
+                        unset($deleteTranslationLanguages[$language]);
+                        foreach ($data as $attribute => $translation) {
+                            $file->translate($language)->$attribute = $translation;
                         }
                     }
                 }
+
                 //Delete all empty or not posted translations
                 foreach ($deleteTranslationLanguages as $lang => $val) {
                     Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file['id'], 'language' => $lang])->execute();
