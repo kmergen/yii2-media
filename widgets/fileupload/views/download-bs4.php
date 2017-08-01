@@ -44,7 +44,7 @@
            <span class="toggle-translation"><i class="fa fa-arrow-down" aria-hidden="true"></i>Translate<span> 
         </td>
     </tr>
-    <tr class=" template-translation hidden hidden-xl-down processing">
+    <tr class=" template-translation hidden-xl-down processing">
         <td colspan="5">
             {% if (file.translations) { %}
                 {% for (var i = 0, lang = o.languages, len = lang.length; i < len; i++) { %}
@@ -59,13 +59,13 @@
                         <div class="col-md-6">
                             <div class="input-group">
                                 <div class="input-group-addon"><?= Yii::t('media', 'Alt') ?> {%=lang[i]%}</div>
-                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][{%=lang[i]%}][alt]" class="form-control input-sm" value="{%=valueAlt%}" disabled>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][{%=lang[i]%}][alt]" class="form-control input-sm" value="{%=valueAlt%}">
                             </div>
                         </div>    
                         <div class="col-md-6">
                             <div class="input-group">
                                 <div class="input-group-addon"><?= Yii::t('media', 'Title') ?> {%=lang[i]%}</div>
-                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][{%=lang[i]%}][title]" class="form-control input-sm" value="{%=valueTitle%}" disabled>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][{%=lang[i]%}][title]" class="form-control input-sm" value="{%=valueTitle%}">
                             </div>
                         </div>    
                     </div>
