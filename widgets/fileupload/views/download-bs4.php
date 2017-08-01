@@ -76,13 +76,13 @@
                         <div class="col-md-6">
                             <div class="input-group">
                                 <div class="input-group-addon"><?= Yii::t('media', 'Alt') . ' ' . $lang ?></div>
-                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][<?= $lang ?>][alt]" class="form-control input-sm" value="" disabled>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][<?= $lang ?>][alt]" class="form-control input-sm">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="input-group">
                                 <div class="input-group-addon"><?= Yii::t('media', 'Title') . ' ' . $lang ?></div>
-                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][<?= $lang ?>][title]" class="form-control input-sm" value="" disabled>
+                                <input type="text" maxlength="255" name="MediaFiles[{%=file.id%}][translations][<?= $lang ?>][title]" class="form-control input-sm">
                             </div>
                         </div>
                     </div>
