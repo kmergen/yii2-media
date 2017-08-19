@@ -27,7 +27,6 @@ class FileUploadAssetBs4 extends AssetBundle
     public $depends = [
         'yii\web\JqueryAsset',
         'yii\bootstrap\BootstrapPluginAsset',
-        'yii\bootstrap\TetherAsset'
     ];
 
     public function init()
