@@ -9,9 +9,10 @@ use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\web\UploadedFile;
 use yii\helpers\Url;
+use yii\helpers\FileHelper;
 
 /**
- * UploadController provide the upload and upload-delete actions for uploading files to the server
+ * DropzoneController provide the upload and upload-delete actions for uploading files to the server
  * and save them as Media model.
  */
 class DropzoneController extends Controller
@@ -33,7 +34,7 @@ class DropzoneController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        //'roles' => ['admin'],
+                    //'roles' => ['admin'],
                     ],
                 ],
             ],
@@ -46,16 +47,53 @@ class DropzoneController extends Controller
      */
     public function actionUpload()
     {
-        //klausi mausi
-        $model = new Media();
-        $model->scenario = Media::SCENARIO_UPLOAD;
-        $request = Yii::$app->getRequest();
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        return '';
+
+        $uploadedFile = UploadedFile::getInstanceByName('mediaUploadFile');
+        if ($uploadedFile->hasError) {
+            throw new Exception('Fileupload Error: ' . $uploadedFile->error);
+        }
 
         try {
-            $model->mediaFile = UploadedFile::getInstanceByName('mediaUploadFile');
-            $model->load($request->post());
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            if ($model->upload()) {
+            $model = new Media();
+            $info = getimagesize($uploadedFile->tempName);
+            $params = Yii::$app->getRequest()->post('WidgetSettings');
+
+
+            //Save the uploaded file
+            $newFileName = $uploadedFile->getBaseName() . '_' . uniqid(mt_rand(100, 1000)) . '.' . $uploadedFile->getExtension();
+            $targetFileDirectory = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $params['targetUrl'];
+            FileHelper::createDirectory($targetFileDirectory);
+            $path = $targetFileDirectory . DIRECTORY_SEPARATOR . $newFileName;
+
+
+            $model->name = $uploadedFile->name;
+            $model->type = $uploadedFile->type;
+            $model->url = $params['targetUrl'] . '/' . $newFileName;
+            $model->status = $params['status'];
+
+            //We save the media model and the uploaded file
+            if ($model->validate()) {
+
+                //We save the uploaded file
+                $resize = (isset($params['imageMaxWidth']) && $params['imageMaxWidth'] < $info[0]) ||
+                    (isset($params['imageMaxHeight']) && $params['imageMaxHeight'] < $info[1]) ? true : false;
+                $jpeg_quality = isset($params['jpeg_quality']) ? $params['jpeg_quality'] : 60;
+                $png_compression_level = isset($params['png_compression_level']) ? $params['png_compression_level'] : 8;
+
+                if ($resize) {
+                    \kmergen\media\helpers\Image::resize($uploadedFile->tempName, $params['imageMaxWidth'], $params['imageMaxHeight'])
+                        ->save($path, ['jpeg_quality' => $jpeg_quality, 'png_compression_level' => $png_compression_level]);
+                    $model->size = filesize($path);
+                } else {
+                    $model->size = $uploadedFile->size;
+                    $uploadedFile->saveAs($path);
+                }
+
+                $model->save();
+
                 $items['baseUrl'] = Yii::getAlias('@web');
                 $items['files'] = [
                     [
@@ -63,7 +101,7 @@ class DropzoneController extends Controller
                         'name' => $model->name,
                         'size' => $model->size,
                         'url' => $model->url,
-                        'thumbnailUrl' => $model->isImage ? Yii::$app->image->thumb($model->url, $model->thumbStyle) : null,
+                        'thumbnailUrl' => is_array($info) ? Yii::$app->image->thumb($model->url, $params['thumbStyle']) : null,
                         'deleteUrl' => Url::to(['/media/upload/delete', 'id' => $model->id]),
                         'deleteType' => 'POST',
                         'status' => $model->status,
@@ -71,17 +109,15 @@ class DropzoneController extends Controller
                     ]
                 ];
             } else {
-                if ($model->hasErrors()) {
-                    $errorMessage = '';
-                    foreach ($model->getFirstErrors() as $error) {
-                        $errorMessage .= "$error\n";
-                    }
-                    $items['files'] = [
-                        ['error' => $errorMessage]
-                    ];
+                $errorMessage = '';
+                foreach ($model->getFirstErrors() as $error) {
+                    $errorMessage .= "$error\n";
                 }
+                $items['files'] = [
+                    ['error' => $errorMessage]
+                ];
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $items['files'] = [
                 ['error' => $e->getMessage()]
             ];
@@ -98,7 +134,6 @@ class DropzoneController extends Controller
 
         if (($model = Media::findOne($id)) !== null) {
             try {
-
                 $model->delete();
                 $items['files'][][$model->name] = true;
                 $items['files'][][$id] = true;
@@ -115,4 +150,5 @@ class DropzoneController extends Controller
             return $items;
         }
     }
+
 }
