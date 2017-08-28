@@ -46,14 +46,7 @@ class MediaAlbum extends \yii\db\ActiveRecord
             'parent' => Yii::t('media', 'Parent ID'),
         ];
     }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getArticles()
-    {
-        return $this->hasMany(Article::className(), ['image_album' => 'id']);
-    }
+ 
 
     /**
      * @inheritdoc

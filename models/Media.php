@@ -26,8 +26,8 @@ class Media extends \yii\db\ActiveRecord
     /**
      * @const integer the possible settings for the model status
      */
-    const STATUS_PERMANENT = 1;
     const STATUS_TEMP = 0;
+    const STATUS_PERMANENT = 1;
 
     /**
      * @var array|false the returned array from getImageSize() or false if the uploaded file is no image will set by [[upload()]].
@@ -137,17 +137,15 @@ class Media extends \yii\db\ActiveRecord
      * Delete all files with status =[[self::STATUS_TEMP]] and if it is image also the thumbnails.
      * We use here DAO to keep the memory consumption as low as possible. 
      * You may call this function in a cronjob or cron action.
+     * @param integer $expire Default is 86400 (24 hours). That means that all temporary files which older than 24 hours from create date on are affected.
      */
-    public static function deleteTemporaryFiles($expire = null)
+    public static function deleteTemporaryFiles($expire = 86400)
     {
-        if ($expire === null) {
-            $expire = 86400; //24 hours
-        }
         $expired = time() - $expire;
         $strExpired = date("Y-m-d H:i:s", $expired);
         $tablename = static::tableName();
 
-        $ids = Yii::$app->db->createCommand("SELECT id FROM $tablename WHERE status=':status' AND created<:expired", [':status' => self::STATUS_TEMP, ':expired' => $strExpired])->queryColumn();
+        $ids = Yii::$app->db->createCommand("SELECT id FROM $tablename WHERE status=:status AND created<:expired", [':status' => self::STATUS_TEMP, ':expired' => $strExpired])->queryColumn();
         $i = 0;
         foreach ($ids as $id) {
             static::findOne($id)->delete();
@@ -155,6 +153,8 @@ class Media extends \yii\db\ActiveRecord
         }
         
         Yii::info("$i temporary media files have been deleted.");
+        
+        return $i;
     }
 
     public function getTranslations()

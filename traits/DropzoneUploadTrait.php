@@ -58,21 +58,10 @@ trait DropzoneUploadTrait
     public $imageMaxHeight;
 
     /**
-     * @var string A thumbStyle provided by kmergen\media\components\Image
-     * If set, it create a thumbnail and the thumbnail url is send within the response.
-     */
-    public $thumbStyle;
-
-    /**
      * @var string The web accessable url like e.g. "images". Do not prefix it with the "@web" alias.
      * The url always should be web accessable and the prefix should set in the function which fetch this file (Normally "Html::img()".
      */
     public $targetUrl;
-
-    /**
-     * @var string The route to the delete action.
-     */
-    public $deleteRoute;
 
     /**
      * @var boolean unique the uploaded file with a unique id
@@ -155,14 +144,13 @@ trait DropzoneUploadTrait
                 'name' => $model->name,
                 'size' => $model->size,
                 'url' => $model->url,
-                'deleteUrl' => Url::to([$this->deleteRoute]),
-                'deleteType' => 'POST',
+                'deleteUrl' => $params['deleteUrl'],
                 'status' => $model->status,
                 'type' => $model->type,
             ];
             
-            if ($this->thumbStyle !== null) {
-                $this->responseItems['thumbnailUrl'] = Yii::$app->image->thumb($model->url, $this->thumbStyle);
+            if (isset($params['thumbStyle'])) {
+                $this->responseItems['thumbnailUrl'] = Yii::$app->image->thumb($model->url, $params['thumbStyle']);
             }
             
         } else {

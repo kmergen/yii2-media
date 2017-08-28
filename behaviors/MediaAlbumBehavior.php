@@ -10,12 +10,12 @@ use kmergen\media\models\Media;
 use kmergen\media\models\MediaAlbum;
 
 /**
- * MediaCollection handles the uploaded images in a specific model.
+ * MediaAlbum behavior handles the uploaded images in a specific model and stored them in as kmergen\media\MediaAlbum.
  * In the owner table must be an attribute that provide the id from media_album table.
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
-class MediaCollection extends Behavior
+class MediaAlbumBehavior extends Behavior
 {
 
     /**
@@ -24,17 +24,17 @@ class MediaCollection extends Behavior
     public $attribute;
 
     /**
-     * @var array|null The media files of the owner model
+     * @var array The media files of the owner model
      */
-    public $mediaFiles;
+    public $mediaFiles = [];
 
     /**
-     * @var array|null The old media files of the owner model
+     * @var array The old media files of the owner model
      */
     protected $oldMediaFiles = [];
 
     /**
-     * @var integer|null the id of the parent media album (default to model_media_collection). Null if media album should have no parent
+     * @var integer|null the id of the parent media album (default to model_media_album). Null if media album should have no parent
      */
     public $mediaAlbumParent = 4;
 
@@ -59,13 +59,12 @@ class MediaCollection extends Behavior
     public function afterFind($event)
     {
 
-        if ($this->owner->{$this->attribute}) {
+        if ($this->owner->{$this->attribute} !== null) {
             $this->mediaFiles = Media::find()
                 ->with('translations')
                 ->where(['album_id' => $this->owner->{$this->attribute}])
                 ->orderBy('album_position')
                 ->asArray()
-                ->indexBy('id')
                 ->all();
         }
     }
@@ -81,8 +80,8 @@ class MediaCollection extends Behavior
             $this->mediaFiles = [];
             $activeLanguages = !empty(Yii::$app->urlManager->languages) ? Yii::$app->urlManager->languages : (array)Yii::$app->language;
             $deleteTranslationLanguages = array_flip($activeLanguages);
-            foreach ($postedFiles as $id => $postedFile) {
-                $file = Media::findOne($id);
+            foreach ($postedFiles as $postedFile) {
+                $file = Media::findOne($postedFile['id']);
                 //Media translations
                 foreach ($postedFile['translations'] as $language => $data) {
                     if ($data['alt'] !== "" || $data['title'] !== "") {
@@ -97,10 +96,10 @@ class MediaCollection extends Behavior
                 foreach ($deleteTranslationLanguages as $lang => $val) {
                     Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file['id'], 'language' => $lang])->execute();
                 }
-                $this->mediaFiles[$id] = $file;
+                $this->mediaFiles[] = $file;
             }
         } else {
-            $this->mediaFiles = null;
+            $this->mediaFiles = [];
         }
 
         return true;
@@ -111,13 +110,13 @@ class MediaCollection extends Behavior
      */
     public function beforeSave($event)
     {
-        if ($this->mediaFiles !== null) {
-            if ($this->owner->{$this->attribute} === null) { //Insert a new owner model
+        if (!empty($this->mediaFiles)) {
+            if ($this->owner->{$this->attribute} === null) { //Create new mediaAlbum
                 $album = $this->createMediaAlbum();
                 $albumId = $album->id;
-            } else { //Update owner model record
+            } else { //Update mediaAlbum
                 $albumId = $this->owner->{$this->attribute};
-                $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), $this->mediaFiles);
+                $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), index($this->mediaFiles, 'id'));
                 //We delete the old images we never need
                 foreach ($deleteFiles as $id => $file) {
                     if (($model = Media::findOne($id)) !== null) {
@@ -127,7 +126,7 @@ class MediaCollection extends Behavior
             }
             //We update the posted files
             $pos = 0;
-            foreach ($this->mediaFiles as $id => $file) {
+            foreach ($this->mediaFiles as $file) {
                 $file->status = 1;
                 $file->album_id = $albumId;
                 $file->album_position = $pos;

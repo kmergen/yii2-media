@@ -20,7 +20,7 @@ use yii\helpers\ArrayHelper;
  * File Upload widget using the dropzone.js
  * @see http://http://www.dropzonejs.com/
  * @see https://github.com/enyo/dropzone/
- * 
+ *
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
@@ -28,10 +28,24 @@ class Dropzone extends Widget
 {
 
     /**
-     * @var object the model which hold the already stored files (in Media Module the media files are provided and stored by the MediaCollection behavior)
+     * @var array the existing files to add to the dropzone.
+     * The array should be in the Media model format
+     * If [[model]] is set, then the files array will filled with the prepared mediaFiles from the model.
+     */
+    public $files = [];
+
+    /**
+     * @var object the model which hold the already stored files (in Media Module the media files are provided and stored by the MediaAlbumBehavior)
      * There is no need to declare an extra attribute variable because the name of the attribute is always [[mediaFiles]] and can you can get them by calling [[$this->model->mediaFiles]]
      */
     public $model;
+
+    /**
+     * @var array An array with languages in which the alt attribute should be translated.
+     * If empty, the alt attribute input element for [[Yii::$app->language]] is created.
+     * If not empty, for each language a alt attribute input element is created.
+     */
+    public $languages = [];
 
     /**
      * @var array The HTML options for the dropzone container. The cssClass 'dropzone' will set in [[init()]].
@@ -47,6 +61,19 @@ class Dropzone extends Widget
      * @var array An array of client events that are supported by Dropzone
      */
     public $clientEvents = [];
+
+    /**
+     * @var string A thumbStyle provided by kmergen\media\components\Image
+     * If set, it create a thumbnail on serverside and return thumbnail url. Otherwise no serverside thumbnail will be created.
+     * If set, the Dropzon option [[$options['createImageThumbnails']]] is set to false.
+     */
+    public $thumbStyle;
+
+    /**
+     * @var string the delete url
+     * If not set it create a url from [[$options['url'] with suffix '-delete'. eg '/post/upload-delete'.
+     */
+    public $deleteUrl;
 
     /**
      * @var integer|string The version of the Css Framework Bootstrap. Possible values are 'bs3' and 'bs4'.
@@ -71,15 +98,23 @@ class Dropzone extends Widget
     protected $dropzoneName = 'dropzone';
     public $sortable = false;
     public $sortableOptions = [];
-        
+
     public function init()
     {
         parent::init();
 
         if (!isset($this->options['url'])) {
-            $this->options['url'] = Url::toRoute(['/media/dropzone/upload']);
-        } else {
-            $this->options['url'] = Url::toRoute($this->options['url']);
+            throw new InvalidConfigException('Url is required.');
+        }
+
+        if (!isset($this->deleteUrl)) {
+            $this->deleteUrl = Url::toRoute($this->options['url'] . '-delete');
+        }
+
+        $this->options['url'] = Url::toRoute($this->options['url']);
+
+        if (empty($this->languages)) {
+            $languages[] = Yii::$app->language;
         }
 
         if ($this->bootstrapVersion !== 'bs4' && $this->bootstrapVersion !== 'bs3') {
@@ -97,13 +132,17 @@ class Dropzone extends Widget
         }
 
         if (!isset($this->options['paramName'])) {
-           $this->options['paramName'] = $this->id . 'file'; 
+            $this->options['paramName'] = $this->id . 'file';
         }
         $this->options['params']['paramName'] = $this->options['paramName'];
-        
+
         $this->dropzoneName = 'dropzone_' . $this->id;
-        
-        
+
+        if ($this->thumbStyle !== null) {
+            $this->options['createImageThumbnails'] = false;
+            $this->options['params']['thumbStyle'] = $this->thumbStyle;
+        }
+        $this->options['params']['deleteUrl'] = $this->deleteUrl;
     }
 
     public function run()
@@ -111,14 +150,33 @@ class Dropzone extends Widget
         if (Yii::$app->request->enableCsrfValidation) {
             $this->options['params'][Yii::$app->request->csrfParam] = Yii::$app->request->getCsrfToken();
         }
-      
+
         $this->htmlOptions['id'] = $this->id;
         Html::addCssClass($this->htmlOptions, 'dropzone');
         echo Html::tag('div', '', $this->htmlOptions);
-        
+
+        if ($this->model !== null && !empty($this->model->mediaFiles)) {
+            $this->prepareMediaFiles();
+        }
+
+
+        //zum testen
+        $this->files[] = ['id' => 100, 'name' => 'peter.jpg', 'size' => 22255];
+        $this->files[] = ['id' => 200, 'name' => 'peter.jpg', 'size' => 22255];
+        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
+        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
+        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
+        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
+        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
+
+        $a = "<div class='col-lg-1'>
+    <p class='Hallo'  ";
+
+
         $this->addEvents();
         $this->registerClientScript();
-      
+
+
         $this->decrementMaxFiles(count($this->model->mediaFiles));
         if ($this->sortable) {
             $options = Json::encode($this->sortableOptions);
@@ -140,9 +198,6 @@ class Dropzone extends Widget
         }
 
         $js[] = 'Dropzone.autoDiscover = false;';
-
-        $options = Json::encode($this->options);
-
         $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->options) . ');';
 
         if (!empty($this->clientEvents)) {
@@ -150,9 +205,7 @@ class Dropzone extends Widget
                 $js[] = "{$this->dropzoneName}.on('$event', $handler);";
             }
         }
-        $js[] = $this->addFilesJs();
-        //$js[] = $this->settingsJs();
-        //$js[] = $this->mediaModelJs();
+        $js[] = $this->commonJs();
 
         $view->registerJs(implode("\n", $js));
     }
@@ -162,8 +215,19 @@ class Dropzone extends Widget
      */
     public function addEvents()
     {
+        $events['addedfile'] = <<<JS
+            function(file) {
+                DropzoneWidgetHandler.file = file;
+                if (file.hasOwnProperty('id')) { //if existing files are added
+                    
+                }
+            }
+JS;
+
         $events['success'] = <<<JS
             function(file, data) {
+                DropzoneWidgetHandler.file = file;
+                DropzoneWidgetHandler.responseData = data;
                 var dz = this;
                 var pe = file.previewElement;
                 if (data.hasOwnProperty('error')) {
@@ -172,11 +236,8 @@ class Dropzone extends Widget
                       dz.removeFile(file);
                       }, 3000);
                 } else {
-                    pe.setAttribute('data-id', data.id);
-                    pe.setAttribute('data-status', data.status);
-                    pe.setAttribute('data-delete-url', data.deleteUrl);
-                    dz.emit('thumbnail', file, data.thumbnailUrl);
-                    
+                   DropzoneWidgetHandler.addUploadedFile();
+                    var le = document.getElementsByClassName("dz-preview").length - 1;
                 }
             }
 JS;
@@ -187,60 +248,58 @@ JS;
 JS;
         $events['removedfile'] = <<<JS
             function(file) {
-                var pe = file.previewElement;
-                var deleteUrl = pe.dataset.deleteUrl;
-                var csrftoken = yii.getCsrfToken();
-                senddata = "id=" + pe.dataset.id;
-                // We delete the file from the server
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', deleteUrl, true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");             
-                xhr.send("id=" + pe.dataset.id + "&_csrf=" + yii.getCsrfToken());
-                
-                xhr.onreadystatechange = function () {
-                var DONE = 4; // readyState 4 means the request is done.
-                var OK = 200; // status 200 is a successful return.
-                if (xhr.readyState === DONE) {
-                if (xhr.status === OK) { 
-                    //console.log(xhr.responseText); // 'This is the returned text.'
-                } else {
-                    //console.log('Error: ' + xhr.status); // An error occurred during the request.
+                if(file.status === "success") {
+                   deleteUploadedFile(file); 
                 }
-                
-            }
-};
-                
-                
             }
 JS;
         $this->clientEvents = ArrayHelper::merge($events, $this->clientEvents);
     }
 
-    protected function addFilesJs($files = [])
+    /**
+     * Prepare the existing files from media model to add them to the dropzone
+     */
+    protected function prepareMediaFiles()
     {
-        $js = '';
-        if (!empty($files)) {
-            $js .= <<<JS
-            var files = Json::encode($files);
-            for (var i=0; i<files.length; i++) {
-                addFile(files[i]);
+        foreach ($this->model->mediaFiles as $file) {
+            $this->files[]['id'] = $id;
+            $this->files[]['name'] = $file['name'];
+            $this->files[]['size'] = (int)$file['size'];
+            $this->files[]['url'] = $file['url'];
+            $this->files[]['status'] = $file['status'];
+            $this->files[]['type'] = $file['type'];
+            if (strpos($file['type'], 'image/') !== false) {
+                $this->files[]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
+
+                //We need the translation array indexed by language
+                if (isset($file['translations'])) {
+                    $translations = (array)$file['translations'];
+                    if (isset($translations[0])) {
+                        $this->files[]['translations'] = ArrayHelper::index($translations, 'language');
+                    } else {
+                        $this->files[]['translations'] = $file['translations'];
+                    }
+                }
             }
-JS;
+            $this->files[]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $id]);
         }
-        
-        $js .= <<<JS
-            function addFile(file)
-            {
-                {$this->dropzoneName}.emit('addedfile', file);
-                {$this->dropzoneName}.emit('thumbnail', file, file.thumbnailUrl);
-                {$this->dropzoneName}.emit('complete', file);
-            }
+    }
+
+    protected function commonJs()
+    {
+        $existingFiles = Json::encode($this->files);
+        $languages = Json::encode($this->languages);
+        $dropzoneName = $this->dropzoneName;
+
+        $js = <<<JS
+ 
+ 
+
+
+           
 JS;
-        
         return $js;
     }
-    
-   
 
     protected function decrementMaxFiles($num)
     {
