@@ -169,9 +169,6 @@ class Dropzone extends Widget
         $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
         $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
 
-        $a = "<div class='col-lg-1'>
-    <p class='Hallo'  ";
-
 
         $this->addEvents();
         $this->registerClientScript();
@@ -208,6 +205,7 @@ class Dropzone extends Widget
         $js[] = $this->commonJs();
 
         $view->registerJs(implode("\n", $js));
+
     }
 
     /**
@@ -216,14 +214,13 @@ class Dropzone extends Widget
     public function addEvents()
     {
         $events['addedfile'] = <<<JS
-            function(file) {
+           function(file) {
                 DropzoneWidgetHandler.file = file;
                 if (file.hasOwnProperty('id')) { //if existing files are added
-                    
+
                 }
             }
 JS;
-
         $events['success'] = <<<JS
             function(file, data) {
                 DropzoneWidgetHandler.file = file;
@@ -262,7 +259,7 @@ JS;
     protected function prepareMediaFiles()
     {
         foreach ($this->model->mediaFiles as $file) {
-            $this->files[]['id'] = $id;
+            $this->files[]['id'] = $file['id'];
             $this->files[]['name'] = $file['name'];
             $this->files[]['size'] = (int)$file['size'];
             $this->files[]['url'] = $file['url'];
@@ -285,6 +282,9 @@ JS;
         }
     }
 
+    /**
+     * The main js code for dropzone widget
+     */
     protected function commonJs()
     {
         $existingFiles = Json::encode($this->files);
@@ -292,10 +292,83 @@ JS;
         $dropzoneName = $this->dropzoneName;
 
         $js = <<<JS
- 
- 
+ /* 
+ * The DropzoneWidgetHandler provide all functions to handle all
+ * tasks to finish uploads or react on dropzone events.
+ */
+DropzoneWidgetHandler = {
+    existingFiles: $existingFiles,
+    languages: $languages,
+    dz: $dropzoneName,
+    responseData: null,
+    file: null, //This is the file object from dropzone
+    filedata: null, //This is the filedata of the current uploaded file or the existing file which is added 
+    _fileNumber: function () {
+        return document.getElementsByClassName("dz-preview").length - 1;
+        return le;
+    },
+    addExistingFiles: function () { //Return the existing files
+        if (Object.keys(this.existingFiles).length !== 0) {
+            var files = this.existingFiles;
+            for (var i = 0; i < files.length; i++) {
+                this.filedata = files[i];
+                this.fileNumber = i;
+                this.dz.emit('addedfile', files[i]);
+                if (files[i].hasOwnProperty('thumbnailUrl')) {
+                    this.dz.emit('thumbnail', files[i], files[i].thumbnailUrl);
+                }
+                this.dz.emit('complete', files[i]);
+                this._setAttributes();
+                this.file.previewElement.appendChild(this._fileIdInputElement());
+            }
+        }
+    },
+    addUploadedFile: function () {
+        this.filedata = this.responseData;
 
+    },
+    _setAttributes: function () { //Add attributes to added files
+        var pe = this.file.previewElement;
+        pe.setAttribute('id', 'mediafile-' + this.filedata.id);
+        pe.setAttribute('data-id', this.filedata.id);
+        pe.setAttribute('data-delete-url', this.filedata.deleteUrl);
+    },
+    _fileIdInputElement: function () { //Create the hidden input element with the file id
+        var ipt = document.createElement('input');
+        ipt.setAttribute('type', 'hidden');
+        ipt.setAttribute('name', 'MediaFiles[' + this._fileNumber() + '][id]');
+        ipt.setAttribute('value', this.filedata.id);
+        return ipt;
+    },
+    _getAltAttributeInputElements: function () { //Create the alt attribute input element 
 
+    },
+    _decrementMaxFiles: function () {
+
+    },
+    deleteUploadedFile: function () { //Delete the file from the server
+        var pe = this.file.previewElement;
+        var deleteUrl = pe.dataset.deleteUrl;
+        senddata = "id=" + pe.dataset.id;
+        // We delete the file from the server
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', deleteUrl, true);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.send("id=" + pe.dataset.id + "&_csrf=" + yii.getCsrfToken());
+        xhr.onreadystatechange = function () {
+            var DONE = 4; // readyState 4 means the request is done.
+            var OK = 200; // status 200 is a successful return.
+            if (xhr.readyState === DONE) {
+                if (xhr.status === OK) {
+                    //console.log(xhr.responseText); // 'This is the returned text.'
+                } else {
+                    //console.log('Error: ' + xhr.status); // An error occurred during the request.
+                }
+            }
+        }
+    }
+}
+DropzoneWidgetHandler.addExistingFiles();
            
 JS;
         return $js;
