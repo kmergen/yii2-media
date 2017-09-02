@@ -42,8 +42,8 @@ class Dropzone extends Widget
 
     /**
      * @var array An array with languages in which the alt attribute should be translated.
-     * If empty, the alt attribute input element for [[Yii::$app->language]] is created.
-     * If not empty, for each language a alt attribute input element is created.
+     * If empty, no alt input element is created. That means the translation feature is off.
+     * If not empty, for each language an alt attribute input element is created. (Typically values are Yii::$app->language or Yii::$app->urlManager->languages)
      */
     public $languages = [];
 
@@ -113,10 +113,6 @@ class Dropzone extends Widget
 
         $this->options['url'] = Url::toRoute($this->options['url']);
 
-        if (empty($this->languages)) {
-            $languages[] = Yii::$app->language;
-        }
-
         if ($this->bootstrapVersion !== 'bs4' && $this->bootstrapVersion !== 'bs3') {
             throw new InvalidConfigException('"bootstrapVersion" can only be set to "bs4" or "bs3"');
         }
@@ -161,14 +157,9 @@ class Dropzone extends Widget
 
 
         //zum testen
-        $this->files[] = ['id' => 100, 'name' => 'peter.jpg', 'size' => 22255];
-        $this->files[] = ['id' => 200, 'name' => 'peter.jpg', 'size' => 22255];
-        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
-        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
-        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
-        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
-        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255];
-
+//        $this->files[] = ['id' => 100, 'name' => 'peter.jpg', 'size' => 22255, 'deleteUrl' => 'path/to/delete'];
+//        $this->files[] = ['id' => 200, 'name' => 'peter.jpg', 'size' => 22255, 'deleteUrl' => 'path/to/delete'];
+//        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255, 'deleteUrl' => 'path/to/delete'];
 
         $this->addEvents();
         $this->registerClientScript();
@@ -215,40 +206,53 @@ class Dropzone extends Widget
     {
         $events['addedfile'] = <<<JS
            function(file) {
-                DropzoneWidgetHandler.file = file;
                 if (file.hasOwnProperty('id')) { //if existing files are added
-
+                    file.status = 'success';
                 }
             }
 JS;
         $events['success'] = <<<JS
-            function(file, data) {
-                DropzoneWidgetHandler.file = file;
-                DropzoneWidgetHandler.responseData = data;
-                var dz = this;
-                var pe = file.previewElement;
-                if (data.hasOwnProperty('error')) {
-                  pe.innerHTML = '<span class="text-danger">' + data.error + '</span>';
-                  setTimeout(function() {
-                      dz.removeFile(file);
-                      }, 3000);
-                } else {
-                   DropzoneWidgetHandler.addUploadedFile();
-                    var le = document.getElementsByClassName("dz-preview").length - 1;
-                }
-            }
+function (file, data) {
+    var dz = this;
+    if (data.hasOwnProperty('error')) {
+        pe.innerHTML = '<span class="text-danger">' + data.error + '</span>';
+        setTimeout(function () {
+            dz.removeFile(file);
+        }, 3000);
+    } else {
+        this.DzHelper.extend(file, data);
+        if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
+            dz.emit('thumbnail', file, file.thumbnailUrl);
+        }
+      
+    }
+}
 JS;
         $events['error'] = <<<JS
             function(file, message) {
                 file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
+                
             }
+
 JS;
         $events['removedfile'] = <<<JS
             function(file) {
-                if(file.status === "success") {
-                   deleteUploadedFile(file); 
+                if(file.isTemp) {
+                    //We delete only the files which are stored with status \kmergen\models\Media::STATUS_TEMP.
+                    // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
+                    this.DzHelper.deleteUploadedFile(file); 
                 }
+                this.DzHelper.rearrangeInputs();
             }
+JS;
+
+        $events['complete'] = <<<JS
+           function(file) {
+               this.DzHelper.setAttributes(file);
+               file.previewElement.appendChild(this.DzHelper.fileIdInputElement(file));
+               //Add the alt input elements to preview element
+               file.previewElement.appendChild(this.DzHelper.altInputElements(file));
+           }
 JS;
         $this->clientEvents = ArrayHelper::merge($events, $this->clientEvents);
     }
@@ -259,26 +263,18 @@ JS;
     protected function prepareMediaFiles()
     {
         foreach ($this->model->mediaFiles as $file) {
-            $this->files[]['id'] = $file['id'];
-            $this->files[]['name'] = $file['name'];
-            $this->files[]['size'] = (int)$file['size'];
-            $this->files[]['url'] = $file['url'];
-            $this->files[]['status'] = $file['status'];
-            $this->files[]['type'] = $file['type'];
+            $i = $file['id'];
+            $this->files[$i]['id'] = $file['id'];
+            $this->files[$i]['name'] = $file['name'];
+            $this->files[$i]['size'] = (int)$file['size'];
+            $this->files[$i]['url'] = $file['url'];
+            $this->files[$i]['isTemp'] = $file['status'] == \kmergen\media\models\Media::STATUS_TEMP ? true : false;
+            $this->files[$i]['type'] = $file['type'];
             if (strpos($file['type'], 'image/') !== false) {
-                $this->files[]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
-
-                //We need the translation array indexed by language
-                if (isset($file['translations'])) {
-                    $translations = (array)$file['translations'];
-                    if (isset($translations[0])) {
-                        $this->files[]['translations'] = ArrayHelper::index($translations, 'language');
-                    } else {
-                        $this->files[]['translations'] = $file['translations'];
-                    }
-                }
+                $this->files[$i]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
             }
-            $this->files[]['deleteUrl'] = Url::to(['/media/upload-delete', 'id' => $id]);
+            $this->files[$i]['deleteUrl'] = Url::toRoute([$this->deleteUrl]);
+            $this->files[$i]['translations'] = ArrayHelper::index($file['translations'], 'language');
         }
     }
 
@@ -289,72 +285,33 @@ JS;
     {
         $existingFiles = Json::encode($this->files);
         $languages = Json::encode($this->languages);
-        $dropzoneName = $this->dropzoneName;
+        $dz = $this->dropzoneName;
 
         $js = <<<JS
  /* 
- * The DropzoneWidgetHandler provide all functions to handle all
- * tasks to finish uploads or react on dropzone events.
+ * Extend Dropzone with own functions
  */
-DropzoneWidgetHandler = {
-    existingFiles: $existingFiles,
-    languages: $languages,
-    dz: $dropzoneName,
-    responseData: null,
-    file: null, //This is the file object from dropzone
-    filedata: null, //This is the filedata of the current uploaded file or the existing file which is added 
-    _fileNumber: function () {
-        return document.getElementsByClassName("dz-preview").length - 1;
-        return le;
-    },
-    addExistingFiles: function () { //Return the existing files
-        if (Object.keys(this.existingFiles).length !== 0) {
-            var files = this.existingFiles;
-            for (var i = 0; i < files.length; i++) {
-                this.filedata = files[i];
-                this.fileNumber = i;
-                this.dz.emit('addedfile', files[i]);
-                if (files[i].hasOwnProperty('thumbnailUrl')) {
-                    this.dz.emit('thumbnail', files[i], files[i].thumbnailUrl);
+ 
+ $dz.DzHelper = {
+     languages: $languages,
+     addExistingFiles: function (files) { //Return the existing files
+        if (Object.keys(files).length !== 0) {
+            for (key in files) {
+                $dz.emit('addedfile', files[key]);
+                if (files[key].hasOwnProperty('thumbnailUrl')) {
+                    $dz.emit('thumbnail', files[key], files[key].thumbnailUrl);
                 }
-                this.dz.emit('complete', files[i]);
-                this._setAttributes();
-                this.file.previewElement.appendChild(this._fileIdInputElement());
-            }
+                $dz.emit('complete', files[key]);
+            }         
         }
     },
-    addUploadedFile: function () {
-        this.filedata = this.responseData;
-
-    },
-    _setAttributes: function () { //Add attributes to added files
-        var pe = this.file.previewElement;
-        pe.setAttribute('id', 'mediafile-' + this.filedata.id);
-        pe.setAttribute('data-id', this.filedata.id);
-        pe.setAttribute('data-delete-url', this.filedata.deleteUrl);
-    },
-    _fileIdInputElement: function () { //Create the hidden input element with the file id
-        var ipt = document.createElement('input');
-        ipt.setAttribute('type', 'hidden');
-        ipt.setAttribute('name', 'MediaFiles[' + this._fileNumber() + '][id]');
-        ipt.setAttribute('value', this.filedata.id);
-        return ipt;
-    },
-    _getAltAttributeInputElements: function () { //Create the alt attribute input element 
-
-    },
-    _decrementMaxFiles: function () {
-
-    },
-    deleteUploadedFile: function () { //Delete the file from the server
-        var pe = this.file.previewElement;
-        var deleteUrl = pe.dataset.deleteUrl;
-        senddata = "id=" + pe.dataset.id;
+     deleteUploadedFile: function (file) { //Delete the file from the server
+        var pe = file.previewElement;
         // We delete the file from the server
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', deleteUrl, true);
+        xhr.open('POST', file.deleteUrl, true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.send("id=" + pe.dataset.id + "&_csrf=" + yii.getCsrfToken());
+        xhr.send("id=" + file.id + "&_csrf=" + yii.getCsrfToken());
         xhr.onreadystatechange = function () {
             var DONE = 4; // readyState 4 means the request is done.
             var OK = 200; // status 200 is a successful return.
@@ -366,9 +323,58 @@ DropzoneWidgetHandler = {
                 }
             }
         }
+    },
+    setAttributes: function (file) { //Add attributes to added files
+        var el = file.previewElement;
+        el.setAttribute('id', 'mediafile-' + file.id);
+    },
+    fileIdInputElement: function (file) { //Create the html hidden input element with the file id of the given file.
+        var el = document.createElement('input');
+        el.setAttribute('type', 'hidden');
+        el.setAttribute('name', 'MediaFiles[' + file.id + '][id]');
+        el.setAttribute('value', file.id);
+        return el;
+    },
+    altInputElements: function (file) { //Create the html for the alt attribute input elements of the given file
+        var container = document.createElement('div');
+        container.className = 'media-files-alt-inputs';
+        var lang = this.languages;
+        for (var i = 0; i < lang.length; i++) {
+            var inputGroup = document.createElement('div');
+            inputGroup.className = 'input-group input-group-sm';
+            inputGroup.innerHTML ='<span class="input-group-addon">Alt-' + lang[i] + '</span>';
+            
+            var el = document.createElement('input');
+            el.setAttribute('type', 'text');
+            el.setAttribute('name', 'MediaFiles[' + file.id + '][translations][' + lang[i] + '][alt]');
+            el.className = 'form-control';
+            if (file.translations && file.translations.hasOwnProperty(lang[i])) {
+                el.setAttribute('value', file.translations[lang[i]]['alt']);
+            }
+            inputGroup.appendChild(el);
+            container.appendChild(inputGroup);
+        }
+        return container;
+    },
+    rearrangeInputs: function() {
+      for (var i=0; i<document.getElementsByClassName("dz-preview").length; i++) {
+          
+      }   
+    },
+    _decrementMaxFiles: function () {
+
+    },
+     _posId: function () {
+        //Return the position id of the file. First position id = 0
+        return document.getElementsByClassName("dz-preview").length - 1;
+    },
+    extend: function (obj, src) {
+         Object.keys(src).forEach(function(key) { obj[key] = src[key]; });
     }
-}
-DropzoneWidgetHandler.addExistingFiles();
+ };
+ 
+ //Add the existing files to dropzone
+ $dz.DzHelper.addExistingFiles($existingFiles);
            
 JS;
         return $js;

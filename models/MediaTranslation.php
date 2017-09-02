@@ -10,7 +10,6 @@ use Yii;
  * @property integer $media_id
  * @property string $language
  * @property string $alt
- * @property string $title
  */
 class MediaTranslation extends \yii\db\ActiveRecord
 {
@@ -31,7 +30,7 @@ class MediaTranslation extends \yii\db\ActiveRecord
             [['language'], 'required'],
             [['media_id'], 'integer'],
             [['language'], 'string', 'max' => 16],
-            [['alt', 'title'], 'string', 'max' => 255],
+            [['alt'], 'string', 'max' => 20],
             [['media_id'], 'exist', 'skipOnError' => true, 'targetClass' => Media::className(), 'targetAttribute' => ['media_id' => 'id']],
         ];
     }
@@ -45,7 +44,6 @@ class MediaTranslation extends \yii\db\ActiveRecord
             'media_id' => Yii::t('media', 'Media ID'),
             'language' => Yii::t('media', 'Language'),
             'alt' => Yii::t('media', 'Alt'),
-            'title' => Yii::t('media', 'Title'),
         ];
     }
 }

@@ -145,7 +145,8 @@ trait DropzoneUploadTrait
                 'size' => $model->size,
                 'url' => $model->url,
                 'deleteUrl' => $params['deleteUrl'],
-                'status' => $model->status,
+                'isTemp' => $model->status == \kmergen\media\models\Media::STATUS_TEMP ? true : false,
+                //file object while we extend it with the response items.
                 'type' => $model->type,
             ];
             

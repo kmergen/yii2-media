@@ -50,7 +50,7 @@ class Media extends \yii\db\ActiveRecord
         return [
             'translateable' => [
                 'class' => TranslateableBehavior::className(),
-                'translationAttributes' => ['alt', 'title'],
+                'translationAttributes' => ['alt'],
             //'translationRelation' => 'translations',
             // translationLanguageAttribute => 'language',
             ],

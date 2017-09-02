@@ -78,23 +78,16 @@ class MediaAlbumBehavior extends Behavior
         $postedFiles = Yii::$app->request->post('MediaFiles');
         if ($postedFiles !== null) {
             $this->mediaFiles = [];
-            $activeLanguages = !empty(Yii::$app->urlManager->languages) ? Yii::$app->urlManager->languages : (array)Yii::$app->language;
-            $deleteTranslationLanguages = array_flip($activeLanguages);
             foreach ($postedFiles as $postedFile) {
                 $file = Media::findOne($postedFile['id']);
                 //Media translations
-                foreach ($postedFile['translations'] as $language => $data) {
-                    if ($data['alt'] !== "" || $data['title'] !== "") {
-                        unset($deleteTranslationLanguages[$language]);
+                if (isset($postedFile['translations'])) {
+                    foreach ($postedFile['translations'] as $language => $data) {
                         foreach ($data as $attribute => $translation) {
                             $file->translate($language)->$attribute = $translation;
                         }
                     }
-                }
 
-                //Delete all empty or not posted translations
-                foreach ($deleteTranslationLanguages as $lang => $val) {
-                    Yii::$app->db->createCommand()->delete('media_translation', ['media_id' => $file['id'], 'language' => $lang])->execute();
                 }
                 $this->mediaFiles[] = $file;
             }
@@ -116,7 +109,7 @@ class MediaAlbumBehavior extends Behavior
                 $albumId = $album->id;
             } else { //Update mediaAlbum
                 $albumId = $this->owner->{$this->attribute};
-                $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), index($this->mediaFiles, 'id'));
+                $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id'));
                 //We delete the old images we never need
                 foreach ($deleteFiles as $id => $file) {
                     if (($model = Media::findOne($id)) !== null) {
