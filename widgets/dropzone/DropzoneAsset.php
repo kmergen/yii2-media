@@ -9,11 +9,11 @@ namespace kmergen\media\widgets\dropzone;
 use yii\web\AssetBundle;
 
 /**
- * DropzoneAsset for Bootstrap Version 4
+ * Dropzone asset
  * 
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
-class DropzoneAssetBs4 extends AssetBundle
+class DropzoneAsset extends AssetBundle
 {
 
     public $sourcePath = '@vendor/kmergen/yii2-media/widgets/dropzone/assets';

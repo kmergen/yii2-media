@@ -76,27 +76,20 @@ class Dropzone extends Widget
     public $deleteUrl;
 
     /**
-     * @var integer|string The version of the Css Framework Bootstrap. Possible values are 'bs3' and 'bs4'.
-     */
-    public $bootstrapVersion = 'bs4';
-
-    /**
      * @var string The template of the dropzone UI.
      */
     public $uiTemplate = '{beginDz}{dzPreviews}{dzMessage}{dzClickable}{endDz}';
 
     /**
-     * @var array UI template items.
+     * @var array The template parts.
+     * @see renderUITemplate()
      */
-    public $uiTemplateItems = [];
+    public $uiTemplateParts = [];
 
     /**
      * @var string The name of this dropzone instance This name will extended by the widget id in [[init()]].
      */
     protected $dropzoneName = 'dropzone';
-
-    public $sortable = false;
-    public $sortableOptions = [];
 
     public function init()
     {
@@ -112,12 +105,8 @@ class Dropzone extends Widget
 
         $this->options['url'] = Url::toRoute($this->options['url']);
 
-        if ($this->bootstrapVersion !== 'bs4' && $this->bootstrapVersion !== 'bs3') {
-            throw new InvalidConfigException('"bootstrapVersion" can only be set to "bs4" or "bs3"');
-        }
-
         if (!isset($this->options['previewTemplate'])) {
-            $this->options['previewTemplate'] = $this->render("{$this->bootstrapVersion}/preview-template");
+            $this->options['previewTemplate'] = $this->render('preview-template');
         }
 
         if (!isset($this->options['addRemoveLinks'])) {
@@ -193,11 +182,6 @@ class Dropzone extends Widget
 
         $this->addEvents();
         $this->registerClientScript();
-
-        if ($this->sortable) {
-            $options = Json::encode($this->sortableOptions);
-            $this->getView()->registerJs("jQuery('#{$this->id}').sortable(" . $options . ");");
-        }
     }
 
 
@@ -206,23 +190,23 @@ class Dropzone extends Widget
      */
     protected function renderUITemplate()
     {
-        $items['{beginDz}'] = isset($this->uiTemplateItems['beginDz'])
-            ? $this->uiTemplateItems['beginDz']
+        $parts['{beginDz}'] = isset($this->uiTemplateParts['beginDz'])
+            ? $this->uiTemplateParts['beginDz']
             : Html::beginTag('div', $this->htmlOptions);
-        $items['{dzPreviews}'] = isset($this->uiTemplateItems['dzPreviews'])
-            ? $this->uiTemplateItems['dzPreviews']
+        $parts['{dzPreviews}'] = isset($this->uiTemplateParts['dzPreviews'])
+            ? $this->uiTemplateParts['dzPreviews']
             : Html::Tag('div', '', ['class' => 'dropzone-previews']);
-        $items['{dzMessage}'] = isset($this->uiTemplateItems['dzMessage'])
-            ? $this->uiTemplateItems['dzMessage']
+        $parts['{dzMessage}'] = isset($this->uiTemplateParts['dzMessage'])
+            ? $this->uiTemplateParts['dzMessage']
             : Html::tag('div', '<span>' . $this->options['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
-        $items['{dzClickable}'] = isset($this->uiTemplateItems['dzClickable'])
-            ? $this->uiTemplateItems['dzClickable']
+        $parts['{dzClickable}'] = isset($this->uiTemplateParts['dzClickable'])
+            ? $this->uiTemplateParts['dzClickable']
             : Html::button('Add File', ['class' => 'btn btn-success btn-upload-file']);
-        $items['{endDz}'] = isset($this->uiTemplateItems['endDz'])
-            ? $this->uiTemplateItems['endDz']
+        $parts['{endDz}'] = isset($this->uiTemplateParts['endDz'])
+            ? $this->uiTemplateParts['endDz']
             : Html::endTag('div');
 
-        return strtr($this->uiTemplate, $items);
+        return strtr($this->uiTemplate, $parts);
     }
 
     /**
@@ -252,12 +236,7 @@ class Dropzone extends Widget
     public function registerClientScript()
     {
         $view = $this->getView();
-
-        if ($this->bootstrapVersion === 'bs4') {
-            DropzoneAssetBs4::register($view);
-        } else {
-            DropzoneAssetBs3::register($view);
-        }
+        DropzoneAsset::register($view);
 
         $js[] = 'Dropzone.autoDiscover = false;';
         $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->options) . ');';
@@ -272,7 +251,6 @@ class Dropzone extends Widget
         $view->registerJs(implode("\n", $js));
 
     }
-
 
     /**
      * Add the necassary dropzone events
@@ -316,9 +294,9 @@ JS;
         $events['complete'] = <<<JS
            function(file) {
                this.DzHelper.setAttributes(file);
-               file.previewElement.appendChild(this.DzHelper.fileIdInputElement(file));
+               this.DzHelper.fileIdInputElement(file);
                //Add the alt input elements to preview element
-               file.previewElement.appendChild(this.DzHelper.altInputElements(file));
+               this.DzHelper.altInputElements(file);
            }
 JS;
         $events['maxfilesreached'] = <<<JS
@@ -371,9 +349,7 @@ $dz.DzHelper = {
                 files[key].accepted = true;
                 $dz.files.push(files[key]);
                 i++;
-                
             }
-           
         }
     },
     deleteUploadedFile: function (file) { //Delete the file from the server
@@ -404,12 +380,11 @@ $dz.DzHelper = {
         el.setAttribute('type', 'hidden');
         el.setAttribute('name', 'MediaFiles[' + file.id + '][id]');
         el.setAttribute('value', file.id);
-        return el;
+        file.previewElement.appendChild(el);
     },
     altInputElements: function (file) { //Create the html for the alt attribute input elements of the given file
-        var container = document.createElement('div');
-        container.className = 'media-files-alt-inputs';
         var lang = this.languages;
+        var inputs = '';
         for (var i = 0; i < lang.length; i++) {
             var inputGroup = document.createElement('div');
             inputGroup.className = 'input-group input-group-sm';
@@ -423,9 +398,9 @@ $dz.DzHelper = {
                 el.setAttribute('value', file.translations[lang[i]]['alt']);
             }
             inputGroup.appendChild(el);
-            container.appendChild(inputGroup);
+            file.previewElement.querySelector('.dz-alt-inputs').appendChild(inputGroup);
+            //container.appendChild(inputGroup);
         }
-        return container;
     },
     extend: function (obj, src) {
         Object.keys(src).forEach(function (key) {
