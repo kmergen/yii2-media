@@ -81,21 +81,20 @@ class Dropzone extends Widget
     public $bootstrapVersion = 'bs4';
 
     /**
-     * @var string The theme you want to use. These are different previewTemplates.
+     * @var string The template of the dropzone UI.
      */
-    public $theme = 'default';
+    public $uiTemplate = '{beginDz}{dzPreviews}{dzMessage}{dzClickable}{endDz}';
 
     /**
-     * @var array A set of predefined themes.
+     * @var array UI template items.
      */
-    protected $themes = [
-        'default' => ['previewTemplate' => 'default-preview-template']
-    ];
+    public $uiTemplateItems = [];
 
     /**
      * @var string The name of this dropzone instance This name will extended by the widget id in [[init()]].
      */
     protected $dropzoneName = 'dropzone';
+
     public $sortable = false;
     public $sortableOptions = [];
 
@@ -118,8 +117,7 @@ class Dropzone extends Widget
         }
 
         if (!isset($this->options['previewTemplate'])) {
-            $theme = $this->themes[$this->theme]['previewTemplate'];
-            $this->options['previewTemplate'] = $this->render("{$this->bootstrapVersion}/{$theme}");
+            $this->options['previewTemplate'] = $this->render("{$this->bootstrapVersion}/preview-template");
         }
 
         if (!isset($this->options['addRemoveLinks'])) {
@@ -139,6 +137,38 @@ class Dropzone extends Widget
             $this->options['params']['thumbStyle'] = $this->thumbStyle;
         }
         $this->options['params']['deleteUrl'] = $this->deleteUrl;
+
+        //Set default messages
+        if (!isset($this->options['dictDefaultMessage'])) {
+            $this->options['dictDefaultMessage'] = Yii::t('media', 'Drop files here to upload');
+        }
+        if (!isset($this->options['dictFallbackMessage'])) {
+            $this->options['dictFallbackMessage'] = Yii::t('media', 'Your browser does not support drag\'n\'drop file uploads.');
+        }
+        if (!isset($this->options['dictFallbackText'])) {
+            $this->options['dictFallbackText'] = Yii::t('media', 'Please use the fallback form below to upload your files like in the olden days.');
+        }
+        if (!isset($this->options['dictFileTooBig'])) {
+            $this->options['dictFileTooBig'] = Yii::t('media', 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.');
+        }
+        if (!isset($this->options['dictInvalidFileType'])) {
+            $this->options['dictInvalidFileType'] = Yii::t('media', 'You can\'t upload files of this type.');
+        }
+        if (!isset($this->options['dictResponseError'])) {
+            $this->options['dictResponseError'] = Yii::t('media', 'Server responded with {{statusCode}} code.');
+        }
+        if (!isset($this->options['dictCancelUpload'])) {
+            $this->options['dictCancelUpload'] = Yii::t('media', 'Cancel upload');
+        }
+        if (!isset($this->options['dictCancelUploadConfirmation'])) {
+            $this->options['dictCancelUploadConfirmation'] = Yii::t('media', 'Are you sure you want to cancel this upload?');
+        }
+        if (!isset($this->options['dictRemoveFile'])) {
+            $this->options['dictRemoveFile'] = Yii::t('media', 'Delete');
+        }
+        if (!isset($this->options['dictMaxFilesExceeded'])) {
+            $this->options['dictMaxFilesExceeded'] = Yii::t('media', 'Maximum number of uploaded files reached.');
+        }
     }
 
     public function run()
@@ -149,7 +179,7 @@ class Dropzone extends Widget
 
         $this->htmlOptions['id'] = $this->id;
         Html::addCssClass($this->htmlOptions, 'dropzone');
-        echo Html::tag('div', '', $this->htmlOptions);
+        echo $this->renderUITemplate();
 
         if ($this->model !== null && !empty($this->model->mediaFiles)) {
             $this->prepareMediaFiles();
@@ -164,11 +194,55 @@ class Dropzone extends Widget
         $this->addEvents();
         $this->registerClientScript();
 
-
-        $this->decrementMaxFiles(count($this->model->mediaFiles));
         if ($this->sortable) {
             $options = Json::encode($this->sortableOptions);
             $this->getView()->registerJs("jQuery('#{$this->id}').sortable(" . $options . ");");
+        }
+    }
+
+
+    /**
+     * Render the UI for the dropzone
+     */
+    protected function renderUITemplate()
+    {
+        $items['{beginDz}'] = isset($this->uiTemplateItems['beginDz'])
+            ? $this->uiTemplateItems['beginDz']
+            : Html::beginTag('div', $this->htmlOptions);
+        $items['{dzPreviews}'] = isset($this->uiTemplateItems['dzPreviews'])
+            ? $this->uiTemplateItems['dzPreviews']
+            : Html::Tag('div', '', ['class' => 'dropzone-previews']);
+        $items['{dzMessage}'] = isset($this->uiTemplateItems['dzMessage'])
+            ? $this->uiTemplateItems['dzMessage']
+            : Html::tag('div', '<span>' . $this->options['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
+        $items['{dzClickable}'] = isset($this->uiTemplateItems['dzClickable'])
+            ? $this->uiTemplateItems['dzClickable']
+            : Html::button('Add File', ['class' => 'btn btn-success btn-upload-file']);
+        $items['{endDz}'] = isset($this->uiTemplateItems['endDz'])
+            ? $this->uiTemplateItems['endDz']
+            : Html::endTag('div');
+
+        return strtr($this->uiTemplate, $items);
+    }
+
+    /**
+     * Prepare the existing files from media model to add them to the dropzone
+     */
+    protected function prepareMediaFiles()
+    {
+        foreach ($this->model->mediaFiles as $file) {
+            $i = $file['id'];
+            $this->files[$i]['id'] = $file['id'];
+            $this->files[$i]['name'] = $file['name'];
+            $this->files[$i]['size'] = (int)$file['size'];
+            $this->files[$i]['url'] = $file['url'];
+            $this->files[$i]['isTemp'] = $file['status'] == \kmergen\media\models\Media::STATUS_TEMP ? true : false;
+            $this->files[$i]['type'] = $file['type'];
+            if (strpos($file['type'], 'image/') !== false) {
+                $this->files[$i]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
+            }
+            $this->files[$i]['deleteUrl'] = Url::toRoute([$this->deleteUrl]);
+            $this->files[$i]['translations'] = ArrayHelper::index($file['translations'], 'language');
         }
     }
 
@@ -199,53 +273,46 @@ class Dropzone extends Widget
 
     }
 
+
     /**
      * Add the necassary dropzone events
      */
     public function addEvents()
     {
-        $events['addedfile'] = <<<JS
-           function(file) {
-                if (file.hasOwnProperty('id')) { //if existing files are added
-                    file.status = 'success';
+        $events['success'] = <<<JS
+            function (file, data) {
+                var dz = this;
+                if (data.hasOwnProperty('error')) {
+                    pe.innerHTML = '<span class="text-danger">' + data.error + '</span>';
+                    setTimeout(function () {
+                        dz.removeFile(file);
+                    }, 3000);
+                } else {
+                    this.DzHelper.extend(file, data);
+                    if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
+                        dz.emit('thumbnail', file, file.thumbnailUrl);
+                    }
                 }
             }
-JS;
-        $events['success'] = <<<JS
-function (file, data) {
-    var dz = this;
-    if (data.hasOwnProperty('error')) {
-        pe.innerHTML = '<span class="text-danger">' + data.error + '</span>';
-        setTimeout(function () {
-            dz.removeFile(file);
-        }, 3000);
-    } else {
-        this.DzHelper.extend(file, data);
-        if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
-            dz.emit('thumbnail', file, file.thumbnailUrl);
-        }
-      
-    }
-}
 JS;
         $events['error'] = <<<JS
             function(file, message) {
                 file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
                 
             }
-
 JS;
         $events['removedfile'] = <<<JS
             function(file) {
-                if(file.isTemp) {
-                    //We delete only the files which are stored with status \kmergen\models\Media::STATUS_TEMP.
-                    // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
-                    this.DzHelper.deleteUploadedFile(file); 
+                if (file.accepted === true) {
+                    this.element.querySelector('.dz-message span').innerHTML = this.options.dictDefaultMessage;
                 }
-                this.DzHelper.rearrangeInputs();
+                if(file.hasOwnProperty('processing')) {
+                    //We delete only the files which are uploaded
+                    // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
+                    this.DzHelper.deleteUploadedFile(file);
+                }
             }
 JS;
-
         $events['complete'] = <<<JS
            function(file) {
                this.DzHelper.setAttributes(file);
@@ -254,29 +321,26 @@ JS;
                file.previewElement.appendChild(this.DzHelper.altInputElements(file));
            }
 JS;
+        $events['maxfilesreached'] = <<<JS
+           function(files) {
+              this.element.querySelector('.dz-message span').innerHTML = this.options.dictMaxFilesExceeded;
+           }
+JS;
+        $events['maxfilesexceeded'] = <<<JS
+           function(file) {
+               this.removeFile(file);
+           }
+JS;
+        $events['uploadprogress'] = <<<JS
+           function(file, progress, bytesSent) {
+               var progressElement = file.previewElement.querySelector(".dz-upload");
+               progressElement.style.width = progress + "%";
+               progressElement.innerHTML = progress + "%";
+           }
+JS;
         $this->clientEvents = ArrayHelper::merge($events, $this->clientEvents);
     }
 
-    /**
-     * Prepare the existing files from media model to add them to the dropzone
-     */
-    protected function prepareMediaFiles()
-    {
-        foreach ($this->model->mediaFiles as $file) {
-            $i = $file['id'];
-            $this->files[$i]['id'] = $file['id'];
-            $this->files[$i]['name'] = $file['name'];
-            $this->files[$i]['size'] = (int)$file['size'];
-            $this->files[$i]['url'] = $file['url'];
-            $this->files[$i]['isTemp'] = $file['status'] == \kmergen\media\models\Media::STATUS_TEMP ? true : false;
-            $this->files[$i]['type'] = $file['type'];
-            if (strpos($file['type'], 'image/') !== false) {
-                $this->files[$i]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
-            }
-            $this->files[$i]['deleteUrl'] = Url::toRoute([$this->deleteUrl]);
-            $this->files[$i]['translations'] = ArrayHelper::index($file['translations'], 'language');
-        }
-    }
 
     /**
      * The main js code for dropzone widget
@@ -288,24 +352,31 @@ JS;
         $dz = $this->dropzoneName;
 
         $js = <<<JS
- /* 
- * Extend Dropzone with own functions
- */
- 
- $dz.DzHelper = {
-     languages: $languages,
-     addExistingFiles: function (files) { //Return the existing files
+/* 
+* Extend Dropzone with own functions
+*/
+
+$dz.DzHelper = {
+    languages: $languages,
+    addExistingFiles: function (files) {
         if (Object.keys(files).length !== 0) {
+            i = 0;
             for (key in files) {
+                //$dz._updateMaxFilesReachedClass();
                 $dz.emit('addedfile', files[key]);
                 if (files[key].hasOwnProperty('thumbnailUrl')) {
                     $dz.emit('thumbnail', files[key], files[key].thumbnailUrl);
                 }
                 $dz.emit('complete', files[key]);
-            }         
+                files[key].accepted = true;
+                $dz.files.push(files[key]);
+                i++;
+                
+            }
+           
         }
     },
-     deleteUploadedFile: function (file) { //Delete the file from the server
+    deleteUploadedFile: function (file) { //Delete the file from the server
         var pe = file.previewElement;
         // We delete the file from the server
         var xhr = new XMLHttpRequest();
@@ -342,8 +413,8 @@ JS;
         for (var i = 0; i < lang.length; i++) {
             var inputGroup = document.createElement('div');
             inputGroup.className = 'input-group input-group-sm';
-            inputGroup.innerHTML ='<span class="input-group-addon">Alt-' + lang[i] + '</span>';
-            
+            inputGroup.innerHTML = '<span class="input-group-addon">Alt-' + lang[i] + '</span>';
+
             var el = document.createElement('input');
             el.setAttribute('type', 'text');
             el.setAttribute('name', 'MediaFiles[' + file.id + '][translations][' + lang[i] + '][alt]');
@@ -356,40 +427,17 @@ JS;
         }
         return container;
     },
-    rearrangeInputs: function() {
-      for (var i=0; i<document.getElementsByClassName("dz-preview").length; i++) {
-          
-      }   
-    },
-    _decrementMaxFiles: function () {
-
-    },
-     _posId: function () {
-        //Return the position id of the file. First position id = 0
-        return document.getElementsByClassName("dz-preview").length - 1;
-    },
     extend: function (obj, src) {
-         Object.keys(src).forEach(function(key) { obj[key] = src[key]; });
+        Object.keys(src).forEach(function (key) {
+            obj[key] = src[key];
+        });
     }
- };
- 
- //Add the existing files to dropzone
- $dz.DzHelper.addExistingFiles($existingFiles);
+};
+
+//Add the existing files to dropzone
+$dz.DzHelper.addExistingFiles($existingFiles);
            
 JS;
         return $js;
     }
-
-    protected function decrementMaxFiles($num)
-    {
-        if ($num > 0) {
-            $this->getView()->registerJs(
-                'if (' . $this->dropzoneName . '.options.maxFiles > 0) { '
-                . $this->dropzoneName . '.options.maxFiles = '
-                . $this->dropzoneName . '.options.maxFiles - ' . $num . ';'
-                . ' }'
-            );
-        }
-    }
-
 }

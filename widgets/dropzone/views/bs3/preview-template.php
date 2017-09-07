@@ -4,7 +4,7 @@
     <div class="dz-size" data-dz-size></div>
     <img data-dz-thumbnail />
   </div>
-  <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+  <div class="dz-progress"><span class="dz-upload progress-text" data-dz-uploadprogress></span></div>
   <div class="dz-error-message"><span data-dz-errormessage></span></div>
 </div>
 
