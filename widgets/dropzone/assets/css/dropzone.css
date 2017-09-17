@@ -3,3 +3,14 @@
  * Copyright (c) 2012 Matias Meno <m@tias.me>
  */
 
+.dz-preview-file {
+    border: #dddddd 1px solid;
+    padding: .5rem;
+    margin-right: 1rem;
+}
+.dz-alt-popover-trigger {
+    font-size: .75rem;
+}
+.dz-alt-inputs .input-group-addon, .dz-alt-inputs .form-control {
+    font-size: .75rem;
+}

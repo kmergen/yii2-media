@@ -93,4 +93,33 @@ class Image extends \yii\imagine\BaseImage
         return $img->crop($cropBy, $target); // Return "ready to save" final image instance
     }
 
+    public static function fixImageOrientation($filename) {
+        $exif = exif_read_data($filename);
+        $img = $filename;
+
+        if (!empty($exif['Orientation'])) {
+            switch ($exif['Orientation']) {
+                case 3:
+                    //$image = imagerotate($image, 180, 0);
+                    $rotate = 180;
+                    $img = self::getImagine()->open(Yii::getAlias($filename))->rotate(180);
+                    break;
+
+                case 6:
+                    //$image = imagerotate($image, -90, 0);
+                    $rotate = -90;
+                    $img = self::getImagine()->open(Yii::getAlias($filename))->rotate(90);
+                    break;
+
+                case 8:
+                    //$image = imagerotate($image, 90, 0);
+                    $rotate = 90;
+                    $img = self::getImagine()->open(Yii::getAlias($filename))->rotate(90);
+                    break;
+            }
+        }
+
+        return $img;
+    }
+
 }

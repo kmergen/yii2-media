@@ -78,7 +78,7 @@ class Dropzone extends Widget
     /**
      * @var string The template of the dropzone UI.
      */
-    public $uiTemplate = '{beginDz}{dzPreviews}{dzMessage}{dzClickable}{endDz}';
+    public $uiTemplate = '{beginDz}{beginDzPreviews}{dzClickable}{endDzPreviews}{dzMessage}{endDz}';
 
     /**
      * @var array The template parts.
@@ -170,6 +170,7 @@ class Dropzone extends Widget
         Html::addCssClass($this->htmlOptions, 'dropzone');
         echo $this->renderUITemplate();
 
+
         if ($this->model !== null && !empty($this->model->mediaFiles)) {
             $this->prepareMediaFiles();
         }
@@ -182,6 +183,7 @@ class Dropzone extends Widget
 
         $this->addEvents();
         $this->registerClientScript();
+
     }
 
 
@@ -193,15 +195,18 @@ class Dropzone extends Widget
         $parts['{beginDz}'] = isset($this->uiTemplateParts['beginDz'])
             ? $this->uiTemplateParts['beginDz']
             : Html::beginTag('div', $this->htmlOptions);
-        $parts['{dzPreviews}'] = isset($this->uiTemplateParts['dzPreviews'])
-            ? $this->uiTemplateParts['dzPreviews']
-            : Html::Tag('div', '', ['class' => 'dropzone-previews']);
+        $parts['{beginDzPreviews}'] = isset($this->uiTemplateParts['beginDzPreviews'])
+            ? $this->uiTemplateParts['beginDzPreviews']
+            : Html::beginTag('div', ['class' => 'dropzone-previews row']);
         $parts['{dzMessage}'] = isset($this->uiTemplateParts['dzMessage'])
             ? $this->uiTemplateParts['dzMessage']
             : Html::tag('div', '<span>' . $this->options['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
         $parts['{dzClickable}'] = isset($this->uiTemplateParts['dzClickable'])
             ? $this->uiTemplateParts['dzClickable']
-            : Html::button('Add File', ['class' => 'btn btn-success btn-upload-file']);
+            : Html::tag('div', 'Bild hinzufügen', ['class' => 'dz-add-file col-md-2']);
+        $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
+            ? $this->uiTemplateParts['endDzPreviews']
+            : Html::endTag('div');
         $parts['{endDz}'] = isset($this->uiTemplateParts['endDz'])
             ? $this->uiTemplateParts['endDz']
             : Html::endTag('div');
@@ -230,6 +235,7 @@ class Dropzone extends Widget
         }
     }
 
+
     /**
      * Registers required javascript for the plugin
      */
@@ -238,7 +244,8 @@ class Dropzone extends Widget
         $view = $this->getView();
         DropzoneAsset::register($view);
 
-        $js[] = 'Dropzone.autoDiscover = false;';
+        //Important to set autoDiscover to POS_END, not working on POS_READY
+        $view->registerJs('Dropzone.autoDiscover = false;', $view::POS_END);
         $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->options) . ');';
 
         if (!empty($this->clientEvents)) {
@@ -246,8 +253,8 @@ class Dropzone extends Widget
                 $js[] = "{$this->dropzoneName}.on('$event', $handler);";
             }
         }
-        $js[] = $this->commonJs();
 
+        $js[] = $this->commonJs();
         $view->registerJs(implode("\n", $js));
 
     }
@@ -257,14 +264,18 @@ class Dropzone extends Widget
      */
     public function addEvents()
     {
+        $events['addedfile'] = <<<JS
+            function (file) {
+               var el = this.previewsContainer.querySelector('.dz-add-file');
+               this.previewsContainer.appendChild(el);
+            }
+JS;
         $events['success'] = <<<JS
             function (file, data) {
                 var dz = this;
                 if (data.hasOwnProperty('error')) {
-                    pe.innerHTML = '<span class="text-danger">' + data.error + '</span>';
-                    setTimeout(function () {
-                        dz.removeFile(file);
-                    }, 3000);
+                    file.status = 'error';
+                    this.emit('error', file, {message: data.error});
                 } else {
                     this.DzHelper.extend(file, data);
                     if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
@@ -274,17 +285,27 @@ class Dropzone extends Widget
             }
 JS;
         $events['error'] = <<<JS
-            function(file, message) {
-                file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
-                
-            }
+function (file, error) {
+    file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
+    var dz = this;
+    var pe = file.previewElement.querySelector('.dz-preview-file')
+    pe.innerHTML = '<span class="text-danger">' + error.message + '</span>';
+    setTimeout(function () {
+        dz.removeFile(file);
+    }, 3000);
+    if (this.options.addRemoveLinks) {
+        var removeLink = file.previewElement.querySelector('.dz-remove');
+        removeLink.remove();
+    }
+}
+            
 JS;
         $events['removedfile'] = <<<JS
             function(file) {
                 if (file.accepted === true) {
                     this.element.querySelector('.dz-message span').innerHTML = this.options.dictDefaultMessage;
                 }
-                if(file.hasOwnProperty('processing')) {
+                if(file.hasOwnProperty('processing') && file.status !== 'error') {
                     //We delete only the files which are uploaded
                     // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
                     this.DzHelper.deleteUploadedFile(file);
@@ -292,12 +313,40 @@ JS;
             }
 JS;
         $events['complete'] = <<<JS
-           function(file) {
-               this.DzHelper.setAttributes(file);
-               this.DzHelper.fileIdInputElement(file);
-               //Add the alt input elements to preview element
-               this.DzHelper.altInputElements(file);
-           }
+function (file) {
+    if (file.status === 'success') {
+        var helper = this.DzHelper;
+        helper.setAttributes(file);
+        helper.fileIdInputElement(file);
+        //Add the alt input elements to preview element
+        if (helper.languages.length > 0) {
+            helper.altInputElements(file);
+            //Add the popover event
+            var el = file.previewElement.querySelector('.dz-alt-popover-trigger');
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                var elAltInputs = file.previewElement.querySelector('.dz-alt-inputs');
+
+                if (this.classList.contains('active')) {
+                    this.classList.remove('active');
+                    helper.hide(elAltInputs);
+                } else {
+                    this.classList.add('active');
+                    helper.show(elAltInputs);
+
+                }
+
+            });
+        }
+
+        if (this.options.addRemoveLinks) {
+            var removeLink = file.previewElement.querySelector('.dz-remove');
+            file.previewElement.querySelector('.dz-preview-file').appendChild(removeLink);
+        }
+
+        file.previewElement.querySelector('.dz-progress').remove();
+    }
+}
 JS;
         $events['maxfilesreached'] = <<<JS
            function(files) {
@@ -340,15 +389,16 @@ $dz.DzHelper = {
         if (Object.keys(files).length !== 0) {
             i = 0;
             for (key in files) {
-                //$dz._updateMaxFilesReachedClass();
                 $dz.emit('addedfile', files[key]);
                 if (files[key].hasOwnProperty('thumbnailUrl')) {
                     $dz.emit('thumbnail', files[key], files[key].thumbnailUrl);
                 }
+                files[key].status = 'success';
                 $dz.emit('complete', files[key]);
                 files[key].accepted = true;
                 $dz.files.push(files[key]);
                 i++;
+                $dz._updateMaxFilesReachedClass();
             }
         }
     },
@@ -384,11 +434,10 @@ $dz.DzHelper = {
     },
     altInputElements: function (file) { //Create the html for the alt attribute input elements of the given file
         var lang = this.languages;
-        var inputs = '';
         for (var i = 0; i < lang.length; i++) {
             var inputGroup = document.createElement('div');
             inputGroup.className = 'input-group input-group-sm';
-            inputGroup.innerHTML = '<span class="input-group-addon">Alt-' + lang[i] + '</span>';
+            inputGroup.innerHTML = '<span class="input-group-addon">' + lang[i].toUpperCase() + '</span>';
 
             var el = document.createElement('input');
             el.setAttribute('type', 'text');
@@ -398,14 +447,23 @@ $dz.DzHelper = {
                 el.setAttribute('value', file.translations[lang[i]]['alt']);
             }
             inputGroup.appendChild(el);
-            file.previewElement.querySelector('.dz-alt-inputs').appendChild(inputGroup);
-            //container.appendChild(inputGroup);
+            var container = file.previewElement.querySelector('.dz-alt-inputs');
+            this.hide(container);
+            container.appendChild(inputGroup);
         }
     },
     extend: function (obj, src) {
         Object.keys(src).forEach(function (key) {
             obj[key] = src[key];
         });
+    },
+    show: function (el) {
+        el.classList.remove('d-none');
+        el.classList.add('d-block');
+    },
+    hide: function (el) {
+        el.classList.remove('d-block');
+        el.classList.add('d-none');
     }
 };
 
@@ -413,6 +471,13 @@ $dz.DzHelper = {
 $dz.DzHelper.addExistingFiles($existingFiles);
            
 JS;
+
+        $js .= <<<JS
+
+       
+
+JS;
+
         return $js;
     }
 }

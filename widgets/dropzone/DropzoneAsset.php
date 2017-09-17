@@ -24,8 +24,8 @@ class DropzoneAsset extends AssetBundle
         'js/dropzone.min.js'
     ];
     public $depends = [
-        'yii\web\JqueryAsset',
-        'yii\bootstrap\BootstrapPluginAsset',
+      //  'yii\web\JqueryAsset',
+       // 'yii\bootstrap\BootstrapPluginAsset',
     ];
 
     public function init()

@@ -7,12 +7,14 @@
 namespace kmergen\media\traits;
 
 use Yii;
+use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 use kmergen\media\models\Media;
 use yii\web\UploadedFile;
 use yii\helpers\Url;
 use yii\helpers\FileHelper;
+use kmergen\media\helpers\Image;
 
 /**
  * Dropzone Upload trait
@@ -58,6 +60,12 @@ trait DropzoneUploadTrait
     public $imageMaxHeight;
 
     /**
+     * @var boolean Check the orientation with reading exif data orientation and rotate the image if necessary.
+     * You should do this in any case but you can set it to false if it is done on client side.
+     */
+    public $fixOrientation = true;
+
+    /**
      * @var string The web accessable url like e.g. "images". Do not prefix it with the "@web" alias.
      * The url always should be web accessable and the prefix should set in the function which fetch this file (Normally "Html::img()".
      */
@@ -91,6 +99,7 @@ trait DropzoneUploadTrait
     public function saveUploadedMediaFile()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
         $params = Yii::$app->getRequest()->post();
 
         $uploadedFile = UploadedFile::getInstanceByName($params['paramName']);
@@ -121,20 +130,23 @@ trait DropzoneUploadTrait
 
         //We save the media model and the uploaded file
         if ($model->validate()) {
+            $img = $uploadedFile->tempName;
+            if($this->fixOrientation) {
+                $img = Image::autorotate($img);
+            }
 
             if (isset($this->imageMaxWidth) && isset($this->imageMaxHeight) && ($this->imageMaxWidth < $info[0] || $this->imageMaxHeight < $info[1])) {
-                \kmergen\media\helpers\Image::resize($uploadedFile->tempName, $this->imageMaxWidth, $this->imageMaxHeight)
-                    ->save($path, ['jpeg_quality' => $this->jpeg_quality, 'png_compression_level' => $this->png_compression_level]);
-                $model->size = filesize($path);
+                $img = Image::resize($img, $this->imageMaxWidth, $this->imageMaxHeight);
             } elseif (isset($this->imageMaxWidth) && !isset($this->imageMaxHeight)) {
                 throw new InvalidConfigException('If you set "maxImageWidth" you must also set "imageMaxHeight".');
             } elseif (isset($this->imageMaxHeight) && !isset($this->imageMaxWidth)) {
                 throw new InvalidConfigException('If you set "maxImageHeight" you must also set "imageMaxWidth".');
-            } else {
-                //No resizing needed
-                $model->size = $uploadedFile->size;
-                $uploadedFile->saveAs($path);
             }
+            if (!is_object($img)) {
+                $img = Image::getImagine()->open($img);
+            }
+            $img->save($path, ['jpeg_quality' => $this->jpeg_quality, 'png_compression_level' => $this->png_compression_level]);
+            $model->size = filesize($path);
 
             $model->save();
             
