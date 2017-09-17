@@ -197,13 +197,13 @@ class Dropzone extends Widget
             : Html::beginTag('div', $this->htmlOptions);
         $parts['{beginDzPreviews}'] = isset($this->uiTemplateParts['beginDzPreviews'])
             ? $this->uiTemplateParts['beginDzPreviews']
-            : Html::beginTag('div', ['class' => 'dropzone-previews row']);
+            : Html::beginTag('div', ['class' => 'dropzone-previews form-row']);
         $parts['{dzMessage}'] = isset($this->uiTemplateParts['dzMessage'])
             ? $this->uiTemplateParts['dzMessage']
             : Html::tag('div', '<span>' . $this->options['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
         $parts['{dzClickable}'] = isset($this->uiTemplateParts['dzClickable'])
             ? $this->uiTemplateParts['dzClickable']
-            : Html::tag('div', 'Bild hinzufügen', ['class' => 'dz-add-file col-md-2']);
+            : '<div class="dz-add-file col-md-2"><div class="inner text-center">+</div></div>';
         $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
             ? $this->uiTemplateParts['endDzPreviews']
             : Html::endTag('div');
@@ -310,6 +310,10 @@ JS;
                     // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
                     this.DzHelper.deleteUploadedFile(file);
                 }
+                var el = this.previewsContainer.querySelector('.dz-add-file');
+                if (this.files.length < this.options.maxFiles) {
+                   this.DzHelper.show(el);
+               }
             }
 JS;
         $events['complete'] = <<<JS
@@ -321,8 +325,8 @@ function (file) {
         //Add the alt input elements to preview element
         if (helper.languages.length > 0) {
             helper.altInputElements(file);
-            //Add the popover event
-            var el = file.previewElement.querySelector('.dz-alt-popover-trigger');
+            //Add the alt translations event
+            var el = file.previewElement.querySelector('.dz-alt-trigger');
             el.addEventListener('click', function (e) {
                 e.preventDefault();
                 var elAltInputs = file.previewElement.querySelector('.dz-alt-inputs');
@@ -333,9 +337,7 @@ function (file) {
                 } else {
                     this.classList.add('active');
                     helper.show(elAltInputs);
-
                 }
-
             });
         }
 
@@ -350,6 +352,10 @@ function (file) {
 JS;
         $events['maxfilesreached'] = <<<JS
            function(files) {
+               var el = this.previewsContainer.querySelector('.dz-add-file');
+               if (this.files.length >= this.options.maxFiles) {
+                   this.DzHelper.hide(el);
+               }
               this.element.querySelector('.dz-message span').innerHTML = this.options.dictMaxFilesExceeded;
            }
 JS;
