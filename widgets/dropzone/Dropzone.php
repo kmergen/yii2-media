@@ -170,22 +170,13 @@ class Dropzone extends Widget
         Html::addCssClass($this->htmlOptions, 'dropzone');
         echo $this->renderUITemplate();
 
-
         if ($this->model !== null && !empty($this->model->mediaFiles)) {
             $this->prepareMediaFiles();
         }
 
-
-        //zum testen
-//        $this->files[] = ['id' => 100, 'name' => 'peter.jpg', 'size' => 22255, 'deleteUrl' => 'path/to/delete'];
-//        $this->files[] = ['id' => 200, 'name' => 'peter.jpg', 'size' => 22255, 'deleteUrl' => 'path/to/delete'];
-//        $this->files[] = ['id' => 300, 'name' => 'peter.jpg', 'size' => 22255, 'deleteUrl' => 'path/to/delete'];
-
         $this->addEvents();
         $this->registerClientScript();
-
     }
-
 
     /**
      * Render the UI for the dropzone
@@ -234,7 +225,6 @@ class Dropzone extends Widget
             $this->files[$i]['translations'] = ArrayHelper::index($file['translations'], 'language');
         }
     }
-
 
     /**
      * Registers required javascript for the plugin
@@ -477,13 +467,6 @@ $dz.DzHelper = {
 $dz.DzHelper.addExistingFiles($existingFiles);
            
 JS;
-
-        $js .= <<<JS
-
-       
-
-JS;
-
         return $js;
     }
 }

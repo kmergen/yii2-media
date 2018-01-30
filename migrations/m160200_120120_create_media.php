@@ -24,8 +24,8 @@ class m160200_120120_create_media extends Migration
         'size' => $this->integer()->notNull(),
         'created' => $this->timestamp(),
         'status' => $this->smallInteger(4)->notNull()->defaultValue(1),
-        'alt' => $this->string()->string(100),
-        'caption' => $this->string()->string(100),
+        'alt' => $this->string(100),
+        'caption' => $this->string(100),
         ], $tableOptions);
     
         $this->createIndex('idx-media-album_id', 'media', 'album_id');
