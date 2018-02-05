@@ -17,7 +17,6 @@ use kmergen\media\models\MediaAlbum;
  */
 class MediaAlbumBehavior extends Behavior
 {
-
     /**
      * @var string the attribute that value is set to the album ID.
      * The attribute is null before an album will be created.
@@ -105,8 +104,11 @@ class MediaAlbumBehavior extends Behavior
     public function beforeSave($event)
     {
         if (!empty($this->mediaFiles) && $this->owner->{$this->attribute} === null) { //Create new mediaAlbum
-            $album = $this->createMediaAlbum();
-            $albumId = $album->id;
+            $album = new MediaAlbum();
+            $album->name = $this->owner->formName() . '_' . $this->attribute;
+            $album->parent = $this->mediaAlbumParent;
+            $album->save(false);
+            $this->owner->{$this->attribute} = $album->id;
         } elseif (!empty($this->mediaFiles)) { //Update mediaAlbum
             $albumId = $this->owner->{$this->attribute};
             $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id'));
@@ -133,23 +135,6 @@ class MediaAlbumBehavior extends Behavior
             }
         }
         return true;
-    }
-
-    /**
-     * Create a new media album
-     */
-    protected function createMediaAlbum()
-    {
-        $album = new MediaAlbum();
-        $album->name = $this->owner->formName() . '_' . $this->attribute;
-        $album->parent = $this->mediaAlbumParent;
-        if ($album->save()) {
-            $this->owner->{$this->attribute} = $album->id;
-            return $album;
-        } else {
-            Yii::warning('Cannot create Media Album.');
-            return false;
-        }
     }
 
 }
