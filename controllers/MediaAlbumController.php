@@ -3,14 +3,14 @@
 namespace kmergen\media\controllers;
 
 use Yii;
-use kmergen\models\mediaAlbum;
-use kmergen\models\mediaAlbumSearch;
+use kmergen\media\models\MediaAlbum;
+use kmergen\media\models\MediaAlbumSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
- * MediaAlbumController implements the CRUD actions for mediaAlbum model.
+ * MediaAlbumController implements the CRUD actions for MediaAlbum model.
  */
 class MediaAlbumController extends Controller
 {
@@ -30,12 +30,12 @@ class MediaAlbumController extends Controller
     }
 
     /**
-     * Lists all mediaAlbum models.
+     * Lists all MediaAlbum models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $searchModel = new mediaAlbumSearch();
+        $searchModel = new MediaAlbumSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
@@ -45,7 +45,7 @@ class MediaAlbumController extends Controller
     }
 
     /**
-     * Displays a single mediaAlbum model.
+     * Displays a single MediaAlbum model.
      * @param integer $id
      * @return mixed
      */
@@ -57,13 +57,13 @@ class MediaAlbumController extends Controller
     }
 
     /**
-     * Creates a new mediaAlbum model.
+     * Creates a new MediaAlbum model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-        $model = new mediaAlbum();
+        $model = new MediaAlbum();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -75,7 +75,7 @@ class MediaAlbumController extends Controller
     }
 
     /**
-     * Updates an existing mediaAlbum model.
+     * Updates an existing MediaAlbum model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
@@ -94,7 +94,7 @@ class MediaAlbumController extends Controller
     }
 
     /**
-     * Deletes an existing mediaAlbum model.
+     * Deletes an existing MediaAlbum model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
@@ -107,15 +107,15 @@ class MediaAlbumController extends Controller
     }
 
     /**
-     * Finds the mediaAlbum model based on its primary key value.
+     * Finds the MediaAlbum model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return mediaAlbum the loaded model
+     * @return MediaAlbum the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = mediaAlbum::findOne($id)) !== null) {
+        if (($model = MediaAlbum::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

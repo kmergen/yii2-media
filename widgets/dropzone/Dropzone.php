@@ -73,7 +73,7 @@ class Dropzone extends Widget
      * @var string the delete url
      * If not set it create a url from [[$options['url'] with suffix '-delete'. eg '/post/upload-delete'.
      */
-    public $deleteUrl;
+    public $deleteUrl = '/media/dropzone/delete';
 
     /**
      * @var string The template of the dropzone UI.
@@ -96,11 +96,7 @@ class Dropzone extends Widget
         parent::init();
 
         if (!isset($this->options['url'])) {
-            throw new InvalidConfigException('Url is required.');
-        }
-
-        if (!isset($this->deleteUrl)) {
-            $this->deleteUrl = Url::toRoute($this->options['url'] . '-delete');
+            $this->options['url'] = 'media/dropzone/upload';
         }
 
         $this->options['url'] = Url::toRoute($this->options['url']);
@@ -125,6 +121,7 @@ class Dropzone extends Widget
             $this->options['createImageThumbnails'] = false;
             $this->options['params']['thumbStyle'] = $this->thumbStyle;
         }
+
         $this->options['params']['deleteUrl'] = $this->deleteUrl;
 
         //Set default messages
@@ -245,7 +242,7 @@ class Dropzone extends Widget
         }
 
         $js[] = $this->commonJs();
-        $view->registerJs(implode("\n", $js));
+        $view->registerJs(implode("\n", $js), $view::POS_END);
 
     }
 

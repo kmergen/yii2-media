@@ -3,14 +3,14 @@
 use yii\helpers\Html;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\mediaAlbum */
+/* @var $model kmergen\media\models\MediaAlbum */
 
-$this->title = Yii::t('app', 'Update {modelClass}: ', [
+$this->title = Yii::t('media', 'Update {modelClass}: ', [
     'modelClass' => 'Media Album',
-]) . ' ' . $model->name;
-$this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Media Albums'), 'url' => ['index']];
+]) . $model->name;
+$this->params['breadcrumbs'][] = ['label' => Yii::t('media', 'Media Albums'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->name, 'url' => ['view', 'id' => $model->id]];
-$this->params['breadcrumbs'][] = Yii::t('app', 'Update');
+$this->params['breadcrumbs'][] = Yii::t('media', 'Update');
 ?>
 <div class="media-album-update">
 

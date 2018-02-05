@@ -1,16 +1,16 @@
 <?php
 
-namespace app\models;
+namespace kmergen\media\models;
 
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\mediaAlbum;
+use kmergen\media\models\MediaAlbum;
 
 /**
- * mediaAlbumSearch represents the model behind the search form about `app\models\mediaAlbum`.
+ * MediaAlbumSearch represents the model behind the search form about `kmergen\media\models\MediaAlbum`.
  */
-class mediaAlbumSearch extends mediaAlbum
+class MediaAlbumSearch extends MediaAlbum
 {
     /**
      * @inheritdoc
@@ -41,7 +41,7 @@ class mediaAlbumSearch extends mediaAlbum
      */
     public function search($params)
     {
-        $query = mediaAlbum::find();
+        $query = MediaAlbum::find();
 
         // add conditions that should always apply here
 

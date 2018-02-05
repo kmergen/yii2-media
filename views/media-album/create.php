@@ -4,10 +4,10 @@ use yii\helpers\Html;
 
 
 /* @var $this yii\web\View */
-/* @var $model app\models\mediaAlbum */
+/* @var $model kmergen\media\models\MediaAlbum */
 
-$this->title = Yii::t('app', 'Create Media Album');
-$this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Media Albums'), 'url' => ['index']];
+$this->title = Yii::t('media', 'Create Media Album');
+$this->params['breadcrumbs'][] = ['label' => Yii::t('media', 'Media Albums'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="media-album-create">

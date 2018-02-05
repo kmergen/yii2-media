@@ -92,7 +92,7 @@ trait DropzoneUploadTrait
     public $jpeg_quality = 60;
 
     /**
-     * @var integer The compression level to store of a png file.
+     * @var integer The compression level to store a png file.
      */
     public $png_compression_level = 8;
 

@@ -4,10 +4,10 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 
 /* @var $this yii\web\View */
-/* @var $searchModel app\models\mediaAlbumSearch */
+/* @var $searchModel kmergen\media\models\MediaAlbumSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = Yii::t('app', 'Media Albums');
+$this->title = Yii::t('media', 'Media Albums');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="media-album-index">
@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <p>
-        <?= Html::a(Yii::t('app', 'Create Media Album'), ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a(Yii::t('media', 'Create Media Album'), ['create'], ['class' => 'btn btn-success']) ?>
     </p>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'name',
-            'parent_id',
+            'parent',
 
             ['class' => 'yii\grid\ActionColumn'],
         ],

@@ -10,8 +10,6 @@ use Yii;
  * @property integer $id
  * @property string $name
  * @property integer $parent
- *
- * @property Article[] $articles
  */
 class MediaAlbum extends \yii\db\ActiveRecord
 {
@@ -29,7 +27,6 @@ class MediaAlbum extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
             [['parent'], 'integer'],
             [['name'], 'string', 'max' => 255],
         ];
@@ -43,10 +40,9 @@ class MediaAlbum extends \yii\db\ActiveRecord
         return [
             'id' => Yii::t('media', 'ID'),
             'name' => Yii::t('media', 'Name'),
-            'parent' => Yii::t('media', 'Parent ID'),
+            'parent' => Yii::t('media', 'Parent'),
         ];
     }
- 
 
     /**
      * @inheritdoc
@@ -55,5 +51,26 @@ class MediaAlbum extends \yii\db\ActiveRecord
     public static function find()
     {
         return new MediaAlbumQuery(get_called_class());
+    }
+
+    /**
+     * Delete media files from this album
+     */
+    public function beforeDelete()
+    {
+        if (!parent::beforeDelete()) {
+            return false;
+        }
+        $files = Media::find()
+            ->where(['album_id' => $this->id])
+            ->asArray()
+            ->all();
+
+        foreach ($files as $file) {
+            if (($model = Media::findOne($file['id'])) !== null) {
+                $model->delete();
+            }
+        }
+        return true;
     }
 }

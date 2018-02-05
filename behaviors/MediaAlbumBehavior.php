@@ -19,7 +19,9 @@ class MediaAlbumBehavior extends Behavior
 {
 
     /**
-     * @var string the attribute that value is set to the album ID if the filesAttribute contains files, if not it is set to null.
+     * @var string the attribute that value is set to the album ID.
+     * The attribute is null before an album will be created.
+     * The MediaAlbum will be created first time, if it contain at minimum one file.
      */
     public $attribute;
 
@@ -28,9 +30,9 @@ class MediaAlbumBehavior extends Behavior
      */
     public $mediaFiles = [];
     /**
-     * @var integer|null the id of the parent media album (default to model_media_album). Null if media album should have no parent
+     * @var integer|null the id of the parent media album
      */
-    public $mediaAlbumParent = 4;
+    public $mediaAlbumParent;
     /**
      * @var array The old media files of the owner model
      */
@@ -57,7 +59,6 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterFind($event)
     {
-
         if ($this->owner->{$this->attribute} !== null) {
             $this->mediaFiles = Media::find()
                 ->with('translations')
@@ -103,18 +104,16 @@ class MediaAlbumBehavior extends Behavior
      */
     public function beforeSave($event)
     {
-        if (!empty($this->mediaFiles)) {
-            if ($this->owner->{$this->attribute} === null) { //Create new mediaAlbum
-                $album = $this->createMediaAlbum();
-                $albumId = $album->id;
-            } else { //Update mediaAlbum
-                $albumId = $this->owner->{$this->attribute};
-                $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id'));
-                //We delete the old images we never need
-                foreach ($deleteFiles as $id => $file) {
-                    if (($model = Media::findOne($id)) !== null) {
-                        $model->delete();
-                    }
+        if (!empty($this->mediaFiles) && $this->owner->{$this->attribute} === null) { //Create new mediaAlbum
+            $album = $this->createMediaAlbum();
+            $albumId = $album->id;
+        } elseif (!empty($this->mediaFiles)) { //Update mediaAlbum
+            $albumId = $this->owner->{$this->attribute};
+            $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id'));
+            //We delete the old images we never need
+            foreach ($deleteFiles as $id => $file) {
+                if (($model = Media::findOne($id)) !== null) {
+                    $model->delete();
                 }
             }
             //We update the posted files
@@ -127,8 +126,10 @@ class MediaAlbumBehavior extends Behavior
                 $pos++;
             }
         } else {
-            if ($this->owner->{$this->attribute} !== null) { //Update owner model
-                $this->deleteMediaAlbum();
+            if (!empty($this->oldMediaFiles)) { //Delete the old media files
+                foreach ($this->oldMediaFiles as $oldFile) {
+                    Media::find()->where(['album_id' => $oldFile['album_id']])->one()->delete();
+                }
             }
         }
         return true;
@@ -148,46 +149,6 @@ class MediaAlbumBehavior extends Behavior
         } else {
             Yii::warning('Cannot create Media Album.');
             return false;
-        }
-    }
-
-    /**
-     * Delete a media album and all its media files
-     */
-    protected function deleteMediaAlbum()
-    {
-        $files = Media::find()
-            ->where(['album_id' => $this->owner->{$this->attribute}])
-            ->asArray()
-            ->all();
-
-        foreach ($files as $file) {
-            if (($model = Media::findOne($file['id'])) !== null) {
-                $model->delete();
-            }
-        }
-
-        if (($album = MediaAlbum::findOne($this->owner->{$this->attribute})) !== null) {
-            $album->delete();
-            $this->owner->{$this->attribute} = null;
-            return true;
-        } else {
-            Yii::warning('Cannot delete Media Album.');
-            return false;
-        }
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function beforeDelete($event)
-    {
-        if (!empty($this->owner->{$this->attribute})) {
-            if ($this->deleteMediaAlbum()) {
-                return true;
-            } else {
-                return false;
-            }
         }
     }
 

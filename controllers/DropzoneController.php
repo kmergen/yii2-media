@@ -3,20 +3,21 @@
 namespace kmergen\media\controllers;
 
 use Yii;
-use kmergen\media\models\Media;
+use yii\base\InvalidConfigException;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
-use yii\web\UploadedFile;
-use yii\helpers\Url;
-use yii\helpers\FileHelper;
 
 /**
- * DropzoneController provide the upload and upload-delete actions for uploading files to the server
- * and save them as Media model.
+ * DropzoneController provide the actions for uploading files to the server
+ * and save them as Media model and delete this files from the server.
+ *
+ * If you need more control over the upload or deletion you can also use your own controller to handle
+ * the upload and delete actions. Therefore you can use [[\kmergen\media\traits\DropzoneUploadTrait]] in your controller.
  */
 class DropzoneController extends Controller
 {
+    use \kmergen\media\traits\DropzoneUploadTrait;
 
     /** @inheritdoc */
     public function behaviors()
@@ -34,7 +35,7 @@ class DropzoneController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                    //'roles' => ['admin'],
+                        //'roles' => ['admin'],
                     ],
                 ],
             ],
@@ -43,112 +44,50 @@ class DropzoneController extends Controller
 
     /**
      * Upload a file via ajax.
+     * @inheritdoc
      * @return string JSON string will return with uploaded file information or if upload failed an error message.
      */
     public function actionUpload()
     {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        
-        return '';
+        $params = Yii::$app->getRequest()->post();
 
-        $uploadedFile = UploadedFile::getInstanceByName('mediaUploadFile');
-        if ($uploadedFile->hasError) {
-            throw new Exception('Fileupload Error: ' . $uploadedFile->error);
+        if (!isset($params['targetUrl'])) {
+            throw new InvalidConfigException('TargetUrl is required.');
+        }
+
+        $vars = get_class_vars('kmergen\media\traits\DropzoneUploadTrait');
+
+        foreach ($vars as $key => $value) {
+            if (isset($params[$key])) {
+                $this->$key = $params[$key];
+            }
         }
 
         try {
-            $model = new Media();
-            $info = getimagesize($uploadedFile->tempName);
-            $params = Yii::$app->getRequest()->post('WidgetSettings');
-
-
-            //Save the uploaded file
-            $newFileName = $uploadedFile->getBaseName() . '_' . uniqid(mt_rand(100, 1000)) . '.' . $uploadedFile->getExtension();
-            $targetFileDirectory = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $params['targetUrl'];
-            FileHelper::createDirectory($targetFileDirectory);
-            $path = $targetFileDirectory . DIRECTORY_SEPARATOR . $newFileName;
-
-
-            $model->name = $uploadedFile->name;
-            $model->type = $uploadedFile->type;
-            $model->url = $params['targetUrl'] . '/' . $newFileName;
-            $model->status = $params['status'];
-
-            //We save the media model and the uploaded file
-            if ($model->validate()) {
-
-                //We save the uploaded file
-                $resize = (isset($params['imageMaxWidth']) && $params['imageMaxWidth'] < $info[0]) ||
-                    (isset($params['imageMaxHeight']) && $params['imageMaxHeight'] < $info[1]) ? true : false;
-                $jpeg_quality = isset($params['jpeg_quality']) ? $params['jpeg_quality'] : 60;
-                $png_compression_level = isset($params['png_compression_level']) ? $params['png_compression_level'] : 8;
-
-                if ($resize) {
-                    \kmergen\media\helpers\Image::resize($uploadedFile->tempName, $params['imageMaxWidth'], $params['imageMaxHeight'])
-                        ->save($path, ['jpeg_quality' => $jpeg_quality, 'png_compression_level' => $png_compression_level]);
-                    $model->size = filesize($path);
-                } else {
-                    $model->size = $uploadedFile->size;
-                    $uploadedFile->saveAs($path);
-                }
-
-                $model->save();
-
-                $items['baseUrl'] = Yii::getAlias('@web');
-                $items['files'] = [
-                    [
-                        'id' => $model->id,
-                        'name' => $model->name,
-                        'size' => $model->size,
-                        'url' => $model->url,
-                        'thumbnailUrl' => is_array($info) ? Yii::$app->image->thumb($model->url, $params['thumbStyle']) : null,
-                        'deleteUrl' => Url::to(['/media/upload/delete', 'id' => $model->id]),
-                        'deleteType' => 'POST',
-                        'status' => $model->status,
-                        'type' => $model->type,
-                    ]
-                ];
-            } else {
-                $errorMessage = '';
-                foreach ($model->getFirstErrors() as $error) {
-                    $errorMessage .= "$error\n";
-                }
-                $items['files'] = [
-                    ['error' => $errorMessage]
-                ];
-            }
-        } catch (\Exception $e) {
-            $items['files'] = [
-                ['error' => $e->getMessage()]
-            ];
+            $this->saveUploadedMediaFile();
+            $items = $this->responseItems;
+        } catch (\yii\base\Exception $e) {
+            $items['error'] = $e->getMessage();
         }
 
         return $items;
     }
 
-    public function actionDelete($id)
+
+    /**
+     * Handle file deletion when clicking on dropzone remove link
+     * @return mixed
+     */
+    public function actionDelete()
     {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-        $items['files'] = [];
-
-        if (($model = Media::findOne($id)) !== null) {
-            try {
-                $model->delete();
-                $items['files'][][$model->name] = true;
-                $items['files'][][$id] = true;
-                return $items;
-            } catch (\Exception $e) {
-                $items['files'][][$model->name] = false;
-                $items['files'][][$id] = false;
-                $items['files'][]['error'] = $e->getMessage();
-                return $items;
-            }
-        } else {
-            $items['files'][][$id] = false;
-            $items['files'][]['error'] = 'The requested image file does not exist.';
-            return $items;
+        try {
+            $id = $_POST['id'];
+            $this->deleteUploadedFile($id);
+            $items = $this->responseItems;
+        } catch (\Exception $e) {
+            $items['files'][]['error'] = $e->getMessage();
         }
+        return $items;
     }
 
 }
