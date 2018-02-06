@@ -63,13 +63,10 @@ class MediaAlbum extends \yii\db\ActiveRecord
         }
         $files = Media::find()
             ->where(['album_id' => $this->id])
-            ->asArray()
             ->all();
 
         foreach ($files as $file) {
-            if (($model = Media::findOne($file['id'])) !== null) {
-                $model->delete();
-            }
+            $file->delete();
         }
         return true;
     }

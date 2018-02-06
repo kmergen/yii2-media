@@ -17,6 +17,14 @@ use kmergen\media\models\MediaAlbum;
  */
 class MediaAlbumBehavior extends Behavior
 {
+
+    /**
+     * @var boolean $deleteCascade
+     * If true the mediaAlbum and the related files will be deleted.
+     * If false the mediaAlbum and the related files will not be deleted.
+     */
+    public $deleteCascade = true;
+
     /**
      * @var string the attribute that value is set to the album ID.
      * The attribute is null before an album will be created.
@@ -87,7 +95,6 @@ class MediaAlbumBehavior extends Behavior
                             $file->translate($language)->$attribute = $translation;
                         }
                     }
-
                 }
                 $this->mediaFiles[] = $file;
             }
@@ -102,38 +109,51 @@ class MediaAlbumBehavior extends Behavior
      */
     public function beforeSave($event)
     {
-        if (!empty($this->mediaFiles) && $this->owner->{$this->attribute} === null) { //Create new mediaAlbum
-            $album = new MediaAlbum();
-            $album->name = $this->owner->formName() . '_' . $this->attribute;
-            $album->parent = $this->mediaAlbumParent;
-            $album->save(false);
-            $this->owner->{$this->attribute} = $album->id;
-        } elseif (!empty($this->mediaFiles)) { //Update mediaAlbum
-            $albumId = $this->owner->{$this->attribute};
-            $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id'));
-            //We delete the old images we never need
-            foreach ($deleteFiles as $id => $file) {
-                if (($model = Media::findOne($id)) !== null) {
-                    $model->delete();
+        if (!empty($this->mediaFiles)) {
+            if ($this->owner->{$this->attribute} === null) { //Create new mediaAlbum
+                $album = new MediaAlbum();
+                $album->name = $this->owner->formName() . '_' . $this->attribute;
+                $album->parent = $this->mediaAlbumParent;
+                $album->save(false);
+                $this->owner->{$this->attribute} = $album->id;
+            } else {
+                $deleteFiles = array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id'));
+                //We delete the old images we never need
+                foreach ($deleteFiles as $id => $file) {
+                    if (($model = Media::findOne($id)) !== null) {
+                        $model->delete();
+                    }
                 }
             }
             //We update the posted files
             $pos = 0;
             foreach ($this->mediaFiles as $file) {
                 $file->status = 1;
-                $file->album_id = $albumId;
+                $file->album_id = $this->owner->{$this->attribute};
                 $file->album_position = $pos;
                 $file->update(false); //TODO there is an error in translation, at the moment fixed with validate false
                 $pos++;
             }
         } else {
-            if (!empty($this->oldMediaFiles)) { //Delete the old media files
-                foreach ($this->oldMediaFiles as $oldFile) {
-                    Media::find()->where(['album_id' => $oldFile['album_id']])->one()->delete();
-                }
+            foreach ($this->oldMediaFiles as $oldFile) {//Delete the old media files
+                Media::find()->where(['album_id' => $oldFile['album_id']])->one()->delete();
             }
         }
         return true;
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function beforeDelete($event)
+    {
+        if ($this->deleteCascade) {
+            if ($this->owner->{$this->attribute} !== null) {
+                MediaAlbum::findOne($this->owner->{$this->attribute})->delete();
+            }
+        }
+        return true;
+
+
+    }
 }
