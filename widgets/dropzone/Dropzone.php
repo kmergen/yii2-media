@@ -95,24 +95,30 @@ class Dropzone extends Widget
     {
         parent::init();
 
-        if (!isset($this->options['url'])) {
-            $this->options['url'] = 'media/dropzone/upload';
-        }
+        $defaultOptions = [
+            'url' => 'media/dropzone/upload',
+            'previewTemplate' => $this->render('preview-template'),
+            'addRemoveLinks' => true,
+            'previewsContainer' => '.dropzone-previews',
+            'clickable' => '.dz-add-file',
+            'paramName' => $this->id . 'file',
+            'dictDefaultMessage' => Yii::t('media', 'Drop files here to upload'),
+            'dictFallbackMessage' => Yii::t('media', 'Your browser does not support drag\'n\'drop file uploads.'),
+            'dictFallbackText' => Yii::t('media', 'Please use the fallback form below to upload your files like in the olden days.'),
+            'dictFileTooBig' => Yii::t('media', 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.'),
+            'dictInvalidFileType' => Yii::t('media', 'You can\'t upload files of this type.'),
+            'dictResponseError' => Yii::t('media', 'Server responded with {{statusCode}} code.'),
+            'dictCancelUpload' => Yii::t('media', 'Cancel upload'),
+            'dictCancelUploadConfirmation' => Yii::t('media', 'Are you sure you want to cancel this upload?'),
+            'dictRemoveFile' => Yii::t('media', 'Delete'),
+            'dictMaxFilesExceeded' => Yii::t('media', 'Maximum number of uploaded files reached.'),
+        ];
+
+        $this->options = ArrayHelper::merge($defaultOptions, $this->options);
 
         $this->options['url'] = Url::toRoute($this->options['url']);
 
-        if (!isset($this->options['previewTemplate'])) {
-            $this->options['previewTemplate'] = $this->render('preview-template');
-        }
-
-        if (!isset($this->options['addRemoveLinks'])) {
-            $this->options['addRemoveLinks'] = true;
-            $this->options['dictRemoveFile'] = Yii::t('media', 'Delete');
-        }
-
-        if (!isset($this->options['paramName'])) {
-            $this->options['paramName'] = $this->id . 'file';
-        }
+        $this->options['params']['deleteUrl'] = $this->deleteUrl;
         $this->options['params']['paramName'] = $this->options['paramName'];
 
         $this->dropzoneName = 'dropzone_' . $this->id;
@@ -120,40 +126,6 @@ class Dropzone extends Widget
         if ($this->thumbStyle !== null) {
             $this->options['createImageThumbnails'] = false;
             $this->options['params']['thumbStyle'] = $this->thumbStyle;
-        }
-
-        $this->options['params']['deleteUrl'] = $this->deleteUrl;
-
-        //Set default messages
-        if (!isset($this->options['dictDefaultMessage'])) {
-            $this->options['dictDefaultMessage'] = Yii::t('media', 'Drop files here to upload');
-        }
-        if (!isset($this->options['dictFallbackMessage'])) {
-            $this->options['dictFallbackMessage'] = Yii::t('media', 'Your browser does not support drag\'n\'drop file uploads.');
-        }
-        if (!isset($this->options['dictFallbackText'])) {
-            $this->options['dictFallbackText'] = Yii::t('media', 'Please use the fallback form below to upload your files like in the olden days.');
-        }
-        if (!isset($this->options['dictFileTooBig'])) {
-            $this->options['dictFileTooBig'] = Yii::t('media', 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.');
-        }
-        if (!isset($this->options['dictInvalidFileType'])) {
-            $this->options['dictInvalidFileType'] = Yii::t('media', 'You can\'t upload files of this type.');
-        }
-        if (!isset($this->options['dictResponseError'])) {
-            $this->options['dictResponseError'] = Yii::t('media', 'Server responded with {{statusCode}} code.');
-        }
-        if (!isset($this->options['dictCancelUpload'])) {
-            $this->options['dictCancelUpload'] = Yii::t('media', 'Cancel upload');
-        }
-        if (!isset($this->options['dictCancelUploadConfirmation'])) {
-            $this->options['dictCancelUploadConfirmation'] = Yii::t('media', 'Are you sure you want to cancel this upload?');
-        }
-        if (!isset($this->options['dictRemoveFile'])) {
-            $this->options['dictRemoveFile'] = Yii::t('media', 'Delete');
-        }
-        if (!isset($this->options['dictMaxFilesExceeded'])) {
-            $this->options['dictMaxFilesExceeded'] = Yii::t('media', 'Maximum number of uploaded files reached.');
         }
     }
 

@@ -94,7 +94,6 @@ class MediaAlbumBehavior extends Behavior
         } else {
             $this->mediaFiles = [];
         }
-
         return true;
     }
 
