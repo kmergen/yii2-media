@@ -86,17 +86,18 @@ class MediaAlbumBehavior extends Behavior
 
         if ($postedFiles !== null) {
             $this->mediaFiles = [];
-            foreach ($postedFiles as $postedFile) {
-                $file = Media::findOne($postedFile['id']);
+            $mediaFiles = Media::find()->where(['id' => array_keys($postedFiles)])->all();
+            foreach ($mediaFiles as $mediaFile) {
                 //Media translations
-                if (isset($postedFile['translations'])) {
-                    foreach ($postedFile['translations'] as $language => $data) {
+                $id = $mediaFile->id;
+                if (isset($postedFiles[$id]['translations'])) {
+                    foreach ($postedFiles[$id]['translations'] as $language => $data) {
                         foreach ($data as $attribute => $translation) {
-                            $file->translate($language)->$attribute = $translation;
+                            $mediaFile->translate($language)->$attribute = $translation;
                         }
                     }
                 }
-                $this->mediaFiles[] = $file;
+                $this->mediaFiles[] = $mediaFile;
             }
         } else {
             $this->mediaFiles = [];
@@ -153,7 +154,5 @@ class MediaAlbumBehavior extends Behavior
             }
         }
         return true;
-
-
     }
 }
