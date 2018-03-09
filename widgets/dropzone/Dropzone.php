@@ -95,6 +95,8 @@ class Dropzone extends Widget
     {
         parent::init();
 
+        $this->languages = (array)$this->languages;
+
         $defaultOptions = [
             'url' => 'media/dropzone/upload',
             'previewTemplate' => $this->render('preview-template'),
