@@ -11,7 +11,9 @@ use kmergen\media\models\MediaAlbum;
 
 /**
  * MediaAlbum behavior handles the uploaded images in a specific model and stored them in as kmergen\media\MediaAlbum.
- * In the owner table must be an attribute that provide the id from media_album table.
+ * In the owner table you have to set an attribute that provide the id from media_album table.
+ * If you save the first media file this ID is the value of the attribute and persist until the owner model will be
+ * deleted.
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */

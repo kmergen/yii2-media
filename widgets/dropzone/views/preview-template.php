@@ -1,4 +1,4 @@
-<div class="dz-preview col-md-2">
+<div class="dz-preview col-md-3">
     <div class="dz-preview-file text-center">
         <div class="dz-details">
 <!--            <div class="dz-filename"><span data-dz-name></span></div>-->
