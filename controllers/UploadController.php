@@ -23,14 +23,14 @@ class UploadController extends Controller
     {
         return [
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'upload' => ['POST'], //Do this to prevent a direct call from the browser. We can not choose ajaxOnly because the upload process is not a real ajax request.
                     'delete' => ['POST'],
                 ],
             ],
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'rules' => [
                     [
                         'allow' => true,
