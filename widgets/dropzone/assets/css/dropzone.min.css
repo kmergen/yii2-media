@@ -12,6 +12,7 @@
     border: #dddddd 1px solid;
     padding: .5rem;
     margin-right: 1rem;
+    margin-bottom: 1rem;
 }
 .dz-alt-trigger {
     font-size: .75rem;
@@ -26,5 +27,6 @@
     border: dashed #ddd;
     color: #ddd;
     font-size: 4rem;
+    line-height: 2;
 
 }
