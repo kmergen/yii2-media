@@ -159,13 +159,13 @@ class Dropzone extends Widget
             : Html::beginTag('div', $this->htmlOptions);
         $parts['{beginDzPreviews}'] = isset($this->uiTemplateParts['beginDzPreviews'])
             ? $this->uiTemplateParts['beginDzPreviews']
-            : Html::beginTag('div', ['class' => 'dropzone-previews form-row']);
+            : Html::beginTag('div', ['class' => 'dropzone-previews clearfix']);
         $parts['{dzMessage}'] = isset($this->uiTemplateParts['dzMessage'])
             ? $this->uiTemplateParts['dzMessage']
             : Html::tag('div', '<span>' . $this->options['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
         $parts['{dzClickable}'] = isset($this->uiTemplateParts['dzClickable'])
             ? $this->uiTemplateParts['dzClickable']
-            : '<div class="dz-add-file col-md-3"><div class="inner text-center">+</div></div>';
+            : '<div class="dz-add-file card text-center justify-content-center"><div class="inner">+</div></div>';
         $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
             ? $this->uiTemplateParts['endDzPreviews']
             : Html::endTag('div');
