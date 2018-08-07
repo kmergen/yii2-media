@@ -21,6 +21,7 @@ class Image extends \yii\base\Object
      * The format is as follows: [width, height, quality, imagineFunction (thumb or cropCenter)]
      */
     public $thumbStyles = [
+        'xxsmall' => [40, 30, 80, 'thumb'],
         'xsmall' => [60, 45, 80, 'thumb'],
         'small' => [80, 60, 80, 'thumb'],
         'medium' => [100, 75, 80, 'thumb'],
