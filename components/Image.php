@@ -12,7 +12,7 @@ use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
 
-class Image extends \yii\base\Object
+class Image extends \yii\base\BaseObject
 {
 
     /**
