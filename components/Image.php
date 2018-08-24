@@ -9,6 +9,7 @@ namespace kmergen\media\components;
 use Yii;
 use Exception;
 use yii\base\InvalidConfigException;
+use yii\base\InvalidArgumentException;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
 
@@ -27,6 +28,7 @@ class Image extends \yii\base\BaseObject
         'medium' => [100, 75, 80, 'thumb'],
         'large' => [140, 105, 80, 'thumb'],
         'xlarge' => [200, 150, 80, 'thumb'],
+        'xsmall_crop' => [40, 40, 80, 'cropCenter'],
         'xsmall_crop' => [60, 60, 80, 'cropCenter'],
         'small_crop' => [80, 80, 80, 'cropCenter'],
         'medium_crop' => [100, 100, 80, 'cropCenter'],
@@ -211,7 +213,7 @@ class Image extends \yii\base\BaseObject
     public function deleteThumbs($url)
     {
         if (!Url::isRelative($url)) {
-            throw new \yii\base\InvalidParamException('Url must be relative');
+            throw new \http\Exception\InvalidArgumentException('Url must be relative');
         }
         $info = pathinfo($url);
         $webroot = Yii::getAlias('@webroot');
