@@ -19,7 +19,7 @@ class MediaSearch extends Media
     {
         return [
             [['id', 'album_id', 'album_position', 'user_id', 'size', 'status'], 'integer'],
-            [['name', 'url', 'type', 'created'], 'safe'],
+            [['name', 'url', 'type'], 'safe'],
         ];
     }
 
@@ -64,7 +64,7 @@ class MediaSearch extends Media
             'album_position' => $this->album_position,
             'user_id' => $this->user_id,
             'size' => $this->size,
-            'created' => $this->created,
+            'created_at' => $this->created_at,
             'status' => $this->status,
         ]);
 

@@ -41,7 +41,9 @@ $this->params['breadcrumbs'][] = Yii::t('app', 'Update');
 
                 <?= $form->field($model, 'size')->textInput() ?>
 
-                <?= $form->field($model, 'created')->textInput() ?>
+                <?= $form->field($model, 'created_at')->textInput() ?>
+
+                <?= $form->field($model, 'updated_at')->textInput() ?>
 
                 <?= $form->field($model, 'status')->textInput() ?>
 

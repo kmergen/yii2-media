@@ -41,7 +41,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         'url:url',
                         'type',
                         'size',
-                        'created',
+                        'created_at',
+                        'updated_at',
                         'status',
                     ],
                 ])

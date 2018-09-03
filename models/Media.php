@@ -6,6 +6,8 @@ use Yii;
 use yii\helpers\FileHelper;
 use yii\helpers\Json;
 use creocoder\translateable\TranslateableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
 
 /**
  * This is the model class for table "media".
@@ -17,7 +19,8 @@ use creocoder\translateable\TranslateableBehavior;
  * @property string $url
  * @property string $type
  * @property integer $size
- * @property string $created
+ * @property string $created_at
+ * @property string $updated_at
  * @property integer $status
  */
 class Media extends \yii\db\ActiveRecord
@@ -54,6 +57,10 @@ class Media extends \yii\db\ActiveRecord
             //'translationRelation' => 'translations',
             // translationLanguageAttribute => 'language',
             ],
+            'timestamp' => [
+                'class' => TimestampBehavior::class,
+                'value' => new Expression('NOW()')
+            ]
         ];
     }
 
@@ -83,7 +90,8 @@ class Media extends \yii\db\ActiveRecord
             'url' => Yii::t('media', 'Url'),
             'type' => Yii::t('media', 'Filetype'),
             'size' => Yii::t('media', 'Filesize'),
-            'created' => Yii::t('media', 'Created'),
+            'created_at' => Yii::t('media', 'created_at'),
+            'updated_at' => Yii::t('media', 'updated_at'),
             'status' => Yii::t('media', 'Status'),
         ];
     }
@@ -135,7 +143,7 @@ class Media extends \yii\db\ActiveRecord
 
     /**
      * Delete all files with status =[[self::STATUS_TEMP]] and if it is image also the thumbnails.
-     * We use here DAO to keep the memory consumption as low as possible. 
+     * We use here DAO to keep the memory consumption as low as possible.
      * You may call this function in a cronjob or cron action.
      * @param integer $expire Default is 86400 (24 hours). That means that all temporary files which older than 24 hours from create date on are affected.
      */
@@ -145,15 +153,15 @@ class Media extends \yii\db\ActiveRecord
         $strExpired = date("Y-m-d H:i:s", $expired);
         $tablename = static::tableName();
 
-        $ids = Yii::$app->db->createCommand("SELECT id FROM $tablename WHERE status=:status AND created<:expired", [':status' => self::STATUS_TEMP, ':expired' => $strExpired])->queryColumn();
+        $ids = Yii::$app->db->createCommand("SELECT id FROM $tablename WHERE status=:status AND created_at<:expired", [':status' => self::STATUS_TEMP, ':expired' => $strExpired])->queryColumn();
         $i = 0;
         foreach ($ids as $id) {
             static::findOne($id)->delete();
             $i++;
         }
-        
+
         Yii::info("$i temporary media files have been deleted.");
-        
+
         return $i;
     }
 
