@@ -55,23 +55,23 @@ class Dropzone extends Widget
     /**
      * @var array An array of options that are supported by Dropzone
      */
-    public $options = [];
+    public $pluginOptions = [];
 
     /**
      * @var array An array of client events that are supported by Dropzone
      */
-    public $clientEvents = [];
+    public $pluginEvents = [];
 
     /**
      * @var string A thumbStyle provided by kmergen\media\components\Image
      * If set, it create a thumbnail on serverside and return thumbnail url. Otherwise no serverside thumbnail will be created.
-     * If set, the Dropzon option [[$options['createImageThumbnails']]] is set to false.
+     * If set, the Dropzon option [[$pluginOptions['createImageThumbnails']]] is set to false.
      */
     public $thumbStyle;
 
     /**
      * @var string the delete url
-     * If not set it create a url from [[$options['url'] with suffix '-delete'. eg '/post/upload-delete'.
+     * If not set it create a url from [[$pluginOptions['url'] with suffix '-delete'. eg '/post/upload-delete'.
      */
     public $deleteUrl = '/media/dropzone/delete';
 
@@ -97,12 +97,12 @@ class Dropzone extends Widget
 
         $this->languages = (array)$this->languages;
 
-        $defaultOptions = [
+        $defaults = [
             'url' => 'media/dropzone/upload',
             'previewTemplate' => $this->render('preview-template'),
             'addRemoveLinks' => true,
             'previewsContainer' => '.dropzone-previews',
-            'clickable' => '.dz-add-file',
+            'clickable' => '.dz-clickable',
             'paramName' => $this->id . 'file',
             'dictDefaultMessage' => Yii::t('media', 'Drop files here to upload'),
             'dictFallbackMessage' => Yii::t('media', 'Your browser does not support drag\'n\'drop file uploads.'),
@@ -116,25 +116,25 @@ class Dropzone extends Widget
             'dictMaxFilesExceeded' => Yii::t('media', 'Maximum number of uploaded files reached.'),
         ];
 
-        $this->options = ArrayHelper::merge($defaultOptions, $this->options);
+        $this->pluginOptions = ArrayHelper::merge($defaults, $this->pluginOptions);
 
-        $this->options['url'] = Url::toRoute($this->options['url']);
+        $this->pluginOptions['url'] = Url::toRoute($this->pluginOptions['url']);
 
-        $this->options['params']['deleteUrl'] = $this->deleteUrl;
-        $this->options['params']['paramName'] = $this->options['paramName'];
+        $this->pluginOptions['params']['deleteUrl'] = $this->deleteUrl;
+        $this->pluginOptions['params']['paramName'] = $this->pluginOptions['paramName'];
 
         $this->dropzoneName = 'dropzone_' . $this->id;
 
         if ($this->thumbStyle !== null) {
-            $this->options['createImageThumbnails'] = false;
-            $this->options['params']['thumbStyle'] = $this->thumbStyle;
+            $this->pluginOptions['createImageThumbnails'] = false;
+            $this->pluginOptions['params']['thumbStyle'] = $this->thumbStyle;
         }
     }
 
     public function run()
     {
         if (Yii::$app->request->enableCsrfValidation) {
-            $this->options['params'][Yii::$app->request->csrfParam] = Yii::$app->request->getCsrfToken();
+            $this->pluginOptions['params'][Yii::$app->request->csrfParam] = Yii::$app->request->getCsrfToken();
         }
 
         $this->htmlOptions['id'] = $this->id;
@@ -162,10 +162,14 @@ class Dropzone extends Widget
             : Html::beginTag('div', ['class' => 'dropzone-previews clearfix']);
         $parts['{dzMessage}'] = isset($this->uiTemplateParts['dzMessage'])
             ? $this->uiTemplateParts['dzMessage']
-            : Html::tag('div', '<span>' . $this->options['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
-        $parts['{dzClickable}'] = isset($this->uiTemplateParts['dzClickable'])
-            ? $this->uiTemplateParts['dzClickable']
-            : '<div class="dz-add-file card text-center justify-content-center"><div class="inner">+</div></div>';
+            : Html::tag('div', '<span>' . $this->pluginOptions['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
+        if (isset($this->uiTemplateParts['dzClickable'])) {
+            $parts['{dzClickable}'] = $this->uiTemplateParts['dzClickable'];
+        } else {
+            $options = [];
+            $options['class'] = ($this->thumbStyle !== null) ? 'dz-clickable card text-center justify-content-center ' . $this->thumbStyle : 'dz-clickable card text-center justify-content-center';
+            $parts['{dzClickable}'] = Html::tag('div', '<div class="inner">+</div>', $options);
+        }
         $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
             ? $this->uiTemplateParts['endDzPreviews']
             : Html::endTag('div');
@@ -207,10 +211,10 @@ class Dropzone extends Widget
 
         //Important to set autoDiscover to POS_END, not working on POS_READY
         $view->registerJs('Dropzone.autoDiscover = false;', $view::POS_END);
-        $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->options) . ');';
+        $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->pluginOptions) . ');';
 
-        if (!empty($this->clientEvents)) {
-            foreach ($this->clientEvents as $event => $handler) {
+        if (!empty($this->pluginEvents)) {
+            foreach ($this->pluginEvents as $event => $handler) {
                 $js[] = "{$this->dropzoneName}.on('$event', $handler);";
             }
         }
@@ -227,7 +231,7 @@ class Dropzone extends Widget
     {
         $events['addedfile'] = <<<JS
             function (file) {
-               var el = this.previewsContainer.querySelector('.dz-add-file');
+               var el = this.previewsContainer.querySelector('.dz-clickable');
                this.previewsContainer.appendChild(el);
             }
 JS;
@@ -249,7 +253,7 @@ JS;
 function (file, error) {
     file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
     var dz = this;
-    var pe = file.previewElement.querySelector('.dz-preview-file')
+    var pe = file.previewElement.querySelector('.card-body')
     pe.innerHTML = '<span class="text-danger">' + error.message + '</span>';
     setTimeout(function () {
         dz.removeFile(file);
@@ -271,7 +275,7 @@ JS;
                     // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
                     this.DzHelper.deleteUploadedFile(file);
                 }
-                var el = this.previewsContainer.querySelector('.dz-add-file');
+                var el = this.previewsContainer.querySelector('.dz-clickable');
                 if (this.files.length < this.options.maxFiles) {
                    this.DzHelper.show(el);
                }
@@ -304,7 +308,7 @@ function (file) {
 
         if (this.options.addRemoveLinks) {
             var removeLink = file.previewElement.querySelector('.dz-remove');
-            file.previewElement.querySelector('.dz-preview-file').appendChild(removeLink);
+            file.previewElement.querySelector('.card-body').appendChild(removeLink);
         }
 
         file.previewElement.querySelector('.dz-progress').remove();
@@ -313,7 +317,7 @@ function (file) {
 JS;
         $events['maxfilesreached'] = <<<JS
            function(files) {
-               var el = this.previewsContainer.querySelector('.dz-add-file');
+               var el = this.previewsContainer.querySelector('.dz-clickable');
                if (this.files.length >= this.options.maxFiles) {
                    this.DzHelper.hide(el);
                }
@@ -332,7 +336,7 @@ JS;
                progressElement.innerHTML = progress + "%";
            }
 JS;
-        $this->clientEvents = ArrayHelper::merge($events, $this->clientEvents);
+        $this->pluginEvents = ArrayHelper::merge($events, $this->pluginEvents);
     }
 
 

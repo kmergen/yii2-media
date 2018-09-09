@@ -45,7 +45,7 @@ class DropzoneController extends Controller
     /**
      * Upload a file via ajax.
      * @inheritdoc
-     * @return string JSON string will return with uploaded file information or if upload failed an error message.
+     * @return string JSON will return with uploaded file information or if upload failed an error message.
      */
     public function actionUpload()
     {

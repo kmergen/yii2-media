@@ -3,12 +3,25 @@
  * Copyright (c) 2012 Matias Meno <m@tias.me>
  */
 
+.dropzone {
+    margin-bottom: .75rem;
+}
+
 .d-block {
     display: flex !important;
 }
 
 .dropzone-previews {
-    padding: 1rem;
+    padding: .75rem .75rem 0 .75rem ;
+}
+
+.dz-preview .card-body {
+    padding: .35rem;
+}
+
+.dz-remove i {
+    font-size: 1.1rem;
+    color: #0d3349;
 }
 
 .dz-alt-trigger {
@@ -18,19 +31,30 @@
     font-size: .75rem;
 }
 
-.dz-add-file {
+.dz-clickable {
     border: dashed #ddd;
     color: #ddd;
 }
 
-.dz-add-file .inner {
+.dz-clickable .inner {
     font-size: 2rem;
 }
 
-.dz-preview, .dz-add-file {
+.dz-clickable {
     margin-bottom: 1rem;
     margin-right: 1rem;
     float: left;
-    width: 10rem;
-    height: 10rem;
+    width: 8rem;
+    height: 8rem;
+}
+
+.dz-clickable.medium {
+    width: 100px;
+    height: 6.8rem;
+}
+
+.dz-preview {
+    margin-bottom: 1rem;
+    margin-right: 1rem;
+    float: left;
 }
