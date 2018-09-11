@@ -31,6 +31,7 @@ class Dropzone extends Widget
      * @var array the existing files to add to the dropzone.
      * The array should be in the Media model format
      * If [[model]] is set, then the files array will filled with the prepared mediaFiles from the model.
+     * @see function [[prepareMediaFiles()]]
      */
     public $files = [];
 
@@ -78,13 +79,23 @@ class Dropzone extends Widget
     /**
      * @var string The template of the dropzone UI.
      */
-    public $uiTemplate = '{beginDz}{beginDzPreviews}{dzClickable}{endDzPreviews}{dzMessage}{endDz}';
+    public $uiTemplate = '{beginDz}{beginDzPreviews}{dzClickable}{dzModal}{endDzPreviews}{dzMessage}{endDz}';
 
     /**
      * @var array The template parts.
      * @see renderUITemplate()
      */
     public $uiTemplateParts = [];
+
+    /**
+     * @var string Title for media translation Attributes.
+     */
+    public $dictMediaTranslationTitle;
+
+    /**
+     * @var string The link text for media translation Attributes.
+     */
+    public $linkTextMediaTranslation;
 
     /**
      * @var string The name of this dropzone instance This name will extended by the widget id in [[init()]].
@@ -95,6 +106,14 @@ class Dropzone extends Widget
     {
         parent::init();
 
+        if ($this->dictMediaTranslationTitle === null) {
+            $this->dictMediaTranslationTitle = Yii::t('media/dropzone', 'Short image description');
+        }
+
+        if ($this->linkTextMediaTranslation === null) {
+            $this->linkTextMediaTranslation = '<i class="fa fa-pencil" title="' . Yii::t('media/dropzone', 'Short image description') . '"></i>';
+        }
+
         $this->languages = (array)$this->languages;
 
         $defaults = [
@@ -104,16 +123,16 @@ class Dropzone extends Widget
             'previewsContainer' => '.dropzone-previews',
             'clickable' => '.dz-clickable',
             'paramName' => $this->id . 'file',
-            'dictDefaultMessage' => Yii::t('media', 'Drop files here to upload'),
-            'dictFallbackMessage' => Yii::t('media', 'Your browser does not support drag\'n\'drop file uploads.'),
-            'dictFallbackText' => Yii::t('media', 'Please use the fallback form below to upload your files like in the olden days.'),
-            'dictFileTooBig' => Yii::t('media', 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.'),
-            'dictInvalidFileType' => Yii::t('media', 'You can\'t upload files of this type.'),
-            'dictResponseError' => Yii::t('media', 'Server responded with {{statusCode}} code.'),
-            'dictCancelUpload' => Yii::t('media', 'Cancel upload'),
+            'dictDefaultMessage' => Yii::t('media/dropzone', 'Drop files here to upload'),
+            'dictFallbackMessage' => Yii::t('media/dropzone', 'Your browser does not support drag\'n\'drop file uploads.'),
+            'dictFallbackText' => Yii::t('media/dropzone', 'Please use the fallback form below to upload your files like in the olden days.'),
+            'dictFileTooBig' => Yii::t('media/dropzone', 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.'),
+            'dictInvalidFileType' => Yii::t('media/dropzone', 'You can\'t upload files of this type.'),
+            'dictResponseError' => Yii::t('media/dropzone', 'Server responded with {{statusCode}} code.'),
+            'dictCancelUpload' => Yii::t('media/dropzone', 'Cancel upload'),
             'dictCancelUploadConfirmation' => Yii::t('media', 'Are you sure you want to cancel this upload?'),
-            'dictRemoveFile' => Yii::t('media', 'Delete'),
-            'dictMaxFilesExceeded' => Yii::t('media', 'Maximum number of uploaded files reached.'),
+            'dictRemoveFile' => '<i class="fa fa-trash" title="' . Yii::t('media/dropzone', 'Delete') . '"></i>',
+            'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'Maximum number of uploaded files reached.'),
         ];
 
         $this->pluginOptions = ArrayHelper::merge($defaults, $this->pluginOptions);
@@ -170,6 +189,9 @@ class Dropzone extends Widget
             $options['class'] = ($this->thumbStyle !== null) ? 'dz-clickable card text-center justify-content-center ' . $this->thumbStyle : 'dz-clickable card text-center justify-content-center';
             $parts['{dzClickable}'] = Html::tag('div', '<div class="inner">+</div>', $options);
         }
+        $parts['{dzModal}'] = isset($this->uiTemplateParts['dzModal'])
+            ? $this->uiTemplateParts['dzModal']
+            : $this->render('modal');
         $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
             ? $this->uiTemplateParts['endDzPreviews']
             : Html::endTag('div');
@@ -292,23 +314,27 @@ function (file) {
             helper.altInputElements(file);
             //Add the alt translations event
             var el = file.previewElement.querySelector('.dz-alt-trigger');
+            var modal = document.getElementById('dzModal');
+            
             el.addEventListener('click', function (e) {
                 e.preventDefault();
                 var elAltInputs = file.previewElement.querySelector('.dz-alt-inputs');
-
-                if (this.classList.contains('active')) {
-                    this.classList.remove('active');
-                    helper.hide(elAltInputs);
-                } else {
-                    this.classList.add('active');
-                    helper.show(elAltInputs);
-                }
+                
+                //var modalBody = document.getElementById('dzModal-modal-body')
+                //modalBody.appendChild(elAltInputs);
+                // if (this.classList.contains('active')) {
+                //     this.classList.remove('active');
+                //     helper.hide(elAltInputs);
+                // } else {
+                //     this.classList.add('active');
+                //     helper.show(elAltInputs);
+                // }
             });
         }
 
         if (this.options.addRemoveLinks) {
             var removeLink = file.previewElement.querySelector('.dz-remove');
-            file.previewElement.querySelector('.card-body').appendChild(removeLink);
+            file.previewElement.querySelector('.dz-tool-links').appendChild(removeLink);
         }
 
         file.previewElement.querySelector('.dz-progress').remove();
@@ -437,6 +463,28 @@ $dz.DzHelper = {
         el.classList.add('d-none');
     }
 };
+
+
+//Set the event handler for dzModal modal
+$('#dzModal').on('show.bs.modal', function(event) {
+                var inputHtml = $(event.relatedTarget).parents('.card-body').find('.dz-alt-inputs').html();
+                $(this).find('.modal-body').html(inputHtml);
+});
+$('#dzModal').on('hide.bs.modal', function(event) {
+       var elClicked = $(document.activeElement);
+       if (elClicked.data('save')) {
+         var inp = $(event.target).find('input');
+         var inpName = inp.attr('name');
+         var sel = 'input[name="' + inpName + '"]'
+         $(sel).val(inp.val());
+         console.log('Save button gedrückt');
+       } else {
+         console.log('Anderer button gedrückt');
+       }
+       
+       var g = 4;
+       //k.parent().text('Fuck over');
+});
 
 //Add the existing files to dropzone
 $dz.DzHelper.addExistingFiles($existingFiles);

@@ -19,8 +19,9 @@
     padding: .35rem;
 }
 
-.dz-remove i {
-    font-size: 1.1rem;
+.dz-tool-links i {
+    font-size: 1rem;
+    padding-right: .5rem;
     color: #0d3349;
 }
 

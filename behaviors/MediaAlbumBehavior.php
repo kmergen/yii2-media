@@ -92,28 +92,8 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterValidate($event)
     {
-        $this->oldMediaFiles = $this->mediaFiles;
-        $postedFiles = Yii::$app->request->post('MediaFiles');
-
-        if ($postedFiles !== null) {
-            $this->mediaFiles = [];
-            $mediaFiles = Media::find()->where(['id' => array_keys($postedFiles)])->all();
-            foreach ($mediaFiles as $mediaFile) {
-                //Media translations
-                $id = $mediaFile->id;
-                if (isset($postedFiles[$id]['translations'])) {
-                    foreach ($postedFiles[$id]['translations'] as $language => $data) {
-                        foreach ($data as $attribute => $translation) {
-                            $mediaFile->translate($language)->$attribute = $translation;
-                        }
-                    }
-                }
-                $this->mediaFiles[] = $mediaFile;
-            }
-        } else {
-            $this->mediaFiles = [];
-        }
-        return true;
+        //$this->oldMediaFiles = $this->mediaFiles;
+        return $this->loadMediaFiles(Yii::$app->request->post('MediaFiles'));
     }
 
     /**
@@ -159,4 +139,33 @@ class MediaAlbumBehavior extends Behavior
         }
         return true;
     }
+
+    /**
+     * Normally if we submit a model with mediaFiles we only have the id of the media file and the translation attributes of the media file.
+     * This function loads the Media models with the correspondending id and set the translation attributues.
+     * @param files an array of files with id and optional translations (normally posted [[mediaFiles]])
+     * @return boolean
+     */
+    public function loadMediaFiles($files = null) {
+        if ($files !== null) {
+            $this->mediaFiles = [];
+            $mediaFiles = Media::find()->where(['id' => array_keys($files)])->all();
+            foreach ($mediaFiles as $mediaFile) {
+                //Media translations
+                $id = $mediaFile->id;
+                if (isset($files[$id]['translations'])) {
+                    foreach ($files[$id]['translations'] as $language => $data) {
+                        foreach ($data as $attribute => $translation) {
+                            $mediaFile->translate($language)->$attribute = $translation;
+                        }
+                    }
+                }
+                $this->mediaFiles[] = $mediaFile;
+            }
+        } else {
+            $this->mediaFiles = [];
+        }
+        return true;
+    }
+
 }

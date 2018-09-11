@@ -28,7 +28,7 @@ class Bootstrap implements BootstrapInterface
         if ($app->hasModule('media') && ($module = $app->getModule('media')) instanceof Module) {
 
             $app->get('i18n')->translations['media*'] = [
-                'class' => PhpMessageSource::className(),
+                'class' => PhpMessageSource::class,
                 'basePath' => __DIR__ . '/messages',
             ];
         }
