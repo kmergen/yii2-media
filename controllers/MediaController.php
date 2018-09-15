@@ -111,10 +111,11 @@ class MediaController extends Controller
                     $image = $imagine->open(Yii::getAlias('@webroot') . '/' . $model->url);
                     $image->rotate($deg)
                         ->save(Yii::getAlias('@webroot') . '/' . $model->url, ['jpeg_quality' => 100]);
+
+                    // We update the thumbnail
+                    Yii::$app->image->thumb($model->url, $post['thumbstyle'], true);
+                    $data['refreshThumbnail'] = true;
                 }
-
-                // We update the thumbnail
-
 
                 $data['success'] = Yii::t('media', 'Changes successfully saved.');
             } catch (\Exception $e) {
@@ -127,6 +128,7 @@ class MediaController extends Controller
         }
         return $this->renderAjax('image_tool_form', [
             'model' => $model,
+            'thumbstyle' => $post['thumbstyle']
         ]);
     }
 

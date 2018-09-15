@@ -17,6 +17,7 @@ $('body').on('click', '[data-media-widget]', function (event) {
     postParams.showLanguages = el.data('showLanguages');
   } else if (widget === 'image-tools') {
     url = '/media/media/ajax-image-tools' + '?id=' + el.data('id');
+    postParams.thumbstyle = el.data('thumbstyle');
   }
 
   modalBody.load(url, postParams);
@@ -38,7 +39,12 @@ $('body').on('submit', '.media-modal-form', function (event) {
         setTimeout(function () {
           modalBody.empty()
           modal.modal('hide')
-        }, 2500)
+        }, 2500);
+        if (data.hasOwnProperty('refreshThumbnail')) {
+          var el = document.getElementById('mediafile-161');
+          var image = el.querySelector('img');
+         image.setAttribute('src', '/images/ad/thumbs/medium/American Water Spaniel_1_7035b96697016877.jpg?' + new Date().getTime());
+        }
       } else {
         modalBody.html(data)
       }

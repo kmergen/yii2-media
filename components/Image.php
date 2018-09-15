@@ -26,6 +26,7 @@ class Image extends \yii\base\BaseObject
         'xsmall' => [60, 45, 80, 'thumb'],
         'small' => [80, 60, 80, 'thumb'],
         'medium' => [100, 75, 80, 'thumb'],
+        'medium_inset' => [100, 75, 80, 'thumbInset'],
         'large' => [140, 105, 80, 'thumb'],
         'xlarge' => [200, 150, 80, 'thumb'],
         'xsmall_crop' => [40, 40, 80, 'cropCenter'],
@@ -68,9 +69,9 @@ class Image extends \yii\base\BaseObject
 
     /**
      * Return the thumb url for a given original image and create and save the thumbnail
-     * @param string $url The $url from the original image. It can be a relative url e.g. 'images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
+     * @param string $url The $url from the original image. It can be a relative url e.g. '/images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
      * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format must be the same as the value from [[thumbStyles]]
-     * @param boolean Create thumbnail though it exists
+     * @param boolean $force Create thumbnail though it exists
      *
      */
     public function thumb($url, $config, $force = false)
@@ -157,7 +158,7 @@ class Image extends \yii\base\BaseObject
      * Creates a thumbnail and save it to the given url. This function is called from [[thumb]] function
      * @param string $url The url to the original image file
      * @param array $config A thumbnail configuration array or a [[thumbStyle]]
-     * @param boolean Create thumbnail though it exists
+     * @param boolean $force Create thumbnail though it exists
      * @return The thumbnail url
      */
     protected function createThumb($url, $config, $force)

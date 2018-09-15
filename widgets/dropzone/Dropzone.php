@@ -100,38 +100,8 @@ class Dropzone extends Widget
     {
         parent::init();
 
-        $toolOptionsDefaults = [
-            'showLink' => true,
-            'class' => 'media-load-modal',
-            'data-media-widget' => 'image-tools',
-            'data-modal-target' => 'pageModal',
-            'data-modal-title' => Yii::t('media/dropzone', 'Image Tools'),
-            'data-modal-backdrop' => 'static',
-            'data-modal-close-button-class' => 'btn btn-secondary d-none'
-        ];
-        $this->toolOptions = ArrayHelper::merge($toolOptionsDefaults, $this->toolOptions);
-        $this->pluginOptions['params']['showToolLink'] = $this->toolOptions['showLink'];
-
-
-        $altOptionsDefaults = [
-            'showLink' => true,
-            'class' => 'media-load-modal',
-            'data-media-widget' => 'alt-translations',
-            'data-modal-target' => 'pageModal',
-            'data-modal-title' => Yii::t('media/dropzone', 'Set image title'),
-            'data-modal-backdrop' => 'static',
-            'data-modal-close-button-class' => 'btn btn-secondary d-none',
-            'data-show-languages' => 'one' // 'one' : Show only Yii::$app->language
-                                     //  'all' show all translatable values this has only effect if there is a languages property in your UrlManager
-        ];
-        $this->altOptions = ArrayHelper::merge($altOptionsDefaults, $this->altOptions);
-        $this->pluginOptions['params']['showAltLink'] = $this->altOptions['showLink'];
-
-
-
         $defaults = [
             'url' => 'media/dropzone/upload',
-            'previewTemplate' => $this->render('preview-template'),
             'addRemoveLinks' => true,
             'previewsContainer' => '.dropzone-previews',
             'clickable' => '.dz-clickable',
@@ -161,6 +131,39 @@ class Dropzone extends Widget
             $this->pluginOptions['createImageThumbnails'] = false;
             $this->pluginOptions['params']['thumbStyle'] = $this->thumbStyle;
         }
+
+        $toolOptionsDefaults = [
+            'showLink' => true,
+            'class' => 'media-load-modal',
+            'data-media-widget' => 'image-tools',
+            'data-modal-target' => 'pageModal',
+            'data-modal-title' => Yii::t('media/dropzone', 'Image Tools'),
+            'data-modal-backdrop' => 'static',
+            'data-modal-close-button-class' => 'btn btn-secondary d-none',
+            'data-thumbstyle' => $this->thumbStyle
+        ];
+        $this->toolOptions = ArrayHelper::merge($toolOptionsDefaults, $this->toolOptions);
+        $this->pluginOptions['params']['showToolLink'] = $this->toolOptions['showLink'];
+
+        $altOptionsDefaults = [
+            'showLink' => true,
+            'class' => 'media-load-modal',
+            'data-media-widget' => 'alt-translations',
+            'data-modal-target' => 'pageModal',
+            'data-modal-title' => Yii::t('media/dropzone', 'Set image title'),
+            'data-modal-backdrop' => 'static',
+            'data-modal-close-button-class' => 'btn btn-secondary d-none',
+            'data-show-languages' => 'one' // 'one' : Show only Yii::$app->language
+            //  'all' show all translatable values this has only effect if there is a languages property in your UrlManager
+        ];
+        $this->altOptions = ArrayHelper::merge($altOptionsDefaults, $this->altOptions);
+        $this->pluginOptions['params']['showAltLink'] = $this->altOptions['showLink'];
+
+        if (empty($this->pluginOptions['previewTemplate'])) {
+            $this->pluginOptions['previewTemplate'] = $this->render('preview-template');
+        }
+
+
     }
 
     public function run()
