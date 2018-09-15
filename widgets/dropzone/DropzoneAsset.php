@@ -10,7 +10,7 @@ use yii\web\AssetBundle;
 
 /**
  * Dropzone asset
- * 
+ *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
 class DropzoneAsset extends AssetBundle
@@ -24,7 +24,7 @@ class DropzoneAsset extends AssetBundle
         'js/dropzone.min.js'
     ];
     public $depends = [
-      //  'yii\web\JqueryAsset',
+        'kmergen\media\MediaAsset',
        // 'yii\bootstrap\BootstrapPluginAsset',
     ];
 

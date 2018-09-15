@@ -2,6 +2,8 @@
 
 namespace kmergen\media;
 
+use kmergen\media\MediaAsset;
+
 /**
  * Admin module definition class
  */
@@ -21,6 +23,8 @@ class Module extends \yii\base\Module
     {
         parent::init();
         // custom initialization code goes here
+      //  MediaAsset::register(\Yii::$app->getView());
+
     }
 
 }

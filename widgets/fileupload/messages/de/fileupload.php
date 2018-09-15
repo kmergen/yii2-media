@@ -27,7 +27,7 @@ return [
     'Start' => '',
     'Start upload' => '',
     'Status' => '',
-    'Uid' => '',
+    'user_id' => '',
     'Url' => '',
     'You can only upload {n,plural,=1{one file} other{# files}}.' => 'Es {n,plural,=1{kann maximal eine Datei} other{können maximal # Dateien}} hochgeladen werden.',
     'Only {filetypes} are allowed.' => 'Nur Dateien mit den Endungen {filetypes} können hochgeladen werden.',

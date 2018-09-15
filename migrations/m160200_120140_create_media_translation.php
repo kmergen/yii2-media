@@ -19,7 +19,7 @@ class m160200_120140_create_media_translation extends Migration
         'alt' => $this->string(255),
         'title' => $this->string(255),
         ], $tableOptions);
-    
+
         // add foreign key for table `media`
         $this->addForeignKey(
             'fk-media_translation-media_id',
@@ -29,8 +29,10 @@ class m160200_120140_create_media_translation extends Migration
             'id',
             'CASCADE'
         );
+
+        $this->addPrimaryKey('media_translation_pk', 'media_translation', ['media_id', 'language']);
     }
-    
+
 
     public function down()
     {

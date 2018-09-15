@@ -38,7 +38,7 @@ return [
     'Status' => '',
     'The maximum filesize is {filesize}.' => '',
     'The minimum filesize is {filesize}.' => '',
-    'Uid' => '',
+    'user_id' => '',
     'Url' => '',
     'You can only upload {n,plural,=1{one file} other{# files}}.' => '',
 ];

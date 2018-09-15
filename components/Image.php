@@ -43,7 +43,7 @@ class Image extends \yii\base\BaseObject
     public $thumbDirectory = 'thumbs';
 
     /**
-     * @var boolean 
+     * @var boolean
      * If true the thumb will created in an extra subdirectory under the [[thumbDirectoryName]] with the given thumbStyle.
      * If false the thumbnail will save under the [[thumbDirectory]] directory with the suffix of the keys from [[thumbStyles]] e.g images/thumbs/image_small.jpg or if it is a configuration with the width and height. e.g images/image_100x75.jpg
      */
@@ -69,19 +69,20 @@ class Image extends \yii\base\BaseObject
     /**
      * Return the thumb url for a given original image and create and save the thumbnail
      * @param string $url The $url from the original image. It can be a relative url e.g. 'images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
-     * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format must be the same as the value from [[thumbStyles]] 
-     * 
+     * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format must be the same as the value from [[thumbStyles]]
+     * @param boolean Create thumbnail though it exists
+     *
      */
-    public function thumb($url, $config)
+    public function thumb($url, $config, $force = false)
     {
         $config = $this->resolveConfig($config);
 
-        return $this->createThumb($url, $config);
+        return $this->createThumb($url, $config, $force);
     }
 
     /**
      * Resolve the thumb configuration
-     * 
+     *
      * @param string|array $config The thumb configuration.
      */
     protected function resolveConfig($config)
@@ -154,11 +155,12 @@ class Image extends \yii\base\BaseObject
 
     /**
      * Creates a thumbnail and save it to the given url. This function is called from [[thumb]] function
-     * @param string $url The url to the original image file 
-     * @param array A thumbnail configuration array or a [[thumbStyle]]
+     * @param string $url The url to the original image file
+     * @param array $config A thumbnail configuration array or a [[thumbStyle]]
+     * @param boolean Create thumbnail though it exists
      * @return The thumbnail url
      */
-    protected function createThumb($url, $config)
+    protected function createThumb($url, $config, $force)
     {
         if (is_string($config)) {
             if ($this->thumbExtraDirectory === true) {
@@ -180,7 +182,7 @@ class Image extends \yii\base\BaseObject
         $thumbPath = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $dirname . DIRECTORY_SEPARATOR . $thumbDirectory;
         $thumbName = $info['filename'] . $suffix . '.' . $info['extension'];
 
-        if (!file_exists($thumbPath . DIRECTORY_SEPARATOR . $thumbName)) {
+        if (!file_exists($thumbPath . DIRECTORY_SEPARATOR . $thumbName) || $force) {
 
             if (!$suffix) {
                 FileHelper::createDirectory($thumbPath, 0766);

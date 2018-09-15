@@ -30,7 +30,7 @@ class MediaTranslation extends \yii\db\ActiveRecord
             [['language'], 'required'],
             [['media_id'], 'integer'],
             [['language'], 'string', 'max' => 16],
-            [['alt'], 'string', 'max' => 20],
+            [['alt'], 'string', 'max' => 40],
             [['media_id'], 'exist', 'skipOnError' => true, 'targetClass' => Media::className(), 'targetAttribute' => ['media_id' => 'id']],
         ];
     }

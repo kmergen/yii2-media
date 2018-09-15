@@ -92,8 +92,8 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterValidate($event)
     {
-        //$this->oldMediaFiles = $this->mediaFiles;
-        return $this->loadMediaFiles(Yii::$app->request->post('MediaFiles'));
+        $this->loadPostedMediaFiles(Yii::$app->getRequest()->post('MediaFiles'));
+        return true;
     }
 
     /**
@@ -140,32 +140,19 @@ class MediaAlbumBehavior extends Behavior
         return true;
     }
 
+
     /**
-     * Normally if we submit a model with mediaFiles we only have the id of the media file and the translation attributes of the media file.
-     * This function loads the Media models with the correspondending id and set the translation attributues.
-     * @param files an array of files with id and optional translations (normally posted [[mediaFiles]])
-     * @return boolean
+     * Load and set the Media Files from the posted Media files ids
+     * @param array the posted media files array
+     * @return void
      */
-    public function loadMediaFiles($files = null) {
+    public function loadPostedMediaFiles($files)
+    {
         if ($files !== null) {
-            $this->mediaFiles = [];
-            $mediaFiles = Media::find()->where(['id' => array_keys($files)])->all();
-            foreach ($mediaFiles as $mediaFile) {
-                //Media translations
-                $id = $mediaFile->id;
-                if (isset($files[$id]['translations'])) {
-                    foreach ($files[$id]['translations'] as $language => $data) {
-                        foreach ($data as $attribute => $translation) {
-                            $mediaFile->translate($language)->$attribute = $translation;
-                        }
-                    }
-                }
-                $this->mediaFiles[] = $mediaFile;
-            }
+            $this->mediaFiles = Media::find()->where(['id' => array_keys($files)])->all();
         } else {
             $this->mediaFiles = [];
         }
-        return true;
     }
 
 }

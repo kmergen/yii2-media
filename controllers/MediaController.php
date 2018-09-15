@@ -5,9 +5,13 @@ namespace kmergen\media\controllers;
 use Yii;
 use kmergen\media\models\Media;
 use kmergen\media\models\MediaSearch;
+use kmergen\media\helpers\Image;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\BadRequestHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Response;
+
 
 /**
  * MediaController implements the CRUD actions for Media model.
@@ -27,6 +31,103 @@ class MediaController extends Controller
                 ],
             ],
         ];
+    }
+
+
+    /**
+     * Open a form to set the alt attributes
+     * @return mixed
+     */
+    public function actionAjaxAltUpdate($id)
+    {
+        $request = Yii::$app->getRequest();
+
+        if (!$request->getIsAjax()) {
+            throw new BadRequestHttpException();
+        }
+        $post = $request->post();
+        $model = $this->findModel($id);
+
+        if (isset($post['showLanguages'])) {
+            if ($post['showLanguages'] === 'one') {
+                $languages = (array)Yii::$app->language;
+            } elseif ($post['showLanguages'] === 'all') {
+                $urlManager = Yii::$app->getUrlManager();
+                if ($urlManager->hasProperty('languages')) {
+                    $languages = $urlManager->languages;
+                } else {
+                    (array)Yii::$app->language;
+                }
+            }
+        }
+
+        if ($model->load($post)) {
+            $languages = $post['languages'];
+
+            foreach ($request->post('MediaTranslation', []) as $language => $data) {
+                foreach ($data as $attribute => $translation) {
+                    $model->translate($language)->$attribute = $translation;
+                }
+            }
+
+            if ($model->validate()) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                if ($model->save()) {
+                    $data['success'] = Yii::t('media', 'Changes successfully saved.');
+                } else {
+                    $data['error'] = Yii::t('media', 'Error! Cannot update changes');
+                }
+                return $data;
+            }
+        }
+        return $this->renderAjax('update_alt_form', [
+            'model' => $model,
+            'languages' => $languages
+        ]);
+    }
+
+    /**
+     * Open a form to rotate the image
+     * Also it gives informations about the image
+     * @return mixed
+     */
+    public function actionAjaxImageTools($id)
+    {
+        $request = Yii::$app->getRequest();
+
+        if (!$request->getIsAjax()) {
+            throw new BadRequestHttpException();
+        }
+
+        $post = $request->post();
+        $model = $this->findModel($id);
+
+        if (isset($post['image-rotate-deg'])) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            try {
+                $deg = (int)$post['image-rotate-deg'];
+                if ($deg !== 0) {
+                    $imagine = Image::getImagine();
+                    $image = $imagine->open(Yii::getAlias('@webroot') . '/' . $model->url);
+                    $image->rotate($deg)
+                        ->save(Yii::getAlias('@webroot') . '/' . $model->url, ['jpeg_quality' => 100]);
+                }
+
+                // We update the thumbnail
+
+
+                $data['success'] = Yii::t('media', 'Changes successfully saved.');
+            } catch (\Exception $e) {
+                $data['error'] = Yii::t('media', 'Error! Cannot update changes');
+                if (YII_DEBUG) {
+                    $data['error'] .= "\n" . $e->getMessage();
+                }
+            }
+            return $data;
+        }
+        return $this->renderAjax('image_tool_form', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -90,8 +191,9 @@ class MediaController extends Controller
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        return $this->render('update', [
+        return $this->render('update_form', [
             'model' => $model,
+            'languages' => ['de']
         ]);
     }
 
@@ -118,7 +220,7 @@ class MediaController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Media::findOne($id)) !== null) {
+        if (($model = Media::find()->where(['id' => $id])->with('translations')->one()) !== null) {
             return $model;
         }
 

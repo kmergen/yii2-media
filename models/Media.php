@@ -72,7 +72,7 @@ class Media extends \yii\db\ActiveRecord
         return [
             [['album_id', 'album_position', 'user_id', 'status'], 'integer'],
             [['status'], 'in', 'range' => [self::STATUS_TEMP, self::STATUS_PERMANENT]],
-            [['name'], 'string', 'max' => 100],
+            [['name'], 'string', 'max' => 255],
             [['url', 'type', 'size'], 'safe']];
     }
 
@@ -85,7 +85,7 @@ class Media extends \yii\db\ActiveRecord
             'id' => Yii::t('media', 'ID'),
             'album_id' => Yii::t('media', 'Album ID'),
             'album_position' => Yii::t('media', 'Album position'),
-            'user_id' => Yii::t('media', 'Uid'),
+            'user_id' => Yii::t('media', 'user_id'),
             'name' => Yii::t('media', 'Filename'),
             'url' => Yii::t('media', 'Url'),
             'type' => Yii::t('media', 'Filetype'),

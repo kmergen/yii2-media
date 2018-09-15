@@ -42,13 +42,6 @@ class Dropzone extends Widget
     public $model;
 
     /**
-     * @var array An array with languages in which the alt attribute should be translated.
-     * If empty, no alt input element is created. That means the translation feature is off.
-     * If not empty, for each language an alt attribute input element is created. (Typically values are Yii::$app->language or Yii::$app->urlManager->languages)
-     */
-    public $languages = [];
-
-    /**
      * @var array The HTML options for the dropzone container. The cssClass 'dropzone' will set in [[init()]].
      */
     public $htmlOptions = [];
@@ -79,7 +72,7 @@ class Dropzone extends Widget
     /**
      * @var string The template of the dropzone UI.
      */
-    public $uiTemplate = '{beginDz}{beginDzPreviews}{dzClickable}{dzModal}{endDzPreviews}{dzMessage}{endDz}';
+    public $uiTemplate = '{beginDz}{beginDzPreviews}{dzClickable}{endDzPreviews}{dzMessage}{endDz}';
 
     /**
      * @var array The template parts.
@@ -88,14 +81,15 @@ class Dropzone extends Widget
     public $uiTemplateParts = [];
 
     /**
-     * @var string Title for media translation Attributes.
+     * @var array The options for the media modal tool window to rotate images.
      */
-    public $dictMediaTranslationTitle;
+    public $toolOptions = [];
 
     /**
-     * @var string The link text for media translation Attributes.
+     * @var array The options for the media modal alt translations.
      */
-    public $linkTextMediaTranslation;
+    public $altOptions = [];
+
 
     /**
      * @var string The name of this dropzone instance This name will extended by the widget id in [[init()]].
@@ -106,15 +100,34 @@ class Dropzone extends Widget
     {
         parent::init();
 
-        if ($this->dictMediaTranslationTitle === null) {
-            $this->dictMediaTranslationTitle = Yii::t('media/dropzone', 'Short image description');
-        }
+        $toolOptionsDefaults = [
+            'showLink' => true,
+            'class' => 'media-load-modal',
+            'data-media-widget' => 'image-tools',
+            'data-modal-target' => 'pageModal',
+            'data-modal-title' => Yii::t('media/dropzone', 'Image Tools'),
+            'data-modal-backdrop' => 'static',
+            'data-modal-close-button-class' => 'btn btn-secondary d-none'
+        ];
+        $this->toolOptions = ArrayHelper::merge($toolOptionsDefaults, $this->toolOptions);
+        $this->pluginOptions['params']['showToolLink'] = $this->toolOptions['showLink'];
 
-        if ($this->linkTextMediaTranslation === null) {
-            $this->linkTextMediaTranslation = '<i class="fa fa-pencil" title="' . Yii::t('media/dropzone', 'Short image description') . '"></i>';
-        }
 
-        $this->languages = (array)$this->languages;
+        $altOptionsDefaults = [
+            'showLink' => true,
+            'class' => 'media-load-modal',
+            'data-media-widget' => 'alt-translations',
+            'data-modal-target' => 'pageModal',
+            'data-modal-title' => Yii::t('media/dropzone', 'Set image title'),
+            'data-modal-backdrop' => 'static',
+            'data-modal-close-button-class' => 'btn btn-secondary d-none',
+            'data-show-languages' => 'one' // 'one' : Show only Yii::$app->language
+                                     //  'all' show all translatable values this has only effect if there is a languages property in your UrlManager
+        ];
+        $this->altOptions = ArrayHelper::merge($altOptionsDefaults, $this->altOptions);
+        $this->pluginOptions['params']['showAltLink'] = $this->altOptions['showLink'];
+
+
 
         $defaults = [
             'url' => 'media/dropzone/upload',
@@ -189,9 +202,6 @@ class Dropzone extends Widget
             $options['class'] = ($this->thumbStyle !== null) ? 'dz-clickable card text-center justify-content-center ' . $this->thumbStyle : 'dz-clickable card text-center justify-content-center';
             $parts['{dzClickable}'] = Html::tag('div', '<div class="inner">+</div>', $options);
         }
-        $parts['{dzModal}'] = isset($this->uiTemplateParts['dzModal'])
-            ? $this->uiTemplateParts['dzModal']
-            : $this->render('modal');
         $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
             ? $this->uiTemplateParts['endDzPreviews']
             : Html::endTag('div');
@@ -309,35 +319,26 @@ function (file) {
         var helper = this.DzHelper;
         helper.setAttributes(file);
         helper.fileIdInputElement(file);
-        //Add the alt input elements to preview element
-        if (helper.languages.length > 0) {
-            helper.altInputElements(file);
-            //Add the alt translations event
-            var el = file.previewElement.querySelector('.dz-alt-trigger');
-            var modal = document.getElementById('dzModal');
-            
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                var elAltInputs = file.previewElement.querySelector('.dz-alt-inputs');
-                
-                //var modalBody = document.getElementById('dzModal-modal-body')
-                //modalBody.appendChild(elAltInputs);
-                // if (this.classList.contains('active')) {
-                //     this.classList.remove('active');
-                //     helper.hide(elAltInputs);
-                // } else {
-                //     this.classList.add('active');
-                //     helper.show(elAltInputs);
-                // }
-            });
-        }
-
+        
+        // Add remove Link
         if (this.options.addRemoveLinks) {
             var removeLink = file.previewElement.querySelector('.dz-remove');
-            file.previewElement.querySelector('.dz-tool-links').appendChild(removeLink);
+            file.previewElement.querySelector('.dz-links').appendChild(removeLink);
         }
-
         file.previewElement.querySelector('.dz-progress').remove();
+        
+        if (this.options.params.showAltLink) {
+          // Add Link for alt translation 
+          var altLink = file.previewElement.querySelector('[data-media-widget="alt-translations"]');
+          altLink.dataset.id = file.id;
+        }
+       
+        if (this.options.params.showToolLink) {
+          // Add Link for alt translation 
+          var toolLink = file.previewElement.querySelector('[data-media-widget="image-tools"]');
+          toolLink.dataset.id = file.id;
+        }
+        
     }
 }
 JS;
@@ -365,23 +366,19 @@ JS;
         $this->pluginEvents = ArrayHelper::merge($events, $this->pluginEvents);
     }
 
-
     /**
      * The main js code for dropzone widget
      */
     protected function commonJs()
     {
         $existingFiles = Json::encode($this->files);
-        $languages = Json::encode($this->languages);
         $dz = $this->dropzoneName;
 
         $js = <<<JS
 /* 
 * Extend Dropzone with own functions
 */
-
 $dz.DzHelper = {
-    languages: $languages,
     addExistingFiles: function (files) {
         if (Object.keys(files).length !== 0) {
             i = 0;
@@ -429,26 +426,6 @@ $dz.DzHelper = {
         el.setAttribute('value', file.id);
         file.previewElement.appendChild(el);
     },
-    altInputElements: function (file) { //Create the html for the alt attribute input elements of the given file
-        var lang = this.languages;
-        for (var i = 0; i < lang.length; i++) {
-            var inputGroup = document.createElement('div');
-            inputGroup.className = 'input-group input-group-sm';
-            inputGroup.innerHTML = '<span class="input-group-addon">' + lang[i].toUpperCase() + '</span>';
-
-            var el = document.createElement('input');
-            el.setAttribute('type', 'text');
-            el.setAttribute('name', 'MediaFiles[' + file.id + '][translations][' + lang[i] + '][alt]');
-            el.className = 'form-control';
-            if (file.translations && file.translations.hasOwnProperty(lang[i])) {
-                el.setAttribute('value', file.translations[lang[i]]['alt']);
-            }
-            inputGroup.appendChild(el);
-            var container = file.previewElement.querySelector('.dz-alt-inputs');
-            this.hide(container);
-            container.appendChild(inputGroup);
-        }
-    },
     extend: function (obj, src) {
         Object.keys(src).forEach(function (key) {
             obj[key] = src[key];
@@ -462,31 +439,10 @@ $dz.DzHelper = {
         el.classList.remove('d-block');
         el.classList.add('d-none');
     }
+    
 };
 
-
-//Set the event handler for dzModal modal
-$('#dzModal').on('show.bs.modal', function(event) {
-                var inputHtml = $(event.relatedTarget).parents('.card-body').find('.dz-alt-inputs').html();
-                $(this).find('.modal-body').html(inputHtml);
-});
-$('#dzModal').on('hide.bs.modal', function(event) {
-       var elClicked = $(document.activeElement);
-       if (elClicked.data('save')) {
-         var inp = $(event.target).find('input');
-         var inpName = inp.attr('name');
-         var sel = 'input[name="' + inpName + '"]'
-         $(sel).val(inp.val());
-         console.log('Save button gedrückt');
-       } else {
-         console.log('Anderer button gedrückt');
-       }
-       
-       var g = 4;
-       //k.parent().text('Fuck over');
-});
-
-//Add the existing files to dropzone
+// Add the existing files to dropzone
 $dz.DzHelper.addExistingFiles($existingFiles);
            
 JS;
