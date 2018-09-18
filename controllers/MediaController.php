@@ -115,6 +115,7 @@ class MediaController extends Controller
                     // We update the thumbnail
                     Yii::$app->image->thumb($model->url, $post['thumbstyle'], true);
                     $data['refreshThumbnail'] = true;
+                    $data['id'] = $id;
                 }
 
                 $data['success'] = Yii::t('media', 'Changes successfully saved.');

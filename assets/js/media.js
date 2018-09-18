@@ -41,9 +41,9 @@ $('body').on('submit', '.media-modal-form', function (event) {
           modal.modal('hide')
         }, 2500);
         if (data.hasOwnProperty('refreshThumbnail')) {
-          var el = document.getElementById('mediafile-161');
+          var el = document.getElementById('mediafile-' + data.id);
           var image = el.querySelector('img');
-         image.setAttribute('src', '/images/ad/thumbs/medium/American Water Spaniel_1_7035b96697016877.jpg?' + new Date().getTime());
+         image.setAttribute('src', image.getAttribute('src') + '?' + new Date().getTime());
         }
       } else {
         modalBody.html(data)

@@ -92,6 +92,7 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterValidate($event)
     {
+        $this->oldMediaFiles = $this->mediaFiles;
         $this->loadPostedMediaFiles(Yii::$app->getRequest()->post('MediaFiles'));
         return true;
     }

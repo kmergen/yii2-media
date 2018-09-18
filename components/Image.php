@@ -12,6 +12,8 @@ use yii\base\InvalidConfigException;
 use yii\base\InvalidArgumentException;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
+use yii\imagine\Image as ImagineImage;
+use Imagine\Image\ManipulatorInterface;
 
 class Image extends \yii\base\BaseObject
 {
@@ -19,22 +21,27 @@ class Image extends \yii\base\BaseObject
     /**
      * @var array The thumbnail styles configuration
      * [styles] The thumbnail style name as key and the configuration array as value.
-     * The format is as follows: [width, height, quality, imagineFunction (thumb or cropCenter)]
+     * The format is as follows: [width, height, quality, imagineFunction (thumb or crop)], the fourth parameter of thumbnail or crop
      */
     public $thumbStyles = [
-        'xxsmall' => [40, 30, 80, 'thumb'],
-        'xsmall' => [60, 45, 80, 'thumb'],
-        'small' => [80, 60, 80, 'thumb'],
-        'medium' => [100, 75, 80, 'thumb'],
-        'medium_inset' => [100, 75, 80, 'thumbInset'],
-        'large' => [140, 105, 80, 'thumb'],
-        'xlarge' => [200, 150, 80, 'thumb'],
-        'xsmall_crop' => [40, 40, 80, 'cropCenter'],
-        'xsmall_crop' => [60, 60, 80, 'cropCenter'],
-        'small_crop' => [80, 80, 80, 'cropCenter'],
-        'medium_crop' => [100, 100, 80, 'cropCenter'],
-        'large_crop' => [140, 140, 80, 'cropCenter'],
-        'xlarge_crop' => [200, 200, 80, 'cropCenter']
+        'xxsmall' => [40, 30, 80, 'thumbnail', 0x00000001],
+        'xsmall' => [60, 45, 80, 'thumbnail', 0x00000001],
+        'small' => [80, 60, 80, 'thumbnail', 0x00000001],
+        'medium' => [100, 75, 80, 'thumbnail', 0x00000001],
+        'large' => [140, 105, 80, 'thumbnail', 0x00000001],
+        'xlarge' => [200, 150, 80, 'thumbnail', 0x00000001],
+        'xxsmall_outbound' => [40, 30, 80, 'thumbnail', 0x00000002],
+        'xsmall_outbound' => [60, 45, 80, 'thumbnail', 0x00000002],
+        'small_outbound' => [80, 60, 80, 'thumbnail', 0x00000002],
+        'medium_outbound' => [100, 75, 80, 'thumbnail', 0x00000002],
+        'large_outbound' => [140, 105, 80, 'thumbnail', 0x00000002],
+        'xlarge_outbound' => [200, 150, 80, 'thumbnail', 0x00000002],
+        'xxsmall_crop_center' => [40, 40, 80, 'cropCenter', []],
+        'xsmall_crop_center' => [60, 60, 80, 'cropCenter', []],
+        'small_crop_center' => [80, 80, 80, 'cropCenter', []],
+        'medium_crop_center' => [100, 100, 80, 'cropCenter', []],
+        'large_crop_center' => [140, 140, 80, 'cropCenter', []],
+        'xlarge_crop_center' => [200, 200, 80, 'cropCenter', []]
     ];
 
     /**
@@ -190,10 +197,12 @@ class Image extends \yii\base\BaseObject
             }
 
             //Create and save the thumbnail
-            list($width, $height, $quality, $func) = $config;
+            list($width, $height, $quality, $func, $param1) = $config;
 
             try {
-                \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
+                // \yii\imagine\Image::$thumbnailBackgroundColor = '000';
+                \kmergen\media\helpers\Image::$func($url, $width, $height, $param1)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
+               // \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
             } catch (Exception $ex) {
                 if ($ex instanceof \Imagine\Exception\InvalidArgumentException) {
                     Yii::info('Imagine Invalid Argument Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');

@@ -14,32 +14,6 @@ class Image extends \yii\imagine\BaseImage
 {
 
     /**
-     * Creates a thumbnail
-     * @param string $filename the image file path or path alias.
-     * @param integer $width the width to resize the original image in pixels
-     * @param integer $height the height to resize the original image in pixels
-     * @param string $mode The mode to create the thumbnail 'inset' or 'outbound'
-     * @return ImageInterface
-     */
-    public static function thumb($filename, $width, $height, $mode = ManipulatorInterface::THUMBNAIL_OUTBOUND)
-    {
-        return self::getImagine()->open(Yii::getAlias($filename))
-                ->thumbnail(new Box($width, $height), $mode);
-    }
-
-    /**
-     * Creates a thumbnail in mode inset
-     * @param string $filename the image file path or path alias.
-     * @param integer $width the width to resize the original image in pixels
-     * @param integer $height the height to resize the original image in pixels
-     * @return ImageInterface
-     */
-    public static function thumbInset($filename, $width, $height)
-    {
-        return self::thumb($filename, $width, $height, ManipulatorInterface::THUMBNAIL_INSET);
-    }
-
-    /**
      * Creates a crop thumbnail
      * @param string $filename the image file path or path alias.
      * @param integer $resizeWidth the width to resize the original image in pixels
@@ -63,7 +37,7 @@ class Image extends \yii\imagine\BaseImage
      * @param integer $height the height in pixels
      * @return ImageInterface
      */
-    public static function cropCenter($filename, $targetWidth, $targetHeight)
+    public static function cropCenter($filename, $targetWidth, $targetHeight, array $start = [])
     {
         // Box is Imagine Box instance
         // Point is Imagine Point instance
@@ -91,35 +65,6 @@ class Image extends \yii\imagine\BaseImage
         $img = $originalImage->thumbnail($tempBox, 'outbound');
         // Here is the magic..
         return $img->crop($cropBy, $target); // Return "ready to save" final image instance
-    }
-
-    public static function fixImageOrientation($filename) {
-        $exif = exif_read_data($filename);
-        $img = $filename;
-
-        if (!empty($exif['Orientation'])) {
-            switch ($exif['Orientation']) {
-                case 3:
-                    //$image = imagerotate($image, 180, 0);
-                    $rotate = 180;
-                    $img = self::getImagine()->open(Yii::getAlias($filename))->rotate(180);
-                    break;
-
-                case 6:
-                    //$image = imagerotate($image, -90, 0);
-                    $rotate = -90;
-                    $img = self::getImagine()->open(Yii::getAlias($filename))->rotate(90);
-                    break;
-
-                case 8:
-                    //$image = imagerotate($image, 90, 0);
-                    $rotate = 90;
-                    $img = self::getImagine()->open(Yii::getAlias($filename))->rotate(90);
-                    break;
-            }
-        }
-
-        return $img;
     }
 
 }
