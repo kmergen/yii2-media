@@ -109,7 +109,7 @@ class Dropzone extends Widget
             'dictDefaultMessage' => Yii::t('media/dropzone', 'Drop files here to upload'),
             'dictFallbackMessage' => Yii::t('media/dropzone', 'Your browser does not support drag\'n\'drop file uploads.'),
             'dictFallbackText' => Yii::t('media/dropzone', 'Please use the fallback form below to upload your files like in the olden days.'),
-            'dictFileTooBig' => Yii::t('media/dropzone', 'File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.'),
+            'dictFileTooBig' => Yii::t('media/dropzone', 'File is too big {{filesize}} MB. Max filesize: {{maxFilesize}} MB.'),
             'dictInvalidFileType' => Yii::t('media/dropzone', 'You can\'t upload files of this type.'),
             'dictResponseError' => Yii::t('media/dropzone', 'Server responded with {{statusCode}} code.'),
             'dictCancelUpload' => Yii::t('media/dropzone', 'Cancel upload'),
