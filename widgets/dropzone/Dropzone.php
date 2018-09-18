@@ -109,13 +109,13 @@ class Dropzone extends Widget
             'dictDefaultMessage' => Yii::t('media/dropzone', 'Drop files here to upload'),
             'dictFallbackMessage' => Yii::t('media/dropzone', 'Your browser does not support drag\'n\'drop file uploads.'),
             'dictFallbackText' => Yii::t('media/dropzone', 'Please use the fallback form below to upload your files like in the olden days.'),
-            'dictFileTooBig' => Yii::t('media/dropzone', 'File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.'),
+            'dictFileTooBig' => Yii::t('media/dropzone', 'File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.'),
             'dictInvalidFileType' => Yii::t('media/dropzone', 'You can\'t upload files of this type.'),
             'dictResponseError' => Yii::t('media/dropzone', 'Server responded with {{statusCode}} code.'),
             'dictCancelUpload' => Yii::t('media/dropzone', 'Cancel upload'),
             'dictCancelUploadConfirmation' => Yii::t('media', 'Are you sure you want to cancel this upload?'),
-            'dictRemoveFile' => '<i class="fa fa-trash" title="' . Yii::t('media/dropzone', 'Delete') . '"></i>',
-            'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'Maximum number of uploaded files reached.'),
+            'dictRemoveFile' => '<i class="fa fa-trash" title="' . Yii::t('media/dropzone', 'Delete Image') . '"></i>',
+            'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'The maximum number of {n} pictures has been reached.', ['n' => 5]),
         ];
 
         $this->pluginOptions = ArrayHelper::merge($defaults, $this->pluginOptions);
@@ -286,13 +286,14 @@ JS;
 JS;
         $events['error'] = <<<JS
 function (file, error) {
-    file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
+    // file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
     var dz = this;
-    var pe = file.previewElement.querySelector('.card-body')
-    pe.innerHTML = '<span class="text-danger">' + error.message + '</span>';
+    var el = dz.element.querySelector('.dz-message span')
+    el.innerHTML = '<span class="text-danger">' + error + '</span>';
+    dz.removeFile(file);
     setTimeout(function () {
-        dz.removeFile(file);
-    }, 3000);
+        el.innerHTML = '';
+    }, 4000);
     if (this.options.addRemoveLinks) {
         var removeLink = file.previewElement.querySelector('.dz-remove');
         removeLink.remove();
