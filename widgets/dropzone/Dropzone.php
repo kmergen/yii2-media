@@ -115,7 +115,7 @@ class Dropzone extends Widget
             'dictCancelUpload' => Yii::t('media/dropzone', 'Cancel upload'),
             'dictCancelUploadConfirmation' => Yii::t('media', 'Are you sure you want to cancel this upload?'),
             'dictRemoveFile' => '<i class="fa fa-trash" title="' . Yii::t('media/dropzone', 'Delete Image') . '"></i>',
-            'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'The maximum number of {n} pictures has been reached.', ['n' => 5]),
+            'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'The maximum number of {n} pictures has been reached.', ['n' => $this->pluginOptions['maxFiles'] ?? 5]),
         ];
 
         $this->pluginOptions = ArrayHelper::merge($defaults, $this->pluginOptions);

@@ -65,8 +65,8 @@ class Image extends \yii\base\BaseObject
      *  To create a thumbnail or if you use a placeholder provider you should use [[placeholder()]].
      */
     public $placeholder = [
-        'default' => 'http://placehold.it/{width}x{height}',
-        'profile' => 'http://placehold.it/{width}x{height}',
+        'default' => '//placehold.it/{width}x{height}',
+        'profile' => '//placehold.it/{width}x{height}',
         //'example' => 'https://placeimg.com/{width}/{height}/any',
         //'animal' => 'https://placeimg.com/{width}/{height}/animals',
         //'animal_grayscale' => 'https://placeimg.com/{width}/{height}/animals/grayscale',

@@ -12,7 +12,7 @@
 }
 
 .dropzone-previews {
-    padding: .75rem .75rem 0 .75rem ;
+    padding: 0 .75rem 0 0;
 }
 
 .dz-preview .card-body {
@@ -42,11 +42,11 @@
 }
 
 .dz-clickable {
-    margin-bottom: 1rem;
-    margin-right: 1rem;
+    margin-bottom: .8rem;
+    margin-right: .8rem;
     float: left;
-    width: 8rem;
-    height: 8rem;
+    width: 5rem;
+    height: 6rem;
 }
 
 .dz-clickable.medium {
@@ -55,7 +55,7 @@
 }
 
 .dz-preview {
-    margin-bottom: 1rem;
-    margin-right: 1rem;
+    margin-bottom: .8rem;
+    margin-right: .8rem;
     float: left;
 }
