@@ -11,7 +11,7 @@ $this->title = Yii::t('media', 'Image tools');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="image-tool-box">
-    <a href="#" id="rotate-image"><i class="fa fa-refresh fa-2x"></i></a>
+    <a href="#" id="rotate-image"><i class="fas fa-sync fa-2x"></i></a>
 </div>
 <div id="imgContainer" class="">
     <?= Html::img('@web/' . $model->url . '?' . \time(), ['id' => 'image', 'class' => 'img-fluid']) ?>

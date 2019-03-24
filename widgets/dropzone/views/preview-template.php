@@ -12,10 +12,10 @@ use yii\helpers\Url;
 
         <div class="dz-links">
             <?php if (!empty($this->context->toolOptions['showLink'])): ?>
-                <?= Html::a('<i class="fa fa-circle-o-notch" title="' . Yii::t('media/dropzone', 'Spin image') . '"></i>', '#', $this->context->toolOptions) ?>
+                <?= Html::a('<i class="fas fa-circle-notch" title="' . Yii::t('media/dropzone', 'Spin image') . '"></i>', '#', $this->context->toolOptions) ?>
             <?php endif; ?>
             <?php if (!empty($this->context->altOptions['showLink'])): ?>
-                <?= Html::a('<i class="fa fa-pencil" title="' . Yii::t('media/dropzone', 'Set image title') . '"></i>', '#', $this->context->altOptions) ?>
+                <?= Html::a('<i class="fas fa-pencil-alt" title="' . Yii::t('media/dropzone', 'Set image title') . '"></i>', '#', $this->context->altOptions) ?>
             <?php endif; ?>
         </div>
 
