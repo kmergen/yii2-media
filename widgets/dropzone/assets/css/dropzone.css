@@ -7,8 +7,12 @@
     margin-bottom: .75rem;
 }
 
-.d-block {
+.d-flex {
     display: flex !important;
+}
+
+.d-none {
+    display: none !important;
 }
 
 .dropzone-previews {
@@ -32,7 +36,7 @@
     font-size: .75rem;
 }
 
-.dz-clickable {
+.dz-clickable.card {
     border: dashed #ddd;
     color: #ddd;
 }

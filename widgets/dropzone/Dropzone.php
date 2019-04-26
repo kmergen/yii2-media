@@ -437,10 +437,10 @@ $dz.DzHelper = {
     },
     show: function (el) {
         el.classList.remove('d-none');
-        el.classList.add('d-block');
+        el.classList.add('d-flex');
     },
     hide: function (el) {
-        el.classList.remove('d-block');
+        el.classList.remove('d-flex');
         el.classList.add('d-none');
     }
     
