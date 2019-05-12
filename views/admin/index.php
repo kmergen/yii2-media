@@ -15,6 +15,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="box-header with-border">
         <h3 class="box-title"><?= Html::encode($this->title) ?></h3>
         <?php // echo $this->render('_search', ['model' => $searchModel]);  ?>
+            <?= Html::a('List no existing Files', '/media/admin/no-existing-files', ['id' => 'a-no-existing-files']) ?>
+            <div id="index-alert"></div>
     </div>
     <div class="box-body">
         <?=
@@ -47,3 +49,15 @@ $this->params['breadcrumbs'][] = $this->title;
             ?>
     </div>
 </div>
+
+<?php
+$js = <<<JS
+$('#a-no-existing-files').click(function(event) {
+    event.preventDefault();
+  $('#index-alert').load($(this).attr('href'));
+});
+
+JS;
+$this->registerJs($js);
+
+?>

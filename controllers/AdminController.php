@@ -40,7 +40,7 @@ class AdminController extends Controller
             ],
         ];
     }
-    
+
     /**
      * Renders the index view for the module
      * @return string
@@ -63,8 +63,46 @@ class AdminController extends Controller
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * List all file ids they have no existing file in path
+     * @return string
+     */
+    public function actionNoExistingFiles()
+    {
+        $files = Media::find()->asArray()->all();
+        $webroot = Yii::getAlias('@webroot');
+        $notExistingFiles = [];
+        foreach ($files as $r) {
+            $path = $webroot . DIRECTORY_SEPARATOR . $r['url'];
+            if (!\file_exists($path)) {
+                $notExistingFiles[] = $r['id'];
+            }
+        }
+
+        $count = count($notExistingFiles);
+        if ($count > 0) {
+            $i = 0;
+            $content = 'The following ' . $count . ' files not exist in filepath:<br>';
+            foreach ($notExistingFiles as $fileId) {
+                if ($i >= 20) {
+                    $content .= '<br>';
+                    $i = 0;
+                }
+                $content .= $fileId . ',';
+                $i++;
+            }
+            $content = \rtrim($content, ',');
+        } else {
+            $content = 'All files exists in file path';
+        }
+
+        return $this->renderAjax('_alert', [
+            'content' => $content,
         ]);
     }
 
@@ -76,7 +114,7 @@ class AdminController extends Controller
     public function actionView($id)
     {
         return $this->render('view', [
-                'model' => $this->findModel($id),
+            'model' => $this->findModel($id),
         ]);
     }
 
@@ -94,12 +132,12 @@ class AdminController extends Controller
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('update', [
-                    'model' => $model,
+                'model' => $model,
             ]);
         }
     }
-    
-     /**
+
+    /**
      * Deletes an existing Media model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
@@ -111,7 +149,7 @@ class AdminController extends Controller
 
         return $this->redirect(['index']);
     }
-    
+
     /**
      * Finds the Media model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -145,14 +183,13 @@ class AdminController extends Controller
         if ($model->load($request->post())) {
             $preview = (array_key_exists('resetRun-button', $request->post())) ? false : true;
             if ($model->resetThumbs($preview)) {
-                
             }
             return $this->render('thumbReset', [
-                    'model' => $model
+                'model' => $model
             ]);
         } else {
             return $this->render('thumbReset', [
-                    'model' => $model
+                'model' => $model
             ]);
         }
     }

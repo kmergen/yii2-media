@@ -209,7 +209,9 @@ class Image extends \yii\base\BaseObject
                 } else {
                     Yii::info('Imagine Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
                 }
-                throw new Exception($ex->getMessage());
+              //  @todo if file not exists in path. At the moment we throw no Exception and don't manipulate the file nor set a placeholder.
+                // Do this stuff on application side. To check the files with no file in path use the filter in media/admin/index to search this files.
+                // throw new Exception($ex->getMessage());
             }
         }
 
