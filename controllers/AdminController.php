@@ -89,16 +89,11 @@ class AdminController extends Controller
             $i = 0;
             $content = 'The following ' . $count . ' files not exist in filepath:<br>';
             foreach ($notExistingFiles as $fileId) {
-                if ($i >= 20) {
-                    $content .= '<br>';
-                    $i = 0;
-                }
-                $content .= $fileId . ',';
-                $i++;
+                $content .= $fileId . ', ';
             }
-            $content = \rtrim($content, ',');
+            $content = \rtrim($content, ', ');
         } else {
-            $content = 'All files exists in file path';
+            $content = 'All files exists in file path.';
         }
 
         return $this->renderAjax('_alert', [
