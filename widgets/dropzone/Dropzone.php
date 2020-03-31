@@ -42,7 +42,7 @@ class Dropzone extends Widget
     public $model;
 
     /**
-     * @var array The HTML options for the dropzone container. The cssClass 'dropzone' will set in [[init()]].
+     * @var array HTML options for the dropzone container. The cssClass 'dropzone' will set in [[init()]].
      */
     public $htmlOptions = [];
 
@@ -96,6 +96,12 @@ class Dropzone extends Widget
      */
     protected $dropzoneName = 'dropzone';
 
+
+    /**
+     * @var object The assets object of this widget
+     */
+    public $assets;
+
     public function init()
     {
         parent::init();
@@ -114,7 +120,14 @@ class Dropzone extends Widget
             'dictResponseError' => Yii::t('media/dropzone', 'Server responded with {{statusCode}} code.'),
             'dictCancelUpload' => Yii::t('media/dropzone', 'Cancel upload'),
             'dictCancelUploadConfirmation' => Yii::t('media', 'Are you sure you want to cancel this upload?'),
-            'dictRemoveFile' => '<i class="fas fa-trash" title="' . Yii::t('media/dropzone', 'Delete Image') . '"></i>',
+            'dictRemoveFile' => '<svg class="dz-icon dz-icon-trash" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>' . Yii::t('media/dropzone', 'Delete Image') . '</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect opacity="0" x="0" y="0" width="24" height="24"></rect>
+        <path class="path-1" d="M6,8 L6,20.5 C6,21.3284271 6.67157288,22 7.5,22 L16.5,22 C17.3284271,22 18,21.3284271 18,20.5 L18,8 L6,8 Z" fill="#000000" fill-rule="nonzero"></path>
+        <path class="path-2" d="M14,4.5 L14,4 C14,3.44771525 13.5522847,3 13,3 L11,3 C10.4477153,3 10,3.44771525 10,4 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"></path>
+    </g>
+</svg>',
             'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'The maximum number of {n} pictures has been reached.', ['n' => $this->pluginOptions['maxFiles'] ?? 5]),
         ];
 
@@ -158,6 +171,8 @@ class Dropzone extends Widget
         ];
         $this->altOptions = ArrayHelper::merge($altOptionsDefaults, $this->altOptions);
         $this->pluginOptions['params']['showAltLink'] = $this->altOptions['showLink'];
+
+        $this->assets = DropzoneAsset::register($this->getView());
 
         if (empty($this->pluginOptions['previewTemplate'])) {
             $this->pluginOptions['previewTemplate'] = $this->render('preview-template');
@@ -242,8 +257,6 @@ class Dropzone extends Widget
     public function registerClientScript()
     {
         $view = $this->getView();
-        DropzoneAsset::register($view);
-
         //Important to set autoDiscover to POS_END, not working on POS_READY
         $view->registerJs('Dropzone.autoDiscover = false;', $view::POS_END);
         $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->pluginOptions) . ');';

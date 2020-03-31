@@ -17,6 +17,7 @@
  * NOTE: this file must be saved in UTF-8 encoding.
  */
 return [
+    'Drop files here to upload' => '@@@@',
     'Cancel upload' => '',
     'Delete Image' => '',
     'File is too big {{filesize}} MB. Max filesize: {{maxFilesize}} MB.' => '',
@@ -37,5 +38,4 @@ return [
     'Image title' => '@@@@',
     'Maximum number of uploaded files reached.' => '@@@@',
     'Short image description' => '@@@@',
-    'Drop files here to upload' => '@@@@',
 ];

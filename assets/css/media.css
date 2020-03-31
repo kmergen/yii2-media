@@ -1,10 +1,4 @@
 /* Css for image rotation */
-.image-tool-box {
-  margin-bottom: 1rem;
-}
-#imgContainer {
-  margin-left: 2rem;
-}
 #image {
   transform-origin: top left;
   /* IE 10+, Firefox, etc. */

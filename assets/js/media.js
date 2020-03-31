@@ -20,9 +20,14 @@ $('body').on('click', '[data-media-widget]', function (event) {
     postParams.thumbstyle = el.data('thumbstyle');
   }
 
-  modalBody.load(url, postParams);
-  modal.modal({backdrop: el.data('modalBackdrop')});
-
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: postParams
+  }).done(function(html) {
+    modalBody.html(html);
+    modal.modal({backdrop: el.data('modalBackdrop')});
+  });
 });
 
 //Submit forms via ajax
@@ -39,7 +44,7 @@ $('body').on('submit', '.media-modal-form', function (event) {
         setTimeout(function () {
           modalBody.empty()
           modal.modal('hide')
-        }, 2500);
+        }, 1500);
         if (data.hasOwnProperty('refreshThumbnail')) {
           var el = document.getElementById('mediafile-' + data.id);
           var image = el.querySelector('img');
@@ -51,10 +56,20 @@ $('body').on('submit', '.media-modal-form', function (event) {
     });
 })
 
+$('.modal').on('shown.bs.modal', function () {
+  var imgContainer = document.getElementById('imgContainer');
+  var img = document.getElementById('image');
+  var elInfo = imgContainer.getBoundingClientRect();
+  var elWidth = elInfo.width;
+
+  img.setAttribute('style', 'max-width:' + elWidth + 'px;max-height:' + elWidth + 'px');
+  imgContainer.setAttribute('style', 'min-height:' + elWidth +'px');
+})
+
 // Rotate image, Media Image tools
 $('body').on('click', '#rotate-image', function (event) {
   event.preventDefault();
-  var imgContainer = document.getElementById('imgContainer');
+   // imgContainer.setAttribute('style', 'height:' + longest + 'px');
   inputDeg = document.querySelector('input[name="image-rotate-deg"]');
   var oldDeg = parseInt(inputDeg.value);
   newDeg = oldDeg + 90;

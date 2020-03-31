@@ -24,9 +24,9 @@ return [
     'Delete' => '',
     'Media' => '',
     'Media Album Categories' => '',
-    'Preview' => '',
     'Reset' => '',
     'Search' => '',
     'Update' => '',
     'Update {modelClass}: ' => '',
+    'Preview' => '@@@@',
 ];

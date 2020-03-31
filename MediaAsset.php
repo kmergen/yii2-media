@@ -20,12 +20,23 @@ class MediaAsset extends AssetBundle
 {
     public $sourcePath = '@kmergen/media/assets';
     public $css = [
-        'css/media.css'
+        'css/media.min.css'
     ];
     public $js = [
-        'js/media.js'
+        'js/media.min.js'
     ];
-    public $depends = [
 
-    ];
+    public function init()
+    {
+        parent::init();
+
+        if (YII_DEBUG) {
+            $this->css = [
+                'css/media.css'
+            ];
+            $this->js = [
+                'js/media.js',
+            ];
+        }
+    }
 }
