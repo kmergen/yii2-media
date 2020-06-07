@@ -6,6 +6,7 @@
 namespace kmergen\media\helpers;
 
 use Yii;
+use yii\helpers\Url;
 use Imagine\Image\Box;
 use Imagine\Image\Point;
 use Imagine\Image\ManipulatorInterface;
@@ -65,6 +66,35 @@ class Image extends \yii\imagine\BaseImage
         $img = $originalImage->thumbnail($tempBox, 'outbound');
         // Here is the magic..
         return $img->crop($cropBy, $target); // Return "ready to save" final image instance
+    }
+
+    /**
+     * Creates a thumbnail width a blur background from the image and the image thumbnail centered.
+     * This function can be used if you need a fixed box and want to fill the rest of the box with background.
+     * The mode of the thumbnail is always `ImageInterface::THUMBNAIL_INSET`
+     * @param string $filename the image file path or path alias.
+     * @param integer $width the width in pixels
+     * @param integer $height the height in pixels
+     * @param integer $blur How strong should the background blurred.
+     * @param string $color The color of the background in hex format
+     * @param integer $alpha the opacity of the background from 0-100.
+     * @param string the background color
+     * @return ImageInterface
+     */
+    public static function blurBackgroundThumb($filename, $width, $height, $blur = 3, $color = '#FFF', $alpha = 100) {
+        $path = $filename;
+        if (Url::isRelative($path)) {
+        $path = Yii::$app->getUrlManager()->createAbsoluteUrl($path); // Do this for Imagick that has his problems with relative paths.
+        }
+
+        $bg = static::resize($path, $width, $height);
+        $bg->effects()->blur($blur);
+
+        static::$thumbnailBackgroundColor = $color;
+        static::$thumbnailBackgroundAlpha = $alpha;
+        $image = static::thumbnail($path, $width, $height, ManipulatorInterface::THUMBNAIL_INSET);
+        $bg->paste($image, new Point(0, 0));
+        return $bg;
     }
 
 }

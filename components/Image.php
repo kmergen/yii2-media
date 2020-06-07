@@ -198,6 +198,9 @@ class Image extends \yii\base\BaseObject
 
             //Create and save the thumbnail
             list($width, $height, $quality, $func, $param1) = $config;
+            if (Url::isRelative($url)) {
+                $url = Yii::$app->urlManager->createAbsoluteUrl($url); // Do this because Imagick has problems with relative Urls
+            }
 
             try {
                 // \yii\imagine\Image::$thumbnailBackgroundColor = '000';
