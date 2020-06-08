@@ -81,19 +81,21 @@ class Image extends \yii\imagine\BaseImage
      * @param string the background color
      * @return ImageInterface
      */
-    public static function blurBackgroundThumb($filename, $width, $height, $blur = 3, $color = '#FFF', $alpha = 100) {
-        $path = $filename;
-        if (Url::isRelative($path)) {
-        $path = Yii::$app->getUrlManager()->createAbsoluteUrl($path); // Do this for Imagick that has his problems with relative paths.
-        }
+    public static function blurBackgroundThumb($filename, $width, $height, $blur = 6, $color = '#FFF', $alpha = 100) {
 
-        $bg = static::resize($path, $width, $height);
+        $bg = static::resize($filename, $width, $height, false, true);
         $bg->effects()->blur($blur);
 
         static::$thumbnailBackgroundColor = $color;
         static::$thumbnailBackgroundAlpha = $alpha;
-        $image = static::thumbnail($path, $width, $height, ManipulatorInterface::THUMBNAIL_INSET);
-        $bg->paste($image, new Point(0, 0));
+        $image = static::thumbnail($filename, $width, $height, ManipulatorInterface::THUMBNAIL_INSET);
+
+        // Get the sizes
+        $size = $image->getSize();
+        $startX = ($width - $size->getWidth())/2;
+        $startY = ($height - $size->getHeight())/2;
+
+        $bg->paste($image, new Point($startX, $startY));
         return $bg;
     }
 
