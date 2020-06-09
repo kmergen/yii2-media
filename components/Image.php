@@ -6,14 +6,11 @@
 
 namespace kmergen\media\components;
 
-use Yii;
 use Exception;
+use Yii;
 use yii\base\InvalidConfigException;
-use yii\base\InvalidArgumentException;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
-use yii\imagine\Image as ImagineImage;
-use Imagine\Image\ManipulatorInterface;
 
 class Image extends \yii\base\BaseObject
 {
@@ -21,27 +18,21 @@ class Image extends \yii\base\BaseObject
     /**
      * @var array The thumbnail styles configuration
      * [styles] The thumbnail style name as key and the configuration array as value.
-     * The format is as follows: [width, height, quality, imagineFunction (thumb or crop)], the fourth parameter of thumbnail or crop
+     * The format is as follows: [width, height, quality, kmergen\media\Image::function, the fourth parameter are the $args of the function
      */
     public $thumbStyles = [
-        'xxsmall' => [40, 30, 80, 'thumbnail', 0x00000001],
-        'xsmall' => [60, 45, 80, 'thumbnail', 0x00000001],
-        'small' => [80, 60, 80, 'thumbnail', 0x00000001],
-        'medium' => [100, 75, 80, 'thumbnail', 0x00000001],
-        'large' => [140, 105, 80, 'thumbnail', 0x00000001],
-        'xlarge' => [200, 150, 80, 'thumbnail', 0x00000001],
-        'xxsmall_outbound' => [40, 30, 80, 'thumbnail', 0x00000002],
-        'xsmall_outbound' => [60, 45, 80, 'thumbnail', 0x00000002],
-        'small_outbound' => [80, 60, 80, 'thumbnail', 0x00000002],
-        'medium_outbound' => [100, 75, 80, 'thumbnail', 0x00000002],
-        'large_outbound' => [140, 105, 80, 'thumbnail', 0x00000002],
-        'xlarge_outbound' => [200, 150, 80, 'thumbnail', 0x00000002],
-        'xxsmall_crop_center' => [40, 40, 80, 'cropCenter', []],
-        'xsmall_crop_center' => [60, 60, 80, 'cropCenter', []],
+        'small' => [80, 60, 80, 'thumbnail', [0x00000001]],
+        'medium' => [100, 75, 80, 'thumbnail', [0x00000001]],
+        'large' => [400, 300, 80, 'thumbnail', [0x00000001]],
+        'small_outbound' => [80, 60, 80, 'thumbnail', [0x00000002]],
+        'medium_outbound' => [100, 75, 80, 'thumbnail', [0x00000002]],
+        'large_outbound' => [400, 300, 80, 'thumbnail', [0x00000002]],
         'small_crop_center' => [80, 80, 80, 'cropCenter', []],
-        'medium_crop_center' => [100, 100, 80, 'cropCenter', []],
-        'large_crop_center' => [140, 140, 80, 'cropCenter', []],
-        'xlarge_crop_center' => [200, 200, 80, 'cropCenter', []]
+        'medium_crop_center' => [200, 200, 80, 'cropCenter', []],
+        'large_crop_center' => [400, 400, 80, 'cropCenter', []],
+        'small_blur' => [80, 60, 80, 'blurThumbnail', []],
+        'medium_blur' => [100, 75, 80, 'blurThumbnail', []],
+        'large_blur' => [400, 300, 80, 'blurThumbnail', []],
     ];
 
     /**
@@ -77,14 +68,19 @@ class Image extends \yii\base\BaseObject
     /**
      * Return the thumb url for a given original image and create and save the thumbnail
      * @param string $url The $url from the original image. It can be a relative url e.g. '/images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
-     * @param string|array $config  That can be a key from [[thumStyles]] or a thumbnail configuration array. The format must be the same as the value from [[thumbStyles]]
+     * @param string|array $config That can be a key from [[thumStyles]] or a thumbnail configuration array. The format must be the same as the value from [[thumbStyles]]
      * @param boolean $force Create thumbnail though it exists
      *
      */
     public function thumb($url, $config, $force = false)
     {
-        $config = $this->resolveConfig($config);
-
+        if (is_string($config)) {
+            if (!array_key_exists($config, $this->thumbStyles)) {
+                throw new InvalidConfigException(sprintf('The thumb style %s does not exist.', $config));
+            }
+        } else {
+            $this->resolveConfig($config);
+        }
         return $this->createThumb($url, $config, $force);
     }
 
@@ -95,42 +91,34 @@ class Image extends \yii\base\BaseObject
      */
     protected function resolveConfig($config)
     {
-        if (is_string($config)) {
-            if (!array_key_exists($config, $this->thumbStyles)) {
-                throw new InvalidConfigException(sprintf('The thumb style %s does not exist.', $config));
+        if (isset($config[0])) {
+            if (!is_int($config[0]) || $config[0] < 1) {
+                throw new Exception('Width should be an integer and equal or greater than 1.');
             }
         } else {
-            if (isset($config[0])) {
-                if (!is_int($config[0]) || $config[0] < 1) {
-                    throw new Exception('Width should be an integer and equal or greater than 1.');
-                }
-            } else {
-                throw new InvalidConfigException('Width is not defined.');
-            }
+            throw new InvalidConfigException('Width is not defined.');
+        }
 
-            if (isset($config[1])) {
-                if (!is_int($config[1]) || $config[1] < 1) {
-                    throw new Exception('Height should be an integer and equal or greater than 1.');
-                }
-            } else {
-                throw new InvalidConfigException('Height is not defined.');
+        if (isset($config[1])) {
+            if (!is_int($config[1]) || $config[1] < 1) {
+                throw new Exception('Height should be an integer and equal or greater than 1.');
             }
+        } else {
+            throw new InvalidConfigException('Height is not defined.');
+        }
 
-            if (isset($config[2])) {
-                if (!is_int($config[2]) || $config[2] < 1) {
-                    throw new Exception('Qualtity should be an integer and equal or greater than 1.');
-                }
-            }
-
-            if (isset($config[3])) {
-                $imagineFunctions = ['thumb', 'cropCenter'];
-                if (!in_array($config[3], $imagineFunctions)) {
-                    throw new Exception('You can only choose: "' . implode(',', $imagineFunctions) . '"');
-                }
+        if (isset($config[2])) {
+            if (!is_int($config[2]) || $config[2] < 1) {
+                throw new Exception('Qualtity should be an integer and equal or greater than 1.');
             }
         }
 
-        return $config;
+        if (isset($config[3])) {
+            $imagineFunctions = ['thumbnail', 'cropCenter', 'blurThumbnail'];
+            if (!in_array($config[3], $imagineFunctions)) {
+                throw new Exception('You can only choose: "' . implode(',', $imagineFunctions) . '"');
+            }
+        }
     }
 
     /**
@@ -138,16 +126,18 @@ class Image extends \yii\base\BaseObject
      * @param string $name string The placeholder name. Defined in [[placeholder]].
      * @param string $config string A [[thumbStyles]] or a configuration array.
      */
-    public function placeholder($name = 'default', $config = null)
+    public
+    function placeholder($name = 'default', $config = null)
     {
         if (array_key_exists($name, $this->placeholder)) {
             if (strpos($this->placeholder[$name], '{width}')) { //Check if it is a placeholder provider
                 if ($config === null) {
                     throw new InvalidConfigException('As second parameter you must set either a configuration array or a thumbstyle');
                 } else {
-                    $config = $this->resolveConfig($config);
                     if (is_string($config)) {
                         $config = $this->thumbStyles[$config];
+                    } else {
+                        $this->resolveConfig($config);
                     }
                     return strtr($this->placeholder[$name], ['{width}' => $config[0], '{height}' => $config[1]]);
                 }
@@ -168,7 +158,8 @@ class Image extends \yii\base\BaseObject
      * @param boolean $force Create thumbnail though it exists
      * @return The thumbnail url
      */
-    protected function createThumb($url, $config, $force)
+    protected
+    function createThumb($url, $config, $force)
     {
         if (is_string($config)) {
             if ($this->thumbExtraDirectory === true) {
@@ -191,13 +182,12 @@ class Image extends \yii\base\BaseObject
         $thumbName = $info['filename'] . $suffix . '.' . $info['extension'];
 
         if (!file_exists($thumbPath . DIRECTORY_SEPARATOR . $thumbName) || $force) {
-
             if (!$suffix) {
                 FileHelper::createDirectory($thumbPath, 0766);
             }
 
             //Create and save the thumbnail
-            list($width, $height, $quality, $func, $param1) = $config;
+            [$width, $height, $quality, $func, $param1] = $config;
             if (Url::isRelative($url)) {
                 $url = Yii::$app->urlManager->createAbsoluteUrl($url); // Do this because Imagick has problems with relative Urls
             }
@@ -205,14 +195,14 @@ class Image extends \yii\base\BaseObject
             try {
                 // \yii\imagine\Image::$thumbnailBackgroundColor = '000';
                 \kmergen\media\helpers\Image::$func($url, $width, $height, $param1)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
-               // \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
+                // \kmergen\media\helpers\Image::$func($url, $width, $height)->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
             } catch (Exception $ex) {
                 if ($ex instanceof \Imagine\Exception\InvalidArgumentException) {
                     Yii::info('Imagine Invalid Argument Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
                 } else {
                     Yii::info('Imagine Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
                 }
-              //  @todo if file not exists in path. At the moment we throw no Exception and don't manipulate the file nor set a placeholder.
+                //  @todo if file not exists in path. At the moment we throw no Exception and don't manipulate the file nor set a placeholder.
                 // Do this stuff on application side. To check the files with no file in path use the filter in media/admin/index to search this files.
                 // throw new Exception($ex->getMessage());
             }
@@ -227,7 +217,8 @@ class Image extends \yii\base\BaseObject
      * You should use this function in conjunction with the [[deleteFile]] call function within a cron job.
      * @param string The url from the original file. This must be a relative url.
      */
-    public function deleteThumbs($url)
+    public
+    function deleteThumbs($url)
     {
         if (!Url::isRelative($url)) {
             throw new \http\Exception\InvalidArgumentException('Url must be relative');
@@ -252,5 +243,4 @@ class Image extends \yii\base\BaseObject
         }
         return $files;
     }
-
 }
