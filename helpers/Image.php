@@ -86,7 +86,7 @@ class Image extends \yii\imagine\BaseImage
      * @param integer $alpha the opacity of the background overlay from 0-100.
      * @return ImageInterface
      */
-    public static function blurThumbnail($image, $width, $height, $blur = 6, $color = '#000', $alpha = 10)
+    public static function blurThumbnail($image, $width, $height, $blur = 5, $color = '#000', $alpha = 10)
     {
         $img = self::ensureImageInterfaceInstance($image);
 
