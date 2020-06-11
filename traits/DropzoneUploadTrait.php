@@ -21,7 +21,7 @@ use kmergen\media\helpers\Image;
  *
  * Use this trait in your controller upload action.
  * This trait provide specific functions to save your uploaded file and send a response back to the upload form.
- *  
+ *
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
@@ -130,26 +130,33 @@ trait DropzoneUploadTrait
 
         //We save the media model and the uploaded file
         if ($model->validate()) {
-            $img = $uploadedFile->tempName;
-            if($this->fixOrientation) {
-                $img = Image::autorotate($img);
+            try {
+                $img = $uploadedFile->tempName;
+                if ($this->fixOrientation) {
+                    $img = Image::autorotate($img);
+                }
+
+                if (isset($this->imageMaxWidth) && isset($this->imageMaxHeight) && ($this->imageMaxWidth < $info[0] || $this->imageMaxHeight < $info[1])) {
+                    $img = Image::resize($img, $this->imageMaxWidth, $this->imageMaxHeight);
+                } elseif (isset($this->imageMaxWidth) && !isset($this->imageMaxHeight)) {
+                    throw new InvalidConfigException('If you set "maxImageWidth" you must also set "imageMaxHeight".');
+                } elseif (isset($this->imageMaxHeight) && !isset($this->imageMaxWidth)) {
+                    throw new InvalidConfigException('If you set "maxImageHeight" you must also set "imageMaxWidth".');
+                }
+                if (!is_object($img)) {
+                    $img = Image::getImagine()->open($img);
+                }
+
+                $img->save($path, ['jpeg_quality' => $this->jpeg_quality, 'png_compression_level' => $this->png_compression_level]);
+                $model->size = filesize($path);
+
+                $model->save();
+            } catch(Exception $ex) {
+                $msg = $ex->getMessage();
+                $file = $ex->getFile();
+                $line = $ex->getLine();
             }
 
-            if (isset($this->imageMaxWidth) && isset($this->imageMaxHeight) && ($this->imageMaxWidth < $info[0] || $this->imageMaxHeight < $info[1])) {
-                $img = Image::resize($img, $this->imageMaxWidth, $this->imageMaxHeight);
-            } elseif (isset($this->imageMaxWidth) && !isset($this->imageMaxHeight)) {
-                throw new InvalidConfigException('If you set "maxImageWidth" you must also set "imageMaxHeight".');
-            } elseif (isset($this->imageMaxHeight) && !isset($this->imageMaxWidth)) {
-                throw new InvalidConfigException('If you set "maxImageHeight" you must also set "imageMaxWidth".');
-            }
-            if (!is_object($img)) {
-                $img = Image::getImagine()->open($img);
-            }
-            $img->save($path, ['jpeg_quality' => $this->jpeg_quality, 'png_compression_level' => $this->png_compression_level]);
-            $model->size = filesize($path);
-
-            $model->save();
-            
             $this->responseItems = [
                 'baseUrl' => Yii::getAlias('@web'),
                 'id' => $model->id,
@@ -161,11 +168,11 @@ trait DropzoneUploadTrait
                 //file object while we extend it with the response items.
                 'type' => $model->type,
             ];
-            
+
             if (isset($params['thumbStyle'])) {
                 $this->responseItems['thumbnailUrl'] = Yii::$app->image->thumb($model->url, $params['thumbStyle']);
             }
-            
+
         } else {
             $errorMessage = '';
             foreach ($model->getFirstErrors() as $error) {

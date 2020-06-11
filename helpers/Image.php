@@ -88,7 +88,7 @@ class Image extends \yii\imagine\BaseImage
      */
     public static function blurThumbnail($image, $width, $height, $blur = 6, $color = '#000', $alpha = 10)
     {
-        $img = self::ensureImageInterfaceInstance($image)->copy();
+        $img = self::ensureImageInterfaceInstance($image);
 
         $thumbnailBox = new Box($width, $height);
         $thumbnail = $img->thumbnail($thumbnailBox, ImageInterface::THUMBNAIL_INSET);
