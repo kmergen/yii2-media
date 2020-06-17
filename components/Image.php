@@ -123,16 +123,8 @@ class Image extends \yii\base\BaseObject
                 $thumbnail = \call_user_func_array(['kmergen\media\helpers\Image', $func], $funcArgs);
                 $thumbnail->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
             } catch (Exception $ex) {
-                if ($ex instanceof \Imagine\Exception\InvalidArgumentException) {
-                    Yii::info('Imagine Invalid Argument Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
-                    return null;
-                } else {
                     Yii::info('Imagine Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
                     return null;
-                }
-                //  @todo if file not exists in path. At the moment we throw no Exception and don't manipulate the file nor set a placeholder.
-                // Do this stuff on application side. To check the files with no file in path use the filter in media/admin/index to search this files.
-                // throw new Exception($ex->getMessage());
             }
         }
         $path = "$dirname/$thumbName";
