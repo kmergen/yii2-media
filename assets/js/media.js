@@ -58,12 +58,14 @@ $('body').on('submit', '.media-modal-form', function (event) {
 
 $('.modal').on('shown.bs.modal', function () {
   var imgContainer = document.getElementById('imgContainer');
-  var img = document.getElementById('image');
-  var elInfo = imgContainer.getBoundingClientRect();
-  var elWidth = elInfo.width;
+  if (imgContainer !== null) {
+    var img = document.getElementById('image');
+    var elInfo = imgContainer.getBoundingClientRect();
+    var elWidth = elInfo.width;
 
-  img.setAttribute('style', 'max-width:' + elWidth + 'px;max-height:' + elWidth + 'px');
-  imgContainer.setAttribute('style', 'min-height:' + elWidth +'px');
+    img.setAttribute('style', 'max-width:' + elWidth + 'px;max-height:' + elWidth + 'px');
+    imgContainer.setAttribute('style', 'min-height:' + elWidth + 'px');
+  }
 })
 
 // Rotate image, Media Image tools
