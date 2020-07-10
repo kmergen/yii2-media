@@ -18,7 +18,6 @@
     },
     "require": {
         "yiisoft/yii2-imagine": "*",
-        "bower-asset/blueimp-file-upload": "~9.9",
         "creocoder/yii2-translateable": "~1.0"
     }
 }
