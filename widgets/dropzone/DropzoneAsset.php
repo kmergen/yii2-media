@@ -9,7 +9,7 @@ namespace kmergen\media\widgets\dropzone;
 use yii\web\AssetBundle;
 
 /**
- * Dropzone asset
+ * Dropzone Asset
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
  */
@@ -41,5 +41,4 @@ class DropzoneAsset extends AssetBundle
             ];
         }
     }
-
 }
