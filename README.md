@@ -1,5 +1,6 @@
 # Yii 2 Media
 Yii2 extension to provide media file management with model fileupload
+Uploaded files managed all in a database table.
 
 The preferred way to install this extension is through [composer](https://getcomposer.org/).
 
