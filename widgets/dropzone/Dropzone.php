@@ -90,12 +90,10 @@ class Dropzone extends Widget
      */
     public $altOptions = [];
 
-
     /**
      * @var string The name of this dropzone instance This name will extended by the widget id in [[init()]].
      */
     protected $dropzoneName = 'dropzone';
-
 
     /**
      * @var object The assets object of this widget
@@ -177,8 +175,6 @@ class Dropzone extends Widget
         if (empty($this->pluginOptions['previewTemplate'])) {
             $this->pluginOptions['previewTemplate'] = $this->render('preview-template');
         }
-
-
     }
 
     public function run()
@@ -269,7 +265,6 @@ class Dropzone extends Widget
 
         $js[] = $this->commonJs();
         $view->registerJs(implode("\n", $js), $view::POS_END);
-
     }
 
     /**
@@ -413,7 +408,27 @@ $dz.DzHelper = {
             }
         }
     },
-    deleteUploadedFile: function (file) { //Delete the file from the server
+    deleteUploadedFile: function(file) {
+       const data = {id: file.id}
+       fetch(file.deleteUrl, {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json',
+               'X-Requested-With': 'XMLHttpRequest',
+               'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+           },
+           body: JSON.stringify(data)
+       })
+       .then(response => response.json())
+       .then(data => {
+           console.log('Success:', data);
+       })
+       .catch((error) => {
+           console.error('Error:', error);
+       });
+},
+
+    deleteUploadedFileOld: function (file) { //Delete the file from the server
         var pe = file.previewElement;
         // We delete the file from the server
         var xhr = new XMLHttpRequest();
