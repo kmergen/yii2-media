@@ -218,7 +218,22 @@ class Dropzone extends Widget
         }
         $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
             ? $this->uiTemplateParts['endDzPreviews']
-            : Html::endTag('div');
+            : '<div id="dropzoneModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <div class="modal-footer-content"></div>
+                <button type="button" id="pageModal-close-btn" class="btn btn-secondary d-none"
+                        data-bs-dismiss="modal">Yii::t("dropzone", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>' . Html::endTag('div');
         $parts['{endDz}'] = isset($this->uiTemplateParts['endDz'])
             ? $this->uiTemplateParts['endDz']
             : Html::endTag('div');
@@ -409,15 +424,14 @@ $dz.DzHelper = {
         }
     },
     deleteUploadedFile: function(file) {
-       const data = {id: file.id}
-       fetch(file.deleteUrl, {
+      fetch(file.deleteUrl, {
            method: 'POST',
            headers: {
-               'Content-Type': 'application/json',
+               "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
                'X-Requested-With': 'XMLHttpRequest',
                'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').getAttribute('content')
            },
-           body: JSON.stringify(data)
+           body: 'id=' + file.id
        })
        .then(response => response.json())
        .then(data => {

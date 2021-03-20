@@ -71,19 +71,20 @@ class MediaController extends Controller
             }
 
             if ($model->validate()) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
                 if ($model->save()) {
                     $data['success'] = Yii::t('media', 'Changes successfully saved.');
                 } else {
                     $data['error'] = Yii::t('media', 'Error! Cannot update changes');
                 }
-                return $data;
+                return $this->asJson($data);
             }
         }
-        return $this->renderAjax('update_alt_form', [
+        $items = [];
+        $items['content'] = $this->renderAjax('update_alt_form', [
             'model' => $model,
             'languages' => $languages
         ]);
+        return $this->asJson($items);
     }
 
     /**
@@ -103,7 +104,6 @@ class MediaController extends Controller
         $model = $this->findModel($id);
 
         if (isset($post['image-rotate-deg'])) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
             try {
                 $deg = (int)$post['image-rotate-deg'];
                 if ($deg !== 0) {
@@ -112,7 +112,9 @@ class MediaController extends Controller
                     $image->rotate($deg)
                         ->save(Yii::getAlias('@webroot') . '/' . $model->url, ['jpeg_quality' => 100]);
 
-                    // We update the thumbnail
+                    // Delete all thumbnails of the image
+                    Yii::$app->image->deleteThumbs($model->url);
+                    // Create current thumbnail
                     Yii::$app->image->thumb($model->url, $post['thumbstyle'], true);
                     $data['refreshThumbnail'] = true;
                     $data['id'] = $id;
@@ -125,12 +127,17 @@ class MediaController extends Controller
                     $data['error'] .= "\n" . $e->getMessage();
                 }
             }
-            return $data;
+            return $this->asJson($data);
         }
-        return $this->renderAjax('image_tool_form', [
+        $items = [];
+        $items['content'] = $this->renderAjax('image_tool_form', [
             'model' => $model,
             'thumbstyle' => $post['thumbstyle']
         ]);
+
+        return $this->asJson($items);
+
+
     }
 
     /**
