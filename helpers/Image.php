@@ -70,8 +70,6 @@ class Image extends \yii\imagine\BaseImage
         return $img->crop($cropBy, $target); // Return "ready to save" final image instance
     }
 
-
-
     /**
      * Creates a thumbnail width a blur background from the image and the image thumbnail centered.
      * This function can be used if you need a fixed box and want to fill the rest of the box with background.

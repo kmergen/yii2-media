@@ -54,7 +54,7 @@ Set a link like the following in your code to load the form in a modal window e.
         postData(url, formData, '')
             // .then(response => response.json())
             .then(function (data) {
-                console.log(data);
+                // console.log(data);
                 if (data.hasOwnProperty('success') || data.hasOwnProperty('error')) {
                     const html = data.hasOwnProperty('success') ? '<div class="text-success">' + data.success + '</div>' : '<div class="text-danger">' + data.error + '</div>';
                     modalBody.innerHTML = html;
