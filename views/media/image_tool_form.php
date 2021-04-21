@@ -12,7 +12,7 @@ $this->title = Yii::t('media', 'Image tools');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="image-tool-box mb-1">
-    <a href="#" id="rotate-image">
+    <a href="#" id="btn-rotate-image">
         <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
              x="0px" y="0px"
              width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
@@ -27,8 +27,8 @@ $this->params['breadcrumbs'][] = $this->title;
 </svg>
     </a>
 </div>
-<div id="imgContainer" class="m-4">
-    <?= Html::img('@web/' . $model->url . '?' . \time(), ['id' => 'image', 'class' => 'img-fluid']) ?>
+<div id="imgContainer" class="m-2 overflow-hidden">
+    <?= Html::img('@web/' . $model->url . '?' . \time(), ['class' => 'image-to-rotate img-fluid']) ?>
 </div>
 
 
