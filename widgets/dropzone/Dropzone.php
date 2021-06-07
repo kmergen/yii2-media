@@ -228,7 +228,7 @@ class Dropzone extends Widget
             <div class="modal-body"></div>
             <div class="modal-footer">
                 <div class="modal-footer-content"></div>
-                <button type="button" id="pageModal-close-btn" class="btn btn-secondary d-none"
+                <button type="button" id="dropzoneModal-close-btn" class="btn btn-secondary d-none"
                         data-bs-dismiss="modal">Yii::t("dropzone", "Close")</button>
             </div>
         </div>
@@ -300,7 +300,9 @@ JS;
                     file.status = 'error';
                     this.emit('error', file, {message: data.error});
                 } else {
-                    this.DzHelper.extend(file, data);
+                    Object.keys(data).forEach(function (key) {
+                        file[key] = data[key];
+                    });
                     if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
                         dz.emit('thumbnail', file, file.thumbnailUrl);
                     }
@@ -332,20 +334,39 @@ JS;
                 if(file.hasOwnProperty('processing') && file.status !== 'error') {
                     //We delete only the files which are uploaded
                     // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
-                    this.DzHelper.deleteUploadedFile(file);
+                    fetch(file.deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                           "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+                           'X-Requested-With': 'XMLHttpRequest',
+                           'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                        },
+                        body: 'id=' + file.id
+                   })
+                   .then(response => response.json())
+                   .then(data => {
+                       console.log('Success:', data);
+                   })
+                   .catch((error) => {
+                       console.error('Error:', error);
+                   });
                 }
                 var el = this.previewsContainer.querySelector('.dz-clickable');
                 if (this.files.length < this.options.maxFiles) {
-                   this.DzHelper.show(el);
-               }
+                    el.classList.remove('d-none');
+                    el.classList.add('d-flex');
+                }
             }
 JS;
         $events['complete'] = <<<JS
 function (file) {
     if (file.status === 'success') {
-        var helper = this.DzHelper;
-        helper.setAttributes(file);
-        helper.fileIdInputElement(file);
+        file.previewElement.setAttribute('id', 'mediafile-' + file.id);
+        const el = document.createElement('input');
+        el.setAttribute('type', 'hidden');
+        el.setAttribute('name', 'MediaFiles[' + file.id + '][id]');
+        el.setAttribute('value', file.id);
+        file.previewElement.appendChild(el);
         
         // Add remove Link
         if (this.options.addRemoveLinks) {
@@ -358,14 +379,15 @@ function (file) {
           // Add Link for alt translation 
           var altLink = file.previewElement.querySelector('[data-media-widget="alt-translations"]');
           altLink.dataset.id = file.id;
+          KMMedia.initDropzoneMediaWidgetEvent(altLink);
         }
        
         if (this.options.params.showToolLink) {
           // Add Link for alt translation 
           var toolLink = file.previewElement.querySelector('[data-media-widget="image-tools"]');
           toolLink.dataset.id = file.id;
+          KMMedia.initDropzoneMediaWidgetEvent(toolLink);
         }
-        
     }
 }
 JS;
@@ -373,7 +395,8 @@ JS;
            function(files) {
                var el = this.previewsContainer.querySelector('.dz-clickable');
                if (this.files.length >= this.options.maxFiles) {
-                   this.DzHelper.hide(el);
+                    el.classList.remove('d-flex');
+                    el.classList.add('d-none');
                }
               this.element.querySelector('.dz-message span').innerHTML = this.options.dictMaxFilesExceeded;
            }
@@ -402,12 +425,10 @@ JS;
         $dz = $this->dropzoneName;
 
         $js = <<<JS
-/* 
-* Extend Dropzone with own functions
-*/
-$dz.DzHelper = {
-    addExistingFiles: function (files) {
-        if (Object.keys(files).length !== 0) {
+
+        // Add the existing files to dropzone
+        if (Object.keys($existingFiles).length !== 0) {
+            let files = $existingFiles;
             i = 0;
             for (key in files) {
                 $dz.emit('addedfile', files[key]);
@@ -422,74 +443,6 @@ $dz.DzHelper = {
                 $dz._updateMaxFilesReachedClass();
             }
         }
-    },
-    deleteUploadedFile: function(file) {
-      fetch(file.deleteUrl, {
-           method: 'POST',
-           headers: {
-               "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-               'X-Requested-With': 'XMLHttpRequest',
-               'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-           },
-           body: 'id=' + file.id
-       })
-       .then(response => response.json())
-       .then(data => {
-           console.log('Success:', data);
-       })
-       .catch((error) => {
-           console.error('Error:', error);
-       });
-},
-
-    deleteUploadedFileOld: function (file) { //Delete the file from the server
-        var pe = file.previewElement;
-        // We delete the file from the server
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', file.deleteUrl, true);
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.send("id=" + file.id + "&" + yii.getCsrfParam() + "=" + yii.getCsrfToken());
-        xhr.onreadystatechange = function () {
-            var DONE = 4; // readyState 4 means the request is done.
-            var OK = 200; // status 200 is a successful return.
-            if (xhr.readyState === DONE) {
-                if (xhr.status === OK) {
-                    console.log(xhr.responseText); // 'This is the returned text.'
-                } else {
-                    console.log('Error: ' + xhr.status); // An error occurred during the request.
-                }
-            }
-        }
-    },
-    setAttributes: function (file) { //Add attributes to added files
-        var el = file.previewElement;
-        el.setAttribute('id', 'mediafile-' + file.id);
-    },
-    fileIdInputElement: function (file) { //Create the html hidden input element with the file id of the given file.
-        var el = document.createElement('input');
-        el.setAttribute('type', 'hidden');
-        el.setAttribute('name', 'MediaFiles[' + file.id + '][id]');
-        el.setAttribute('value', file.id);
-        file.previewElement.appendChild(el);
-    },
-    extend: function (obj, src) {
-        Object.keys(src).forEach(function (key) {
-            obj[key] = src[key];
-        });
-    },
-    show: function (el) {
-        el.classList.remove('d-none');
-        el.classList.add('d-flex');
-    },
-    hide: function (el) {
-        el.classList.remove('d-flex');
-        el.classList.add('d-none');
-    }
-    
-};
-
-// Add the existing files to dropzone
-$dz.DzHelper.addExistingFiles($existingFiles);
            
 JS;
         return $js;

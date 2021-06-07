@@ -2,57 +2,66 @@
 Set a link like the following in your code to load the form in a modal window e.g for the alt translation form:
 <a href="/media/media/ajax-alt">Title</a>
  */
-(function () {
-    document.addEventListener('DOMContentLoaded', function (event) {
-        document.querySelectorAll('[data-media-widget]').forEach(function (item) {
-            item.addEventListener('click', function (event) {
-                event.preventDefault();
-                const el = this;
-                const widget = el.dataset.mediaWidget;
-                const modal = document.getElementById(el.dataset.modalTarget);
-                modal.querySelector('.modal-title').innerHTML = el.dataset.modalTitle;
-                const modalBody = modal.querySelector('.modal-body');
-                let postParams = {};
-                let url = '';
-                if (widget === 'alt-translations') {
-                    url = '/media/media/ajax-alt-update' + '?id=' + el.dataset.id;
-                    postParams.showLanguages = el.dataset.showLanguages;
-                } else if (widget === 'image-tools') {
-                    url = '/media/media/ajax-image-tools' + '?id=' + el.dataset.id;
-                    postParams.thumbstyle = el.dataset.thumbstyle;
-                }
-                postData(url, postParams)
-                    .then(function (data) {
-                        const instModal = new KMapp.Modal(modal, {
-                            backdrop: el.dataset.modalBackdrop,
-                            keyboard: false
-                        })
-                        modalBody.innerHTML = data.content;
-                        // Add submit event handler to modal-form
-                        modal.querySelector('.media-modal-form').addEventListener('submit', function (event) {
-                            handleModalFormSubmit(event, modalBody, instModal)
-                        });
-                        if (widget === 'image-tools') {
-                            modalBody.querySelector('.image-to-rotate').addEventListener('load', function (event) {
-                                const img = event.currentTarget;
-                                let imgWidth = img.width;
-                                let imgHeight = img.height;
-                                const landscape = imgWidth > imgHeight;
-                                const ratio = landscape ? imgWidth / imgHeight : imgHeight / imgWidth;
-                                if (landscape) {
-                                    document.getElementById('imgContainer').setAttribute('style', `min-height:${imgWidth}px`)
-                                } else { // Portrait
-                                    img.setAttribute('style', `max-width:${imgWidth / ratio}px`)
-                                }
-                                document.getElementById('btn-rotate-image').addEventListener('click', rotateImage);
+const KMMedia = (function () {
+
+    // Public goes here
+    const pub = {
+        initDropzoneMediaWidgetEvent: function (el) {
+            // This function is also called from dropzone widget when we added a new file.
+
+                el.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const el = this;
+                    const widget = el.dataset.mediaWidget;
+                    const modal = document.getElementById(el.dataset.modalTarget);
+                    modal.querySelector('.modal-title').innerHTML = el.dataset.modalTitle;
+                    const modalBody = modal.querySelector('.modal-body');
+                    let postParams = {};
+                    let url = '';
+                    if (widget === 'alt-translations') {
+                        url = '/media/media/ajax-alt-update' + '?id=' + el.dataset.id;
+                        postParams.showLanguages = el.dataset.showLanguages;
+                    } else if (widget === 'image-tools') {
+                        url = '/media/media/ajax-image-tools' + '?id=' + el.dataset.id;
+                        postParams.thumbstyle = el.dataset.thumbstyle;
+                    }
+                    postData(url, postParams)
+                        .then(function (data) {
+                            const instModal = new KMapp.Modal(modal, {
+                                backdrop: el.dataset.modalBackdrop,
+                                keyboard: false
+                            })
+                            modalBody.innerHTML = data.content;
+                            // Add submit event handler to modal-form
+                            modal.querySelector('.media-modal-form').addEventListener('submit', function (event) {
+                                event.preventDefault();
+                                handleModalFormSubmit(event.currentTarget, modalBody, instModal)
                             });
-                        }
-                        // Show the modal
-                        instModal.show();
-                    })
-            });
-        });
-    });
+                            if (widget === 'image-tools') {
+                                modalBody.querySelector('.image-to-rotate').addEventListener('load', function (event) {
+                                    const img = event.currentTarget;
+                                    let imgWidth = img.width;
+                                    let imgHeight = img.height;
+                                    const landscape = imgWidth > imgHeight;
+                                    const ratio = landscape ? imgWidth / imgHeight : imgHeight / imgWidth;
+                                    if (landscape) {
+                                        document.getElementById('imgContainer').setAttribute('style', `min-height:${imgWidth}px`)
+                                    } else { // Portrait
+                                        img.setAttribute('style', `max-width:${imgWidth / ratio}px`)
+                                    }
+                                    document.getElementById('btn-rotate-image').addEventListener('click', rotateImage);
+                                });
+                            }
+                            // Show the modal
+                            instModal.show();
+                        })
+                })
+
+
+        }
+    }
+
+    // Private goes here
 
     // Rotate image, Media Image tools
     function rotateImage(event) {
@@ -72,9 +81,7 @@ Set a link like the following in your code to load the form in a modal window e.
         }
     }
 
-    function handleModalFormSubmit(event, modalBody, instModal) {
-        event.preventDefault();
-        const form = event.currentTarget;
+    function handleModalFormSubmit(form, modalBody, instModal) {
         const url = form.getAttribute('action');
         let formData = new FormData(form);
         postData(url, formData, '')
@@ -82,8 +89,7 @@ Set a link like the following in your code to load the form in a modal window e.
             .then(function (data) {
                 // console.log(data);
                 if (data.hasOwnProperty('success') || data.hasOwnProperty('error')) {
-                    const html = data.hasOwnProperty('success') ? '<div class="text-success">' + data.success + '</div>' : '<div class="text-danger">' + data.error + '</div>';
-                    modalBody.innerHTML = html;
+                    modalBody.innerHTML = data.hasOwnProperty('success') ? '<div class="text-success">' + data.success + '</div>' : '<div class="text-danger">' + data.error + '</div>';
                     setTimeout(function () {
                         modalBody.innerHTML = '';
                         instModal.hide();
@@ -123,4 +129,5 @@ Set a link like the following in your code to load the form in a modal window e.
         return response.json()
     }
 
+    return pub
 })()
