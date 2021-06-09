@@ -289,13 +289,12 @@ class Dropzone extends Widget
     {
         $events['addedfile'] = <<<JS
             function (file) {
-               var el = this.previewsContainer.querySelector('.dz-clickable');
+               const el = this.previewsContainer.querySelector('.dz-clickable');
                this.previewsContainer.appendChild(el);
             }
 JS;
         $events['success'] = <<<JS
             function (file, data) {
-                var dz = this;
                 if (data.hasOwnProperty('error')) {
                     file.status = 'error';
                     this.emit('error', file, {message: data.error});
@@ -304,7 +303,7 @@ JS;
                         file[key] = data[key];
                     });
                     if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
-                        dz.emit('thumbnail', file, file.thumbnailUrl);
+                        this.emit('thumbnail', file, file.thumbnailUrl);
                     }
                 }
             }
@@ -312,15 +311,14 @@ JS;
         $events['error'] = <<<JS
 function (file, error) {
     // file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
-    var dz = this;
-    var el = dz.element.querySelector('.dz-message span')
+    const el = this.element.querySelector('.dz-message span')
     el.innerHTML = '<span class="text-danger">' + error + '</span>';
-    dz.removeFile(file);
+    this.removeFile(file);
     setTimeout(function () {
         el.innerHTML = '';
     }, 4000);
     if (this.options.addRemoveLinks) {
-        var removeLink = file.previewElement.querySelector('.dz-remove');
+        const removeLink = file.previewElement.querySelector('.dz-remove');
         removeLink.remove();
     }
 }
@@ -345,13 +343,13 @@ JS;
                    })
                    .then(response => response.json())
                    .then(data => {
-                       console.log('Success:', data);
+                       // console.log('Success:', data);
                    })
                    .catch((error) => {
-                       console.error('Error:', error);
+                       // console.error('Error:', error);
                    });
                 }
-                var el = this.previewsContainer.querySelector('.dz-clickable');
+                const el = this.previewsContainer.querySelector('.dz-clickable');
                 if (this.files.length < this.options.maxFiles) {
                     el.classList.remove('d-none');
                     el.classList.add('d-flex');
@@ -370,21 +368,21 @@ function (file) {
         
         // Add remove Link
         if (this.options.addRemoveLinks) {
-            var removeLink = file.previewElement.querySelector('.dz-remove');
+            const removeLink = file.previewElement.querySelector('.dz-remove');
             file.previewElement.querySelector('.dz-links').appendChild(removeLink);
         }
         file.previewElement.querySelector('.dz-progress').remove();
         
         if (this.options.params.showAltLink) {
           // Add Link for alt translation 
-          var altLink = file.previewElement.querySelector('[data-media-widget="alt-translations"]');
+          const altLink = file.previewElement.querySelector('[data-media-widget="alt-translations"]');
           altLink.dataset.id = file.id;
           KMMedia.initDropzoneMediaWidgetEvent(altLink);
         }
        
         if (this.options.params.showToolLink) {
           // Add Link for alt translation 
-          var toolLink = file.previewElement.querySelector('[data-media-widget="image-tools"]');
+          const toolLink = file.previewElement.querySelector('[data-media-widget="image-tools"]');
           toolLink.dataset.id = file.id;
           KMMedia.initDropzoneMediaWidgetEvent(toolLink);
         }
@@ -393,7 +391,7 @@ function (file) {
 JS;
         $events['maxfilesreached'] = <<<JS
            function(files) {
-               var el = this.previewsContainer.querySelector('.dz-clickable');
+               const el = this.previewsContainer.querySelector('.dz-clickable');
                if (this.files.length >= this.options.maxFiles) {
                     el.classList.remove('d-flex');
                     el.classList.add('d-none');
@@ -408,7 +406,7 @@ JS;
 JS;
         $events['uploadprogress'] = <<<JS
            function(file, progress, bytesSent) {
-               var progressElement = file.previewElement.querySelector(".dz-upload");
+               const progressElement = file.previewElement.querySelector(".dz-upload");
                progressElement.style.width = progress + "%";
                progressElement.innerHTML = progress + "%";
            }

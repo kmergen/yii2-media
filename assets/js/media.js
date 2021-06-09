@@ -8,55 +8,53 @@ const KMMedia = (function () {
     const pub = {
         initDropzoneMediaWidgetEvent: function (el) {
             // This function is also called from dropzone widget when we added a new file.
-
-                el.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const el = this;
-                    const widget = el.dataset.mediaWidget;
-                    const modal = document.getElementById(el.dataset.modalTarget);
-                    modal.querySelector('.modal-title').innerHTML = el.dataset.modalTitle;
-                    const modalBody = modal.querySelector('.modal-body');
-                    let postParams = {};
-                    let url = '';
-                    if (widget === 'alt-translations') {
-                        url = '/media/media/ajax-alt-update' + '?id=' + el.dataset.id;
-                        postParams.showLanguages = el.dataset.showLanguages;
-                    } else if (widget === 'image-tools') {
-                        url = '/media/media/ajax-image-tools' + '?id=' + el.dataset.id;
-                        postParams.thumbstyle = el.dataset.thumbstyle;
-                    }
-                    postData(url, postParams)
-                        .then(function (data) {
-                            const instModal = new KMapp.Modal(modal, {
-                                backdrop: el.dataset.modalBackdrop,
-                                keyboard: false
-                            })
-                            modalBody.innerHTML = data.content;
-                            // Add submit event handler to modal-form
-                            modal.querySelector('.media-modal-form').addEventListener('submit', function (event) {
-                                event.preventDefault();
-                                handleModalFormSubmit(event.currentTarget, modalBody, instModal)
-                            });
-                            if (widget === 'image-tools') {
-                                modalBody.querySelector('.image-to-rotate').addEventListener('load', function (event) {
-                                    const img = event.currentTarget;
-                                    let imgWidth = img.width;
-                                    let imgHeight = img.height;
-                                    const landscape = imgWidth > imgHeight;
-                                    const ratio = landscape ? imgWidth / imgHeight : imgHeight / imgWidth;
-                                    if (landscape) {
-                                        document.getElementById('imgContainer').setAttribute('style', `min-height:${imgWidth}px`)
-                                    } else { // Portrait
-                                        img.setAttribute('style', `max-width:${imgWidth / ratio}px`)
-                                    }
-                                    document.getElementById('btn-rotate-image').addEventListener('click', rotateImage);
-                                });
-                            }
-                            // Show the modal
-                            instModal.show();
+            el.addEventListener('click', function (event) {
+                event.preventDefault();
+                const el = this;
+                const widget = el.dataset.mediaWidget;
+                const modal = document.getElementById(el.dataset.modalTarget);
+                modal.querySelector('.modal-title').innerHTML = el.dataset.modalTitle;
+                const modalBody = modal.querySelector('.modal-body');
+                let postParams = {};
+                let url = '';
+                if (widget === 'alt-translations') {
+                    url = '/media/media/ajax-alt-update' + '?id=' + el.dataset.id;
+                    postParams.showLanguages = el.dataset.showLanguages;
+                } else if (widget === 'image-tools') {
+                    url = '/media/media/ajax-image-tools' + '?id=' + el.dataset.id;
+                    postParams.thumbstyle = el.dataset.thumbstyle;
+                }
+                postData(url, postParams)
+                    .then(function (data) {
+                        const instModal = new KMapp.Modal(modal, {
+                            backdrop: el.dataset.modalBackdrop,
+                            keyboard: false
                         })
-                })
-
+                        modalBody.innerHTML = data.content;
+                        // Add submit event handler to modal-form
+                        modal.querySelector('.media-modal-form').addEventListener('submit', function (event) {
+                            event.preventDefault();
+                            handleModalFormSubmit(event.currentTarget, modalBody, instModal)
+                        });
+                        if (widget === 'image-tools') {
+                            modalBody.querySelector('.image-to-rotate').addEventListener('load', function (event) {
+                                const img = event.currentTarget;
+                                let imgWidth = img.width;
+                                let imgHeight = img.height;
+                                const landscape = imgWidth > imgHeight;
+                                const ratio = landscape ? imgWidth / imgHeight : imgHeight / imgWidth;
+                                if (landscape) {
+                                    document.getElementById('imgContainer').setAttribute('style', `min-height:${imgWidth}px`)
+                                } else { // Portrait
+                                    img.setAttribute('style', `max-width:${imgWidth / ratio}px`)
+                                }
+                                document.getElementById('btn-rotate-image').addEventListener('click', rotateImage);
+                            });
+                        }
+                        // Show the modal
+                        instModal.show();
+                    })
+            })
 
         }
     }

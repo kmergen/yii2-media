@@ -36,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'class' => 'yii\grid\Column',
                     'header' => Yii::t('media', 'Preview'),
                     'content' => function ($model, $key, $index, $column) {
-                        return Html::a(Html::img(Yii::$app->image->thumb($model->url, 'xsmall')), '@web/' . $model->url, ['target' => '_blank']);
+                        return Html::a(Html::img(Yii::$app->image->thumb($model->url, 'small')), '@web/' . $model->url, ['target' => '_blank']);
                     }
                 ],
                 'id',

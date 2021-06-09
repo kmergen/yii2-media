@@ -117,7 +117,6 @@ trait DropzoneUploadTrait
             $newFileName .= '_' . uniqid(mt_rand(100, 1000));
         }
         $newFileName .= $this->filenameSuffix . '.' . $uploadedFile->getExtension();
-
         $targetFileDirectory = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $this->targetUrl;
         FileHelper::createDirectory($targetFileDirectory);
         $path = $targetFileDirectory . DIRECTORY_SEPARATOR . $newFileName;
