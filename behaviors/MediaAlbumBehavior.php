@@ -2,17 +2,17 @@
 
 namespace kmergen\media\behaviors;
 
+use kmergen\media\models\Media;
+use kmergen\media\models\MediaAlbum;
 use Yii;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
-use kmergen\media\models\Media;
-use kmergen\media\models\MediaAlbum;
 
 /**
  * MediaAlbum behavior handles the uploaded images in a specific model and stored them in as kmergen\media\MediaAlbum.
  * In the owner table you have to set an attribute that provide the id from media_album table.
- * If you save the first media file this ID is the value of the attribute and persist until the owner model will be
+ * Before insert a new owner model we create a media album which persist until the owner model will be
  * deleted.
  *
  * @author Klaus Mergen <kmergenweb@gmail.com>
@@ -66,7 +66,6 @@ class MediaAlbumBehavior extends Behavior
             ActiveRecord::EVENT_BEFORE_UPDATE => 'beforeSave',
             ActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
         ];
-
     }
 
     /**
@@ -75,16 +74,14 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterFind($event)
     {
-        if ($this->owner->{$this->attribute} !== null) {
-            $query = Media::find()
-                ->with('translations')
-                ->where(['album_id' => $this->owner->{$this->attribute}])
-                ->orderBy('album_position');
-            if ($this->asArray) {
-                $query->asArray();
-            }
-            $this->mediaFiles = $query->all();
+        $query = Media::find()
+            ->with('translations')
+            ->where(['album_id' => $this->owner->{$this->attribute}])
+            ->orderBy('album_position');
+        if ($this->asArray) {
+            $query->asArray();
         }
+        $this->mediaFiles = $query->all();
     }
 
     /**
@@ -102,7 +99,8 @@ class MediaAlbumBehavior extends Behavior
      */
     public function beforeSave($event)
     {
-        if ($this->owner->{$this->attribute} === null && !empty($this->mediaFiles)) { //Create new mediaAlbum
+        if ($event->name === ActiveRecord::EVENT_BEFORE_INSERT) {
+            // Create new mediaAlbum
             $album = new MediaAlbum();
             $album->name = $this->owner->formName() . '_' . $this->attribute;
             $album->parent = $this->mediaAlbumParent;
@@ -140,7 +138,6 @@ class MediaAlbumBehavior extends Behavior
         }
         return true;
     }
-
 
     /**
      * Load and set the Media Files from the posted Media files ids
