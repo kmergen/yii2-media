@@ -49,7 +49,7 @@ class UploadController extends Controller
     {
         $uploadedFile = UploadedFile::getInstanceByName('mediaUploadFile');
         if ($uploadedFile->hasError) {
-            throw new Exception('Fileupload Error: ' . $uploadedFile->error);
+            throw new \Exception('Fileupload Error: ' . $uploadedFile->error);
         }
 
         try {
