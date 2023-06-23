@@ -1,39 +1,19 @@
 <?php
-/**
- * @copyright Copyright (c) Klaus Mergen
- * @license http://opensource.org/licenses/BSD-3-Clause
- */
 
 namespace kmergen\media\widgets\dropzone;
 
-use Yii;
-use yii\base\Widget;
-use yii\base\InvalidConfigException;
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\helpers\Json;
-use yii\helpers\ArrayHelper;
+use Yii;
+use \Imagick;
 
 /**
- * Dropzone Upload widget
- *
- * File Upload widget using the dropzone.js
- * @see http://http://www.dropzonejs.com/
- * @see https://github.com/enyo/dropzone/
- *
- *
- * @author Klaus Mergen <kmergenweb@gmail.com>
+ * KmDropzone is an image Uploader
+ * mainly developed for uploading ad images and show them on the ad edit form.
+ 
+ * @author KlausMergen <kmergenweb@gmail.com>
  */
-class Dropzone extends Widget
+class Dropzone extends \yii\base\Widget
 {
-
-    /**
-     * @var array the existing files to add to the dropzone.
-     * The array should be in the Media model format
-     * If [[model]] is set, then the files array will filled with the prepared mediaFiles from the model.
-     * @see function [[prepareMediaFiles()]]
-     */
-    public $files = [];
 
     /**
      * @var object the model which hold the already stored files (in Media Module the media files are provided and stored by the MediaAlbumBehavior)
@@ -42,19 +22,9 @@ class Dropzone extends Widget
     public $model;
 
     /**
-     * @var array HTML options for the dropzone container. The cssClass 'dropzone' will set in [[init()]].
+     * @var string The url where to upload the image.
      */
-    public $htmlOptions = [];
-
-    /**
-     * @var array An array of options that are supported by Dropzone
-     */
-    public $pluginOptions = [];
-
-    /**
-     * @var array An array of client events that are supported by Dropzone
-     */
-    public $pluginEvents = [];
+    public $uploadUrl;
 
     /**
      * @var string A thumbStyle provided by kmergen\media\components\Image
@@ -69,380 +39,66 @@ class Dropzone extends Widget
      */
     public $deleteUrl = '/media/dropzone/delete';
 
-    /**
-     * @var string The template of the dropzone UI.
-     */
-    public $uiTemplate = '{beginDz}{beginDzPreviews}{dzClickable}{endDzPreviews}{dzMessage}{endDz}';
 
     /**
-     * @var array The template parts.
-     * @see renderUITemplate()
+     * @var array the existing files to add to the dropzone.
+     * The array should be in the Media model format
+     * If [[model]] is set, then the files array will filled with the prepared mediaFiles from the model.
+     * @see function [[prepareMediaFiles()]]
      */
-    public $uiTemplateParts = [];
+    private $files = [];
 
     /**
-     * @var array The options for the media modal tool window to rotate images.
+     * @var array the options for kmDropzone js module
+     * 
      */
-    public $toolOptions = [];
+    public $pluginOptions;
 
     /**
-     * @var array The options for the media modal alt translations.
+     * {@inheritdoc}
      */
-    public $altOptions = [];
-
-    /**
-     * @var string The name of this dropzone instance This name will extended by the widget id in [[init()]].
-     */
-    protected $dropzoneName = 'dropzone';
-
-    /**
-     * @var object The assets object of this widget
-     */
-    public $assets;
-
     public function init()
     {
         parent::init();
-
-        $defaults = [
-            'url' => 'media/dropzone/upload',
-            'addRemoveLinks' => true,
-            'previewsContainer' => '.dropzone-previews',
-            'clickable' => '.dz-clickable',
-            'paramName' => $this->id . 'file',
-            'dictDefaultMessage' => Yii::t('media/dropzone', 'Drop files here to upload'),
-            'dictFallbackMessage' => Yii::t('media/dropzone', 'Your browser does not support drag\'n\'drop file uploads.'),
-            'dictFallbackText' => Yii::t('media/dropzone', 'Please use the fallback form below to upload your files like in the olden days.'),
-            'dictFileTooBig' => Yii::t('media/dropzone', 'File is too big {{filesize}} MB. Max filesize: {{maxFilesize}} MB.'),
-            'dictInvalidFileType' => Yii::t('media/dropzone', 'You can\'t upload files of this type.'),
-            'dictResponseError' => Yii::t('media/dropzone', 'Server responded with {{statusCode}} code.'),
-            'dictCancelUpload' => Yii::t('media/dropzone', 'Cancel upload'),
-            'dictCancelUploadConfirmation' => Yii::t('media', 'Are you sure you want to cancel this upload?'),
-            'dictRemoveFile' => '<svg class="dz-icon dz-icon-trash" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>' . Yii::t('media/dropzone', 'Delete Image') . '</title>
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect opacity="0" x="0" y="0" width="24" height="24"></rect>
-        <path class="path-1" d="M6,8 L6,20.5 C6,21.3284271 6.67157288,22 7.5,22 L16.5,22 C17.3284271,22 18,21.3284271 18,20.5 L18,8 L6,8 Z" fill="#000000" fill-rule="nonzero"></path>
-        <path class="path-2" d="M14,4.5 L14,4 C14,3.44771525 13.5522847,3 13,3 L11,3 C10.4477153,3 10,3.44771525 10,4 L10,4.5 L5.5,4.5 C5.22385763,4.5 5,4.72385763 5,5 L5,5.5 C5,5.77614237 5.22385763,6 5.5,6 L18.5,6 C18.7761424,6 19,5.77614237 19,5.5 L19,5 C19,4.72385763 18.7761424,4.5 18.5,4.5 L14,4.5 Z" fill="#000000" opacity="0.3"></path>
-    </g>
-</svg>',
-            'dictMaxFilesExceeded' => Yii::t('media/dropzone', 'The maximum number of {n} pictures has been reached.', ['n' => $this->pluginOptions['maxFiles'] ?? 5]),
-        ];
-
-        $this->pluginOptions = ArrayHelper::merge($defaults, $this->pluginOptions);
-
-        $this->pluginOptions['url'] = Url::toRoute($this->pluginOptions['url']);
-
-        $this->pluginOptions['params']['deleteUrl'] = $this->deleteUrl;
-        $this->pluginOptions['params']['paramName'] = $this->pluginOptions['paramName'];
-
-        $this->dropzoneName = 'dropzone_' . $this->id;
-
-        if ($this->thumbStyle !== null) {
-            $this->pluginOptions['createImageThumbnails'] = false;
-            $this->pluginOptions['params']['thumbStyle'] = $this->thumbStyle;
-        }
-
-        $toolOptionsDefaults = [
-            'showLink' => true,
-            'class' => 'media-load-modal',
-            'data-media-widget' => 'image-tools',
-            'data-modal-target' => 'pageModal',
-            'data-modal-title' => Yii::t('media/dropzone', 'Image Tools'),
-            'data-modal-backdrop' => 'static',
-            'data-modal-close-button-class' => 'btn btn-secondary d-none',
-            'data-thumbstyle' => $this->thumbStyle
-        ];
-        $this->toolOptions = ArrayHelper::merge($toolOptionsDefaults, $this->toolOptions);
-        $this->pluginOptions['params']['showToolLink'] = $this->toolOptions['showLink'];
-
-        $altOptionsDefaults = [
-            'showLink' => true,
-            'class' => 'media-load-modal',
-            'data-media-widget' => 'alt-translations',
-            'data-modal-target' => 'pageModal',
-            'data-modal-title' => Yii::t('media/dropzone', 'Set image title'),
-            'data-modal-backdrop' => 'static',
-            'data-modal-close-button-class' => 'btn btn-secondary d-none',
-            'data-show-languages' => 'one' // 'one' : Show only Yii::$app->language
-            //  'all' show all translatable values this has only effect if there is a languages property in your UrlManager
-        ];
-        $this->altOptions = ArrayHelper::merge($altOptionsDefaults, $this->altOptions);
-        $this->pluginOptions['params']['showAltLink'] = $this->altOptions['showLink'];
-
-        $this->assets = DropzoneAsset::register($this->getView());
-
-        if (empty($this->pluginOptions['previewTemplate'])) {
-            $this->pluginOptions['previewTemplate'] = $this->render('preview-template');
-        }
+        DropzoneAsset::register($this->getView());
     }
 
+
+    /**
+     * {@inheritdoc}
+     */
     public function run()
-    {
-        if (Yii::$app->request->enableCsrfValidation) {
-            $this->pluginOptions['params'][Yii::$app->request->csrfParam] = Yii::$app->request->getCsrfToken();
-        }
-
-        $this->htmlOptions['id'] = $this->id;
-        Html::addCssClass($this->htmlOptions, 'dropzone');
-        echo $this->renderUITemplate();
-
-        if ($this->model !== null && !empty($this->model->mediaFiles)) {
-            $this->prepareMediaFiles();
-        }
-
-        $this->addEvents();
-        $this->registerClientScript();
-    }
-
-    /**
-     * Render the UI for the dropzone
-     */
-    protected function renderUITemplate()
-    {
-        $parts['{beginDz}'] = isset($this->uiTemplateParts['beginDz'])
-            ? $this->uiTemplateParts['beginDz']
-            : Html::beginTag('div', $this->htmlOptions);
-        $parts['{beginDzPreviews}'] = isset($this->uiTemplateParts['beginDzPreviews'])
-            ? $this->uiTemplateParts['beginDzPreviews']
-            : Html::beginTag('div', ['class' => 'dropzone-previews clearfix']);
-        $parts['{dzMessage}'] = isset($this->uiTemplateParts['dzMessage'])
-            ? $this->uiTemplateParts['dzMessage']
-            : Html::tag('div', '<span>' . $this->pluginOptions['dictDefaultMessage'] . '</span>', ['class' => 'dz-default dz-message']);
-        if (isset($this->uiTemplateParts['dzClickable'])) {
-            $parts['{dzClickable}'] = $this->uiTemplateParts['dzClickable'];
-        } else {
-            $options = [];
-            $options['class'] = ($this->thumbStyle !== null) ? 'dz-clickable card text-center justify-content-center ' . $this->thumbStyle : 'dz-clickable card text-center justify-content-center';
-            $parts['{dzClickable}'] = Html::tag('div', '<div class="inner">+</div>', $options);
-        }
-        $parts['{endDzPreviews}'] = isset($this->uiTemplateParts['endDzPreviews'])
-            ? $this->uiTemplateParts['endDzPreviews']
-            : '<div id="dropzoneModal" class="modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body"></div>
-            <div class="modal-footer">
-                <div class="modal-footer-content"></div>
-                <button type="button" id="dropzoneModal-close-btn" class="btn btn-secondary d-none"
-                        data-bs-dismiss="modal">Yii::t("dropzone", "Close")</button>
-            </div>
-        </div>
-    </div>
-</div>' . Html::endTag('div');
-        $parts['{endDz}'] = isset($this->uiTemplateParts['endDz'])
-            ? $this->uiTemplateParts['endDz']
-            : Html::endTag('div');
-
-        return strtr($this->uiTemplate, $parts);
-    }
-
-    /**
-     * Prepare the existing files from media model to add them to the dropzone
-     */
-    protected function prepareMediaFiles()
-    {
-        foreach ($this->model->mediaFiles as $file) {
-            $i = $file['id'];
-            $this->files[$i]['id'] = $file['id'];
-            $this->files[$i]['name'] = $file['name'];
-            $this->files[$i]['size'] = (int)$file['size'];
-            $this->files[$i]['url'] = $file['url'];
-            $this->files[$i]['isTemp'] = $file['status'] == \kmergen\media\models\Media::STATUS_TEMP ? true : false;
-            $this->files[$i]['type'] = $file['type'];
-            if (strpos($file['type'], 'image/') !== false) {
-                $this->files[$i]['thumbnailUrl'] = Yii::$app->image->thumb($file['url'], $this->thumbStyle);
-            }
-            $this->files[$i]['deleteUrl'] = Url::toRoute([$this->deleteUrl]);
-            $this->files[$i]['translations'] = ArrayHelper::index($file['translations'], 'language');
-        }
-    }
-
-    /**
-     * Registers required javascript for the plugin
-     */
-    public function registerClientScript()
     {
         $view = $this->getView();
         //Important to set autoDiscover to POS_END, not working on POS_READY
-        $view->registerJs('Dropzone.autoDiscover = false;', $view::POS_END);
-        $js[] = $this->dropzoneName . ' = new Dropzone("#' . $this->id . '", ' . Json::encode($this->pluginOptions) . ');';
+        $css = <<<CSS
+        #kmDropzone {margin: 1rem 0 1rem 0;}
+        #kmDz-input {display:none !important;}
+        .kmDz-clickable {width: 100px; height: 100px; border: 2px dashed #ddd; color: #ddd; display:flex; justify-content:center; text-align:center;}
+        .kmDz-clickable .inner {font-size: 2rem; line-height: 3;}
+        .kmDz-message .error {color:red;}
+        .kmDz-preview .card-body {padding: .35rem;}
 
-        if (!empty($this->pluginEvents)) {
-            foreach ($this->pluginEvents as $event => $handler) {
-                $js[] = "{$this->dropzoneName}.on('$event', $handler);";
-            }
+CSS;
+        $view->registerCss($css);
+
+        $pluginOptions = Json::encode($this->pluginOptions);
+        // $view->registerJsFile('@web/build/kmDropzone.js', ['position' => $view::POS_END]);
+        $view->registerJs("document.addEventListener('DOMContentLoaded', function () {
+            window.KmDropzoneInit($pluginOptions);
+         });", $view::POS_END);
+
+        $allowedFileTypes = $this->pluginOptions['allowedFileTypes'] ?? ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (!extension_loaded('imagick')) {
+            echo 'imagick not installed';
         }
 
-        $js[] = $this->commonJs();
-        $view->registerJs(implode("\n", $js), $view::POS_END);
-    }
-
-    /**
-     * Add the necassary dropzone events
-     */
-    public function addEvents()
-    {
-        $events['addedfile'] = <<<JS
-            function (file) {
-               const el = this.previewsContainer.querySelector('.dz-clickable');
-               this.previewsContainer.appendChild(el);
-            }
-JS;
-        $events['success'] = <<<JS
-            function (file, data) {
-                if (data.hasOwnProperty('error')) {
-                    file.status = 'error';
-                    this.emit('error', file, {message: data.error});
-                } else {
-                    Object.keys(data).forEach(function (key) {
-                        file[key] = data[key];
-                    });
-                    if (file.type.match(/image.*/) && file.hasOwnProperty('thumbnailUrl')) {
-                        this.emit('thumbnail', file, file.thumbnailUrl);
-                    }
-                }
-            }
-JS;
-        $events['error'] = <<<JS
-function (file, error) {
-    // file.previewElement.querySelector('.dz-error-message span').innerHTML = 'Es ist ein Serverfehler aufgetreten.';
-    const el = this.element.querySelector('.dz-message span')
-    el.innerHTML = '<span class="text-danger">' + error + '</span>';
-    this.removeFile(file);
-    setTimeout(function () {
-        el.innerHTML = '';
-    }, 4000);
-    if (this.options.addRemoveLinks) {
-        const removeLink = file.previewElement.querySelector('.dz-remove');
-        removeLink.remove();
-    }
-}
-            
-JS;
-        $events['removedfile'] = <<<JS
-            function(file) {
-                if (file.accepted === true) {
-                    this.element.querySelector('.dz-message span').innerHTML = this.options.dictDefaultMessage;
-                }
-                if(file.hasOwnProperty('processing') && file.status !== 'error') {
-                    //We delete only the files which are uploaded
-                    // TODO Do this by modeluploads. For other uploads we must look for annohter solution.  
-                    fetch(file.deleteUrl, {
-                        method: 'POST',
-                        headers: {
-                           "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-                           'X-Requested-With': 'XMLHttpRequest',
-                           'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-                        },
-                        body: 'id=' + file.id
-                   })
-                   .then(response => response.json())
-                   .then(data => {
-                       // console.log('Success:', data);
-                   })
-                   .catch((error) => {
-                       // console.error('Error:', error);
-                   });
-                }
-                const el = this.previewsContainer.querySelector('.dz-clickable');
-                if (this.files.length < this.options.maxFiles) {
-                    el.classList.remove('d-none');
-                    el.classList.add('d-flex');
-                }
-            }
-JS;
-        $events['complete'] = <<<JS
-function (file) {
-    if (file.status === 'success') {
-        file.previewElement.setAttribute('id', 'mediafile-' + file.id);
-        const el = document.createElement('input');
-        el.setAttribute('type', 'hidden');
-        el.setAttribute('name', 'MediaFiles[' + file.id + '][id]');
-        el.setAttribute('value', file.id);
-        file.previewElement.appendChild(el);
-        
-        // Add remove Link
-        if (this.options.addRemoveLinks) {
-            const removeLink = file.previewElement.querySelector('.dz-remove');
-            file.previewElement.querySelector('.dz-links').appendChild(removeLink);
-        }
-        file.previewElement.querySelector('.dz-progress').remove();
-        
-        if (this.options.params.showAltLink) {
-          // Add Link for alt translation 
-          const altLink = file.previewElement.querySelector('[data-media-widget="alt-translations"]');
-          altLink.dataset.id = file.id;
-          KMMedia.initDropzoneMediaWidgetEvent(altLink);
-        }
-       
-        if (this.options.params.showToolLink) {
-          // Add Link for alt translation 
-          const toolLink = file.previewElement.querySelector('[data-media-widget="image-tools"]');
-          toolLink.dataset.id = file.id;
-          KMMedia.initDropzoneMediaWidgetEvent(toolLink);
-        }
-    }
-}
-JS;
-        $events['maxfilesreached'] = <<<JS
-           function(files) {
-               const el = this.previewsContainer.querySelector('.dz-clickable');
-               if (this.files.length >= this.options.maxFiles) {
-                    el.classList.remove('d-flex');
-                    el.classList.add('d-none');
-               }
-              this.element.querySelector('.dz-message span').innerHTML = this.options.dictMaxFilesExceeded;
-           }
-JS;
-        $events['maxfilesexceeded'] = <<<JS
-           function(file) {
-               this.removeFile(file);
-           }
-JS;
-        $events['uploadprogress'] = <<<JS
-           function(file, progress, bytesSent) {
-               const progressElement = file.previewElement.querySelector(".dz-upload");
-               progressElement.style.width = progress + "%";
-               progressElement.innerHTML = progress + "%";
-           }
-JS;
-        $this->pluginEvents = ArrayHelper::merge($events, $this->pluginEvents);
-    }
-
-    /**
-     * The main js code for dropzone widget
-     */
-    protected function commonJs()
-    {
-        $existingFiles = Json::encode($this->files);
-        $dz = $this->dropzoneName;
-
-        $js = <<<JS
-
-        // Add the existing files to dropzone
-        if (Object.keys($existingFiles).length !== 0) {
-            let files = $existingFiles;
-            i = 0;
-            for (key in files) {
-                $dz.emit('addedfile', files[key]);
-                if (files[key].hasOwnProperty('thumbnailUrl')) {
-                    $dz.emit('thumbnail', files[key], files[key].thumbnailUrl);
-                }
-                files[key].status = 'success';
-                $dz.emit('complete', files[key]);
-                files[key].accepted = true;
-                $dz.files.push(files[key]);
-                i++;
-                $dz._updateMaxFilesReachedClass();
-            }
-        }
-           
-JS;
-        return $js;
+        echo '<div id="kmDropzone"><div class="clearfix"><div class="kmDz-previews"></div><label class="kmDz-clickable" for="kmDz-input">
+        <input type="file" name="kmDz-input" id="kmDz-input" accept="' . implode(",", $allowedFileTypes) . '">
+        <span class="inner">+</span>
+        </label></div>
+        <div class="kmDz-message"></div>
+        </div>';
     }
 }
