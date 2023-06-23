@@ -73,11 +73,11 @@ class Dropzone extends \yii\base\Widget
         //Important to set autoDiscover to POS_END, not working on POS_READY
         $css = <<<CSS
         #kmDropzone {margin: 1rem 0 1rem 0;}
-        #kmDz-input {display:none !important;}
-        .kmDz-clickable {width: 100px; height: 100px; border: 2px dashed #ddd; color: #ddd; display:flex; justify-content:center; text-align:center;}
-        .kmDz-clickable .inner {font-size: 2rem; line-height: 3;}
-        .kmDz-message .error {color:red;}
-        .kmDz-preview .card-body {padding: .35rem;}
+        #dz-input {display:none !important;}
+        .dz-clickable {width: 100px; height: 100px; border: 2px dashed #ddd; color: #ddd; display:flex; justify-content:center; text-align:center;}
+        .dz-clickable .inner {font-size: 2rem; line-height: 3;}
+        .dz-message .error {color:red;}
+        .dz-preview .card-body {padding: .35rem;}
 
 CSS;
         $view->registerCss($css);
@@ -94,11 +94,11 @@ CSS;
             echo 'imagick not installed';
         }
 
-        echo '<div id="kmDropzone"><div class="clearfix"><div class="kmDz-previews"></div><label class="kmDz-clickable" for="kmDz-input">
-        <input type="file" name="kmDz-input" id="kmDz-input" accept="' . implode(",", $allowedFileTypes) . '">
+        echo '<div id="kmDropzone"><div class="clearfix"><div class="dz-previews"></div><label class="dz-clickable" for="dz-input">
+        <input type="file" name="dz-input" id="dz-input" accept="' . implode(",", $allowedFileTypes) . '">
         <span class="inner">+</span>
         </label></div>
-        <div class="kmDz-message"></div>
+        <div class="dz-message"></div>
         </div>';
     }
 }
