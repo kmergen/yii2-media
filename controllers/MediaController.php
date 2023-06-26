@@ -113,9 +113,9 @@ class MediaController extends Controller
                         ->save(Yii::getAlias('@webroot') . '/' . $model->url, ['jpeg_quality' => 100]);
 
                     // Delete all thumbnails of the image
-                    Yii::$app->image->deleteThumbs($model->url);
+                    Yii::$app->imageOld->deleteThumbs($model->url);
                     // Create current thumbnail
-                    Yii::$app->image->thumb($model->url, $post['thumbstyle'], true);
+                    Yii::$app->imageOld->thumbOld($model->url, $post['thumbstyle'], true);
                     $data['refreshThumbnail'] = true;
                     $data['id'] = $id;
                 }
@@ -136,8 +136,6 @@ class MediaController extends Controller
         ]);
 
         return $this->asJson($items);
-
-
     }
 
     /**

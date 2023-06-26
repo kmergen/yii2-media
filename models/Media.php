@@ -31,6 +31,7 @@ class Media extends \yii\db\ActiveRecord
      */
     const STATUS_TEMP = 0;
     const STATUS_PERMANENT = 1;
+    const STATUS_DELETED = 9;
 
     /**
      * @var array|false the returned array from getImageSize() or false if the uploaded file is no image will set by [[upload()]].
@@ -52,10 +53,10 @@ class Media extends \yii\db\ActiveRecord
     {
         return [
             'translateable' => [
-                'class' => TranslateableBehavior::className(),
+                'class' => TranslateableBehavior::class,
                 'translationAttributes' => ['alt'],
-            //'translationRelation' => 'translations',
-            // translationLanguageAttribute => 'language',
+                //'translationRelation' => 'translations',
+                // translationLanguageAttribute => 'language',
             ],
             'timestamp' => [
                 'class' => TimestampBehavior::class,
@@ -71,9 +72,10 @@ class Media extends \yii\db\ActiveRecord
     {
         return [
             [['album_id', 'album_position', 'user_id', 'status'], 'integer'],
-            [['status'], 'in', 'range' => [self::STATUS_TEMP, self::STATUS_PERMANENT]],
+            [['status'], 'in', 'range' => [self::STATUS_TEMP, self::STATUS_PERMANENT, self::STATUS_DELETED]],
             [['name'], 'string', 'max' => 255],
-            [['url', 'type', 'size'], 'safe']];
+            [['url', 'type', 'size'], 'safe']
+        ];
     }
 
     /**
@@ -137,7 +139,7 @@ class Media extends \yii\db\ActiveRecord
     protected function deleteThumbnails()
     {
         if (preg_match('/image\/\w*/', $this->type)) {
-            Yii::$app->image->deleteThumbs($this->url);
+            Yii::$app->imageOld->deleteThumbs($this->url);
         }
     }
 
@@ -169,5 +171,4 @@ class Media extends \yii\db\ActiveRecord
     {
         return $this->hasMany(MediaTranslation::className(), ['media_id' => 'id']);
     }
-
 }

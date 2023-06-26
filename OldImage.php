@@ -1,4 +1,7 @@
 <?php
+/**
+ * Image helper class.
+ */
 
 namespace kmergen\media\helpers;
 
@@ -10,102 +13,10 @@ use Imagine\Image\Point;
 use Imagine\Image\Palette\RGB;
 use Yii;
 
-use \Imagick;
-
-/**
- * Image provides a set of static methods for generating and manipulate images.
- * Therefore most of the time we use Imagick:
- *
- * @author Klaus Mergen
- * @since 2.0
- */
 class Image extends \yii\imagine\BaseImage
 {
-    public static function resizeImage(Imagick $img, $width, $height = null, $bestFit = false, $fill = false)
-    {
 
-        $img->thumbnailImage($width, $height, $bestFit);
-        // The same result you will get with this function
-        // $img->resizeImage($this->maxWidth, null, Imagick::FILTER_LANCZOS, false);
-
-        return $img;
-    }
     /**
-     * Set a blur background with an exact width and height of the same image that is then
-     * composite to the background.
-     * $img an Imagick image. This is the image from which we create the background and the foreground.
-     * $width The fixed width of the image
-     * $height The fixed width of the image
-     * $quality The quality of the image, higher is better quality.
-     * $sigma The strength of the blur. Values possible from 0 to 100. Higher is stronger blur.
-     * $radius The radius of the blur. Radius 0 is the strongest blur effect.
-     */
-    public static function thumbCompositeBlur(Imagick $img, $width, $height, $quality = 62, $sigma = 6, $radius = 0)
-    {
-        $imgRatio = $img->getImageWidth() / $img->getImageHeight();
-        if ($imgRatio === $width / $height) {
-            // We need only the thumbnail without a blur background
-            $img->setImageCompressionQuality($quality);
-            $img->thumbnailImage($width, null);
-            return $img;
-        }
-        // Otherwise we need a background to composite the image on top of it.
-        $bgImg = clone $img;
-        $bgImg->setImageCompressionQuality($quality); // This is the quality of the composite image. The setting on $img has no effect on the composite image.
-        $bgImg->thumbnailImage(($width / 2), ($height / 2));
-        $bgImg->blurImage($radius, $sigma);
-        $bgImg->thumbnailImage(($width), ($height));
-        //   return $bgImg;
-        $img->setImageCompressionQuality($quality);
-        $img->thumbnailImage($width, $height, true);
-        //  return $img;
-        $startX = ($width - $img->getImageWidth()) / 2;
-        $startY = ($height - $img->getImageHeight()) / 2;
-
-        $bgImg->compositeImage($img, Imagick::COMPOSITE_ATOP, $startX, $startY);
-        return $bgImg;
-    }
-
-   
-
-    public static function autorotateImage(Imagick $image)
-    {
-        switch ($image->getImageOrientation()) {
-            case Imagick::ORIENTATION_TOPLEFT:
-                break;
-            case Imagick::ORIENTATION_TOPRIGHT:
-                $image->flopImage();
-                break;
-            case Imagick::ORIENTATION_BOTTOMRIGHT:
-                $image->rotateImage("#000", 180);
-                break;
-            case Imagick::ORIENTATION_BOTTOMLEFT:
-                $image->flopImage();
-                $image->rotateImage("#000", 180);
-                break;
-            case Imagick::ORIENTATION_LEFTTOP:
-                $image->flopImage();
-                $image->rotateImage("#000", -90);
-                break;
-            case Imagick::ORIENTATION_RIGHTTOP:
-                $image->rotateImage("#000", 90);
-                break;
-            case Imagick::ORIENTATION_RIGHTBOTTOM:
-                $image->flopImage();
-                $image->rotateImage("#000", 90);
-                break;
-            case Imagick::ORIENTATION_LEFTBOTTOM:
-                $image->rotateImage("#000", -90);
-                break;
-            default: // Invalid orientation
-                break;
-        }
-        $image->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
-    }
-
-   // Here begins the old functions
-
-   /**
      * Creates a crop thumbnail
      * @param string $filename the image file path or path alias.
      * @param integer $resizeWidth the width to resize the original image in pixels
@@ -198,4 +109,5 @@ class Image extends \yii\imagine\BaseImage
             return $thumbnail;
         }
     }
+
 }

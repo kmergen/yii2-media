@@ -74,14 +74,16 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterFind($event)
     {
-        $query = Media::find()
-            ->with('translations')
-            ->where(['album_id' => $this->owner->{$this->attribute}])
-            ->orderBy('album_position');
-        if ($this->asArray) {
-            $query->asArray();
+        if (!empty($this->owner->{$this->attribute})) {
+            $query = Media::find()
+                ->with('translations')
+                ->where(['album_id' => $this->owner->{$this->attribute}])
+                ->orderBy('album_position');
+            if ($this->asArray) {
+                $query->asArray();
+            }
+            $this->mediaFiles = $query->all();
         }
-        $this->mediaFiles = $query->all();
     }
 
     /**
@@ -152,5 +154,4 @@ class MediaAlbumBehavior extends Behavior
             $this->mediaFiles = [];
         }
     }
-
 }

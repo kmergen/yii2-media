@@ -2,7 +2,10 @@
 
 namespace kmergen\media\widgets\dropzone;
 
+use yii\helpers\Url;
 use yii\helpers\Json;
+use yii\helpers\ArrayHelper;
+use kmergen\media\models\Media;
 use Yii;
 use \Imagick;
 
@@ -22,34 +25,7 @@ class Dropzone extends \yii\base\Widget
     public $model;
 
     /**
-     * @var string The url where to upload the image.
-     */
-    public $uploadUrl;
-
-    /**
-     * @var string A thumbStyle provided by kmergen\media\components\Image
-     * If set, it create a thumbnail on serverside and return thumbnail url. Otherwise no serverside thumbnail will be created.
-     * If set, the Dropzon option [[$pluginOptions['createImageThumbnails']]] is set to false.
-     */
-    public $thumbStyle;
-
-    /**
-     * @var string the delete url
-     * If not set it create a url from [[$pluginOptions['url'] with suffix '-delete'. eg '/post/upload-delete'.
-     */
-    public $deleteUrl = '/media/dropzone/delete';
-
-
-    /**
-     * @var array the existing files to add to the dropzone.
-     * The array should be in the Media model format
-     * If [[model]] is set, then the files array will filled with the prepared mediaFiles from the model.
-     * @see function [[prepareMediaFiles()]]
-     */
-    private $files = [];
-
-    /**
-     * @var array the options for kmDropzone js module
+     * @var array the config settings from js module dropzone.
      * 
      */
     public $pluginOptions;
@@ -60,7 +36,17 @@ class Dropzone extends \yii\base\Widget
     public function init()
     {
         parent::init();
+
+        if (!extension_loaded('imagick')) {
+            throw new \Exception('Media upload widget need an loaded Imagick PHP extension.');
+            Yii::error('PHP Imagick not installed.');
+        }
+
         DropzoneAsset::register($this->getView());
+
+        if (empty($this->pluginOptions['previewTemplate'])) {
+            $this->pluginOptions['previewTemplate'] = $this->render('preview-template');
+        }
     }
 
 
@@ -81,6 +67,21 @@ class Dropzone extends \yii\base\Widget
 
 CSS;
         $view->registerCss($css);
+        $files = [];
+        foreach ($this->model->mediaFiles as $file) {
+            $image = [];
+            $image['id'] = $file['id'];
+            $image['size'] = (int)$file['size'];
+            $image['url'] = $file['url'];
+            $image['isTemp'] = $file['status'] == Media::STATUS_TEMP ? true : false;
+            $image['type'] = $file['type'];
+            $image['name'] = $file['name'];
+            if (strpos($file['type'], 'image/') !== false) {
+                $image['previewUrl'] = Yii::$app->image->thumb($file['url'], $this->pluginOptions['previewVariant']);
+            }
+            array_push($files, $image);
+        }
+        $this->pluginOptions['files'] = $files;
 
         $pluginOptions = Json::encode($this->pluginOptions);
         // $view->registerJsFile('@web/build/kmDropzone.js', ['position' => $view::POS_END]);
@@ -88,17 +89,20 @@ CSS;
             window.KmDropzoneInit($pluginOptions);
          });", $view::POS_END);
 
-        $allowedFileTypes = $this->pluginOptions['allowedFileTypes'] ?? ['image/jpeg', 'image/png', 'image/gif'];
+        echo $this->renderUITemplate();
+    }
 
-        if (!extension_loaded('imagick')) {
-            echo 'imagick not installed';
-        }
+    /**
+     * Render the UI for the dropzone
+     */
+    protected function renderUITemplate()
+    {
 
-        echo '<div id="kmDropzone"><div class="clearfix"><div class="dz-previews"></div><label class="dz-clickable" for="dz-input">
-        <input type="file" name="dz-input" id="dz-input" accept="' . implode(",", $allowedFileTypes) . '">
+        return '<div id="kmDropzone"><div class="clearfix"><div class="dz-previews"></div><label class="dz-clickable" for="dz-input">
+        <input type="file" name="dz-input" id="dz-input" accept="' . implode(",", $this->pluginOptions['allowedFileTypes'] ?? ['image/jpeg', 'image/png', 'image/gif']) . '">
         <span class="inner">+</span>
         </label></div>
-        <div class="dz-message"></div>
+        <div class="dz-message" data-dz-message></div>
         </div>';
     }
 }

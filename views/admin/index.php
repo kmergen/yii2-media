@@ -18,7 +18,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <h1 class="card-title"><?= Html::encode($this->title) ?></h1>
     </div>
     <div class="card-body">
-        <?php // echo $this->render('_search', ['model' => $searchModel]);  ?>
+        <?php // echo $this->render('_search', ['model' => $searchModel]);  
+        ?>
         <?= Html::a(Yii::t('media', 'List no existing Files'), '/media/admin/no-existing-files', ['id' => 'a-no-existing-files']) ?>
         <div id="index-alert"></div>
         <?=
@@ -36,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'class' => 'yii\grid\Column',
                     'header' => Yii::t('media', 'Preview'),
                     'content' => function ($model, $key, $index, $column) {
-                        return Html::a(Html::img(Yii::$app->image->thumb($model->url, 'small')), '@web/' . $model->url, ['target' => '_blank']);
+                        return Html::a(Html::img(Yii::$app->imageOld->thumbOld($model->url, 'small')), '@web/' . $model->url, ['target' => '_blank']);
                     }
                 ],
                 'id',
