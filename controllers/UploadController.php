@@ -157,10 +157,11 @@ class UploadController extends Controller
             throw new Exception('Filetype not allowed');
         }
 
-        $fileName = $uploadedFile->name;
+        $sanitizedBaseFileName = $this->sanitizeFileName($uploadedFile->getBaseName());
+        $fileName = "$sanitizedBaseFileName." . $uploadedFile->getExtension();
         if ($this->generateUniqueFilename) {
             $uniqueID = $this->createUniqueId();
-            $fileName = $uploadedFile->getBaseName() . "-$uniqueID." . $uploadedFile->getExtension();
+            $fileName = $sanitizedBaseFileName . "-$uniqueID." . $uploadedFile->getExtension();
         }
 
         $this->model = new Media();
@@ -182,6 +183,7 @@ class UploadController extends Controller
             throw new Exception($errorMessage);
         }
     }
+
 
     protected function saveToFileSystem($sourceFile)
     {
@@ -241,6 +243,21 @@ class UploadController extends Controller
 
         ];
     }
+
+    /**
+     * Sanitize the filename of the uploaded file.
+     * @param string $name The fileBaseName without extension.
+     * @return string The sanitized filename without extension.
+     */
+    protected function sanitizeFileName($name) {
+        $arr = ['?','[',']','/','\\','=','<','>',':',';',',', "'",'"','&','$','#','*','(',')','|','~','`','!','{','}','%','+','’','«','»','”','“'];
+               
+        $name = str_replace( $arr, '', $name );
+        $name = preg_replace( '/[\. _-]+/', '-', $name );
+        $name = trim( $name, '-' );
+        
+        return $name; 
+       }
 
     /**
      * @return string original file base name

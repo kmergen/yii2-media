@@ -74,7 +74,7 @@ class MediaAlbumBehavior extends Behavior
      */
     public function afterFind($event)
     {
-        if (!empty($this->owner->{$this->attribute})) {
+        if ($this->owner->{$this->attribute} !== null) {
             $query = Media::find()
                 ->with('translations')
                 ->where(['album_id' => $this->owner->{$this->attribute}])
@@ -101,14 +101,15 @@ class MediaAlbumBehavior extends Behavior
      */
     public function beforeSave($event)
     {
-        if ($event->name === ActiveRecord::EVENT_BEFORE_INSERT) {
-            // Create new mediaAlbum
-            $album = new MediaAlbum();
-            $album->name = $this->owner->formName() . '_' . $this->attribute;
-            $album->parent = $this->mediaAlbumParent;
-            $album->save(false);
-            $this->owner->{$this->attribute} = $album->id;
-        } else {
+        $insert = $event->name === ActiveRecord::EVENT_BEFORE_INSERT;
+
+        if (($event->name === ActiveRecord::EVENT_BEFORE_INSERT
+                || $this->owner->{$this->attribute} === null)
+            && !empty($this->mediaFiles)
+        ) {
+            $this->createMediaAlbum();
+        }
+        if (!$insert) {
             //Delete old images
             $deleteFilesIds = array_keys(array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id')));
             $deleteFiles = Media::find()->where(['id' => $deleteFilesIds])->all();
@@ -116,7 +117,8 @@ class MediaAlbumBehavior extends Behavior
                 $deleteFile->delete();
             }
         }
-        //We update the posted files
+
+        //We insert or update the posted files
         $pos = 0;
         foreach ($this->mediaFiles as $file) {
             $file->status = 1;
@@ -146,12 +148,26 @@ class MediaAlbumBehavior extends Behavior
      * @param array the posted media files array
      * @return void
      */
-    public function loadPostedMediaFiles($files)
+    protected function loadPostedMediaFiles($files)
     {
         if ($files !== null) {
             $this->mediaFiles = Media::find()->where(['id' => array_keys($files)])->all();
         } else {
             $this->mediaFiles = [];
         }
+    }
+
+    /**
+     * Load and set the Media Files from the posted Media files ids
+     * @param array the posted media files array
+     * @return void
+     */
+    protected function createMediaAlbum()
+    {
+        $album = new MediaAlbum();
+        $album->name = $this->owner->formName() . '_' . $this->attribute;
+        $album->parent = $this->mediaAlbumParent;
+        $album->save(false);
+        $this->owner->{$this->attribute} = $album->id;
     }
 }

@@ -11,6 +11,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\BadRequestHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use kmergen\media\actions\CronAction;
 
 
 /**
@@ -18,6 +19,7 @@ use yii\web\Response;
  */
 class MediaController extends Controller
 {
+
     /**
      * {@inheritdoc}
      */
@@ -25,13 +27,24 @@ class MediaController extends Controller
     {
         return [
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                 ],
             ],
         ];
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function actions()
+    {
+        return [
+            'cron' => 'kmergen\media\actions\CronAction',
+        ];
+    }
+
 
 
     /**

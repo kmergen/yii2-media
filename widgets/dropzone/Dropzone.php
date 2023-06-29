@@ -19,7 +19,7 @@ class Dropzone extends \yii\base\Widget
 {
 
     /**
-     * @var object the model which hold the already stored files (in Media Module the media files are provided and stored by the MediaAlbumBehavior)
+     * @var object the model which hold the already stored files (in Media Module the media files are provided and stored by the MediaImageBehavior)
      * There is no need to declare an extra attribute variable because the name of the attribute is always [[mediaFiles]] and can you can get them by calling [[$this->model->mediaFiles]]
      */
     public $model;
@@ -70,15 +70,18 @@ CSS;
         $files = [];
         foreach ($this->model->mediaFiles as $file) {
             $image = [];
-            $image['id'] = $file['id'];
-            $image['size'] = (int)$file['size'];
-            $image['url'] = $file['url'];
-            $image['isTemp'] = $file['status'] == Media::STATUS_TEMP ? true : false;
-            $image['type'] = $file['type'];
-            $image['name'] = $file['name'];
             if (strpos($file['type'], 'image/') !== false) {
                 $image['previewUrl'] = Yii::$app->image->thumb($file['url'], $this->pluginOptions['previewVariant']);
+                // Ignore the image because there is an error on thumb creation. That can be eg. fileRef not exist.
+                if ($image['previewUrl'] === null) {
+                    continue;
+                }
             }
+            $image['id'] = $file['id'];
+            $image['url'] = $file['url'];
+            $image['type'] = $file['type'];
+            $image['name'] = $file['name'];
+
             array_push($files, $image);
         }
         $this->pluginOptions['files'] = $files;

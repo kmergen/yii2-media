@@ -48,7 +48,7 @@ class Image extends \yii\base\BaseObject
     public function thumb($imageRef, $variant, $absoluteUrl = true, $force = false, $target = null)
     {
         $thumb = $this->createVariant($imageRef, $variant, $absoluteUrl, $force, $target);
-        return $thumb['url'];
+        return $thumb['url'] ?? null;
     }
 
     /**
@@ -64,50 +64,75 @@ class Image extends \yii\base\BaseObject
     {
         $variant = $this->thumbPresets[$variant] ?? $variant;
 
-        $variantArray = explode(',', $variant);
-        $variantName = array_shift($variantArray);
-        $funcArgs = $variantArray;
-        if (!in_array($variantName, $this->variantNames)) {
-            throw new InvalidConfigException("$variantName is not a valid variant name");
-        }
+        $funcArgs = explode(',', $variant);
+        $variantName = array_shift($funcArgs);
 
-        $path  = parse_url($imageRef, PHP_URL_PATH);
-        $parts = pathinfo($path);
+        $this->resolve($variantName, $funcArgs);
 
-        $refDir = Yii::getAlias('@webroot') . DIRECTORY_SEPARATOR . $parts['dirname'];
-        $refPath = $refDir . DIRECTORY_SEPARATOR . $parts['basename'];
+        $pathInfo = !Url::isRelative($imageRef) ? pathinfo(parse_url($imageRef, PHP_URL_PATH)) : pathinfo($imageRef);
+        // $path  = parse_url($imageRef, PHP_URL_PATH);
+        // $parts = pathinfo($path);
+        $dirname = ltrim($pathInfo['dirname'], '/\\');
+        $refDir = Yii::getAlias('@webroot') . '/' . $dirname;
+        $refPath = FileHelper::normalizePath($refDir . '/' . $pathInfo['basename']);
 
 
         if (!file_exists($refPath)) {
-            throw new NotFoundHttpException();
+            Yii::info('Ref Image not exists', __METHOD__);
+            // We not return the function here. If the variant exists the thumbnail url will returned.
+            // If not we catch it, because Imagick will then throw an Exception.
         }
 
         if ($variantName === 'thumbCompositeBlur') {
             [$width, $height, $quality, $sigma] = $funcArgs;
+        } elseif ($variantName === 'resizeImage') {
+            [$width, $height, $bestfit, $fill, $quality] = $funcArgs;
         }
 
         // Check if the variant already exists
         $strVariantValues = implode('_', $funcArgs);
         $variantDir = "$refDir/$variantName/$strVariantValues";
-        $variantPath = "$variantDir/" . $parts['basename'];
+        $variantPath = Filehelper::normalizePath("$variantDir/" . $pathInfo['basename']);
 
         if (!file_exists($variantPath) || $force) {
             FileHelper::createDirectory($variantDir);
-            $img = new Imagick($refPath);
-            array_unshift($funcArgs, $img);
-            $img = \call_user_func_array(['kmergen\media\helpers\Image', $variantName], $funcArgs);
-            $img->writeImage($variantPath);
+            try {
+                $img = new Imagick($refPath);
+                array_unshift($funcArgs, $img);
+                $img = \call_user_func_array(['kmergen\media\helpers\Image', $variantName], $funcArgs);
+                $img->writeImage($variantPath);
+            } catch (Exception $e) {
+                Yii::info('Imagick Exception: ' . $e->getMessage(), __METHOD__);
+                return null;
+            }
         }
 
         if ($target === null) {
-            $target = $parts['dirname'];
+            $target = $dirname;
         }
 
-        $url = "$target/$variantName/$strVariantValues/{$parts['basename']}";
+        $url = "$target/$variantName/$strVariantValues/{$pathInfo['basename']}";
         return [
             'name' => $variantName . '_' . $strVariantValues,
             'url' => $absoluteUrl ?
-                Yii::$app->getUrlManager()->createAbsoluteUrl($url) : Yii::getAlias('@web') . $url
+                Yii::$app->getUrlManager()->createAbsoluteUrl($url) : Yii::getAlias('@web') . "/$url"
         ];
     }
+
+    /**
+     * Check the variant configuration
+     *
+     * @param string $variantName The name of the variant.
+     * @param array $variantArgs The function arguments of the variant.
+     *  At the moment we check only the the variant name
+     * @todo . Check also the function args of the specified variant e.g. height, width, quality etc.
+     */
+    protected function resolve($variantName, $variantArgs)
+    {
+        if (!in_array($variantName, $this->variantNames)) {
+            throw new InvalidConfigException("$variantName is not a valid variant name");
+        }
+    }
+
+    
 }

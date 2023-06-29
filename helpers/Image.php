@@ -21,10 +21,11 @@ use \Imagick;
  */
 class Image extends \yii\imagine\BaseImage
 {
-    public static function resizeImage(Imagick $img, $width, $height = null, $bestFit = false, $fill = false)
+    public static function resizeImage(Imagick $img, $width, $height = null, $bestFit = false, $fill = false, $quality = 60)
     {
 
-        $img->thumbnailImage($width, $height, $bestFit);
+        $img->setImageCompressionQuality($quality);
+        $img->thumbnailImage($width, $height, $bestFit, $fill);
         // The same result you will get with this function
         // $img->resizeImage($this->maxWidth, null, Imagick::FILTER_LANCZOS, false);
 

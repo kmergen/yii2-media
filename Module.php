@@ -10,21 +10,32 @@ use kmergen\media\MediaAsset;
 class Module extends \yii\base\Module
 {
 
-    /**
-     * @inheritdoc
-     */
-    public $controllerNamespace = 'kmergen\media\controllers';
-    public $defaultRoute = 'media/index';
+  /**
+   * @inheritdoc
+   */
+  public $controllerNamespace = 'kmergen\media\controllers';
+  public $defaultRoute = 'media/index';
 
-    /**
-     * @inheritdoc
-     */
-    public function init()
-    {
-        parent::init();
-        // custom initialization code goes here
-      //  MediaAsset::register(\Yii::$app->getView());
+  /**
+   * @var integer The time in days to go until the softdeledet files will hard deleted via a cron action
+   * @see kmergen\media\CronAction
+   */
+  public $timespanDeleteDeletedFiles = 600; // days
 
-    }
+  /**
+   * @var integer The time in days until the temporary files will hard deleted via a cron action
+   * @see kmergen\media\CronAction
+   */
+  public $timespanDeleteTemporaryFiles = 14; // days
 
+  /**
+   * @inheritdoc
+   */
+  public function init()
+  {
+    parent::init();
+    // custom initialization code goes here
+    //  MediaAsset::register(\Yii::$app->getView());
+
+  }
 }
