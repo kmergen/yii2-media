@@ -22,7 +22,7 @@ class Image extends \yii\base\BaseObject
     /**
      * @var array The allowed variant names.
      */
-    public $variantNames = ['thumbCompositeBlur'];
+    public $variantNames = ['resizeImage','thumbCompositeBlur'];
 
     /**
      * @var array The thumbnail presets
