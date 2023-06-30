@@ -60,7 +60,7 @@ class Dropzone extends \yii\base\Widget
         $css = <<<CSS
         #kmDropzone {margin: 1rem 0 1rem 0;}
         #dz-input {display:none !important;}
-        .dz-clickable {width: 100px; height: 100px; border: 2px dashed #ddd; color: #ddd; display:flex; justify-content:center; text-align:center;}
+        .dz-clickable {float:left; width: 100px; height: 100px; border: 2px dashed #ddd; color: #ddd; display:flex; justify-content:center; text-align:center;}
         .dz-clickable .inner {font-size: 2rem; line-height: 3;}
         .dz-message .error {color:red;}
         .dz-preview .card-body {padding: .35rem;}

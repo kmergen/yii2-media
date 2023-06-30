@@ -5,6 +5,7 @@ namespace kmergen\media\behaviors;
 use kmergen\media\models\Media;
 use kmergen\media\models\MediaAlbum;
 use Yii;
+use yii\db\Expression;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
@@ -34,13 +35,6 @@ class MediaAlbumBehavior extends Behavior
      * @var integer|null the id of the parent media album
      */
     public $mediaAlbumParent;
-
-    /**
-     * @var boolean $deleteCascade
-     * If true the mediaAlbum and the related files will be deleted.
-     * If false the mediaAlbum and the related files will not be deleted.
-     */
-    public $deleteCascade = true;
 
     /**
      * @var boolean $asArray
@@ -77,7 +71,7 @@ class MediaAlbumBehavior extends Behavior
         if ($this->owner->{$this->attribute} !== null) {
             $query = Media::find()
                 ->with('translations')
-                ->where(['album_id' => $this->owner->{$this->attribute}])
+                ->where(['album_id' => $this->owner->{$this->attribute}, 'status' => Media::STATUS_PERMANENT])
                 ->orderBy('album_position');
             if ($this->asArray) {
                 $query->asArray();
@@ -110,11 +104,11 @@ class MediaAlbumBehavior extends Behavior
             $this->createMediaAlbum();
         }
         if (!$insert) {
-            //Delete old images
+            //Delete old images (Set to MEDIA::STATUS_TEMP)
             $deleteFilesIds = array_keys(array_diff_key(ArrayHelper::index($this->oldMediaFiles, 'id'), ArrayHelper::index($this->mediaFiles, 'id')));
             $deleteFiles = Media::find()->where(['id' => $deleteFilesIds])->all();
             foreach ($deleteFiles as $deleteFile) {
-                $deleteFile->delete();
+                $deleteFile->updateAttributes(['status' => Media::STATUS_TEMP, 'updated_at' =>  new Expression('NOW()')]);
             }
         }
 
@@ -131,14 +125,14 @@ class MediaAlbumBehavior extends Behavior
     }
 
     /**
-     * @inheritdoc
+     * This function is called when the owner hard delete his model and the
+     * Media Album and its related Media files will deleted.
+     * If the owning model has soft-deleted its model, this function is normally not called.
      */
     public function beforeDelete($event)
     {
-        if ($this->deleteCascade) {
-            if ($this->owner->{$this->attribute} !== null) {
-                MediaAlbum::findOne($this->owner->{$this->attribute})->delete();
-            }
+        if ($this->owner->{$this->attribute} !== null) {
+            MediaAlbum::findOne($this->owner->{$this->attribute})->delete();
         }
         return true;
     }
@@ -148,7 +142,7 @@ class MediaAlbumBehavior extends Behavior
      * @param array the posted media files array
      * @return void
      */
-    protected function loadPostedMediaFiles($files)
+    public function loadPostedMediaFiles($files)
     {
         if ($files !== null) {
             $this->mediaFiles = Media::find()->where(['id' => array_keys($files)])->all();
@@ -158,8 +152,7 @@ class MediaAlbumBehavior extends Behavior
     }
 
     /**
-     * Load and set the Media Files from the posted Media files ids
-     * @param array the posted media files array
+     * Create a Media Album model
      * @return void
      */
     protected function createMediaAlbum()

@@ -32,7 +32,7 @@ class Image extends \yii\base\BaseObject
      * The first string is the name of a function in kmergen\media\helpers\Image.
      * The further strings are the arguments of this function.
      */
-    public $thumbPresets = [
+    public $variantPresets = [
         'thumbCompositeBlur_xs' => 'thumbCompositeBlur,80,60,60,6',
         'thumbCompositeBlur_s' => 'thumbCompositeBlur,100,75,60,6',
         'thumbCompositeBlur_m' => 'thumbCompositeBlur,320,240,60,6',
@@ -54,7 +54,7 @@ class Image extends \yii\base\BaseObject
     /**
      * Return the thumb url for a given original image and create and save the thumbnail
      * @param string $imageRef The $url from the original image. It can be a relative url e.g. 'images/bild.jpg' or an absolute url e.g. 'http://frondend.dev/images/bild.jpg
-     * @param string|array $variant That can be a key from [[$thumbPresets]] or a variant configuration string. The format must be the same as the value from [[thumbPresets]]
+     * @param string|array $variant That can be a key from [[$variantPresets]] or a variant configuration string. The format must be the same as the value from [[variantPresets]]
      * @param boolean $absoluteUrl Should the return url absolute or relative. Default to absolute.
      * @param boolean $force Create thumbnail though it exists
      * @param null|string $target create the url for annother target dirname than that from imageRef.
@@ -62,7 +62,7 @@ class Image extends \yii\base\BaseObject
      */
     public function createVariant($imageRef, $variant, $absoluteUrl = true, $force = false, $target = null)
     {
-        $variant = $this->thumbPresets[$variant] ?? $variant;
+        $variant = $this->variantPresets[$variant] ?? $variant;
 
         $funcArgs = explode(',', $variant);
         $variantName = array_shift($funcArgs);

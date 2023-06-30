@@ -75,6 +75,11 @@ class UploadController extends Controller
      */
     public $variants = [];
 
+    /**
+     * @var array The variant to use in dropzone widget to show in the preview template.
+     */
+    public $previewVariant;
+
 
     /**
      * Properties need to json decode
@@ -184,7 +189,6 @@ class UploadController extends Controller
         }
     }
 
-
     protected function saveToFileSystem($sourceFile)
     {
         if (!class_exists('Imagick')) {
@@ -200,7 +204,6 @@ class UploadController extends Controller
         if ($this->maxWidth) {
             $img = Image::resizeImage($img, $this->maxWidth, $this->maxWidth, true, true);
         }
-
 
         $model = $this->model;
 
@@ -228,6 +231,29 @@ class UploadController extends Controller
 
         // Create the variants
         $variants = [];
+        if ($this->previewVariant !== null) {
+            // Check if the variants array contains the preview variant, otherwise it will be inserted into the variants array.
+            $lookups = [$this->previewVariant];
+            $presets = Yii::$app->image->variantPresets;
+            if (array_key_exists($this->previewVariant, $presets)) {
+                $lookups[] = $presets[$this->previewVariant];
+                $this->previewVariant = $presets[$this->previewVariant];
+            } else {
+                if (in_array($this->previewVariant, $presets)) {
+                    $lookups[] = array_search($this->previewVariant, $presets);
+                }
+            }
+            $needtoSet = true;
+            foreach ($lookups as $lookup) {
+                if (in_array($lookup, $this->variants)) {
+                    $needtoSet = false;
+                    break;
+                }
+            }
+            if ($needtoSet) {
+                array_push($this->variants, $this->previewVariant);
+            }
+        }
         if (!empty($this->variants)) {
             $variantData = [];
             foreach ($this->variants as $variant) {
@@ -238,6 +264,7 @@ class UploadController extends Controller
         $this->responseData = [
             'id' => $model->id,
             'downloadUrl' => Yii::$app->urlManager->createAbsoluteUrl($fileRefUrl),
+            'previewUrl' => ($this->previewVariant !== null) ? $variants[str_replace(',', '_', $this->previewVariant)] : null,
             'variants' => $variants,
             'isTemp' => $model->status == Media::STATUS_TEMP ? true : false,
 
@@ -249,15 +276,16 @@ class UploadController extends Controller
      * @param string $name The fileBaseName without extension.
      * @return string The sanitized filename without extension.
      */
-    protected function sanitizeFileName($name) {
-        $arr = ['?','[',']','/','\\','=','<','>',':',';',',', "'",'"','&','$','#','*','(',')','|','~','`','!','{','}','%','+','’','«','»','”','“'];
-               
-        $name = str_replace( $arr, '', $name );
-        $name = preg_replace( '/[\. _-]+/', '-', $name );
-        $name = trim( $name, '-' );
-        
-        return $name; 
-       }
+    protected function sanitizeFileName($name)
+    {
+        $arr = ['?', '[', ']', '/', '\\', '=', '<', '>', ':', ';', ',', "'", '"', '&', '$', '#', '*', '(', ')', '|', '~', '`', '!', '{', '}', '%', '+', '’', '«', '»', '”', '“'];
+
+        $name = str_replace($arr, '', $name);
+        $name = preg_replace('/[\. _-]+/', '-', $name);
+        $name = trim($name, '-');
+
+        return $name;
+    }
 
     /**
      * @return string original file base name
