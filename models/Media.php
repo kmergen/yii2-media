@@ -139,7 +139,7 @@ class Media extends \yii\db\ActiveRecord
     protected function deleteThumbnails()
     {
         if (preg_match('/image\/\w*/', $this->type)) {
-            Yii::$app->imageOld->deleteThumbs($this->url);
+            Yii::$app->image->deleteThumbs($this->url);
         }
     }
 

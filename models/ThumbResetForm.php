@@ -34,7 +34,7 @@ class ThumbResetForm extends Model
     {
         return [
             [['thumbstyle'], 'required'],
-            [['thumbstyle'], 'in', 'range' => array_keys(Yii::$app->imageOld->thumbStyles)],
+            [['thumbstyle'], 'in', 'range' => array_keys(Yii::$app->image->thumbStyles)],
             [['startPath'], 'validateIsDirectory', 'skipOnEmpty' => false, 'skipOnError' => false],
         ];
     }
@@ -71,10 +71,10 @@ class ThumbResetForm extends Model
         if ($this->validate()) {
             Yii::beginProfile('fileIterate');
             $this->_affectedFiles = [];
-            $cacheKey = ['thumbreset', $this->startPath, $this->thumbstyle, Yii::$app->imageOld->thumbDirectory, Yii::$app->imageOld->thumbExtraDirectory];
+            $cacheKey = ['thumbreset', $this->startPath, $this->thumbstyle, Yii::$app->image->thumbDirectory, Yii::$app->image->thumbExtraDirectory];
             $webroot = Yii::getAlias('@webroot');
             $path = $webroot . '/' . $this->startPath;
-            if (Yii::$app->imageOld->thumbExtraDirectory) {
+            if (Yii::$app->image->thumbExtraDirectory) {
                 if (($data = Yii::$app->cache->get($cacheKey)) === false) {
                     $iterator = new \RecursiveIteratorIterator(
                         new \RecursiveDirectoryIterator($path),
@@ -86,9 +86,9 @@ class ThumbResetForm extends Model
                             $filename = $file->getFilename();
                             if ($filename === $this->thumbstyle) {
                                 $realpath = $file->getRealpath();
-                                if (!empty(Yii::$app->imageOld->thumbDirectory)) {
+                                if (!empty(Yii::$app->image->thumbDirectory)) {
                                     //The directory is only affected if the parent directory is the thumbDirectory
-                                    if (basename(dirname($realpath)) === Yii::$app->imageOld->thumbDirectory) {
+                                    if (basename(dirname($realpath)) === Yii::$app->image->thumbDirectory) {
                                         $this->_affectedFiles[] = $realpath;
                                     }
                                 } else {
@@ -115,7 +115,7 @@ class ThumbResetForm extends Model
                 }
             } else {
                 if (($data = Yii::$app->cache->get($cacheKey)) === false) {
-                    if (!empty(Yii::$app->imageOld->thumbDirectory)) {
+                    if (!empty(Yii::$app->image->thumbDirectory)) {
                         $iterator = new \RecursiveIteratorIterator(
                             new \RecursiveDirectoryIterator($path),
                             \RecursiveIteratorIterator::SELF_FIRST
@@ -124,7 +124,7 @@ class ThumbResetForm extends Model
                         foreach ($iterator as $file) {
                             if (!$file->isDir()) {
                                 $realpath = $file->getRealpath();
-                                if (basename(dirname($realpath)) === Yii::$app->imageOld->thumbDirectory) {
+                                if (basename(dirname($realpath)) === Yii::$app->image->thumbDirectory) {
                                     if (strpos($file->getFilename(), '_' . $this->thumbstyle)) {
                                         $this->_affectedFiles[] = $realpath;
                                     }

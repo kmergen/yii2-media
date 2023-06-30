@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <?php
             $form = ActiveForm::begin(['id' => 'thumb-reset-form']);
-            $thumbStyles = array_keys(Yii::$app->imageOld->thumbStyles);
+            $thumbStyles = array_keys(Yii::$app->image->thumbStyles);
             $items = array_combine($thumbStyles, $thumbStyles);
             ?>
 

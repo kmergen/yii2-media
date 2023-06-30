@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Image component provides an application wide access to images and on the
  * fly image manipulation e.g. thumbnail creation.
@@ -11,7 +12,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Url;
 
-class ImageOld extends \yii\base\BaseObject
+class image extends \yii\base\BaseObject
 {
 
     /**
@@ -42,7 +43,7 @@ class ImageOld extends \yii\base\BaseObject
      * @param boolean $force Create thumbnail though it exists
      *
      */
-    public function thumbOld($url, $config, $absoluteUrl = true, $force = false)
+    public function thumb($url, $config, $absoluteUrl = true, $force = false)
     {
         if (is_string($config)) {
             if (!array_key_exists($config, $this->thumbStyles)) {
@@ -123,8 +124,8 @@ class ImageOld extends \yii\base\BaseObject
                 $thumbnail = \call_user_func_array(['kmergen\media\helpers\Image', $func], $funcArgs);
                 $thumbnail->save($thumbPath . DIRECTORY_SEPARATOR . $thumbName, ['quality' => $quality]);
             } catch (Exception $ex) {
-                    Yii::info('Imagine Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
-                    return null;
+                Yii::info('Imagine Exception: ' . $ex->getMessage() . ' in file ' . $ex->getFile() . ' on line ' . $ex->getLine() . '.');
+                return null;
             }
         }
         $path = "$dirname/$thumbName";
@@ -140,7 +141,7 @@ class ImageOld extends \yii\base\BaseObject
     function deleteThumbs($url)
     {
         if (!Url::isRelative($url)) {
-          //  throw new \http\Exception\InvalidArgumentException('Url must be relative');
+            //  throw new \http\Exception\InvalidArgumentException('Url must be relative');
         }
         $info = pathinfo($url);
         $webroot = Yii::getAlias('@webroot');

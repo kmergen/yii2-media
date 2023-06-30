@@ -20,24 +20,11 @@ class CronAction extends BaseAction
     {
         $this->mediaModule = Module::getInstance();
 
-
-        $this->deleteDeletedFiles();
         $this->deleteTemporaryFiles();
 
         return '';
     }
-
-    /**
-     * Cron function
-     * Delete expired soft deleted files
-     */
-    public function deleteDeletedFiles()
-    {
-        $ids = Yii::$app->db->createCommand("SELECT id FROM media WHERE status=:status AND DATE_ADD(updated_at, INTERVAL {$this->mediaModule->timespanDeleteDeletedFiles} DAY) < NOW()", [':status' => Media::STATUS_DELETED])->queryColumn();
-        foreach ($ids as $id) {
-            Media::findOne($id);
-        }
-    }
+    
 
     /**
      * Cron function

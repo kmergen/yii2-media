@@ -128,7 +128,7 @@ class MediaImageBehavior extends Behavior
         $deleteFiles = Media::find()->where(['id' => $ids])->all();
         foreach ($deleteFiles as $deleteFile) {
             // It is important to update the updated_at field, because that is the begin of the cronHhardDeleteTimespan
-            $deleteFile->updateAttributes(['status' => Media::STATUS_DELETED, 'updated_at' =>  new Expression('NOW()')]);
+            $deleteFile->updateAttributes(['status' => Media::STATUS_TEMP, 'updated_at' =>  new Expression('NOW()')]);
         }
     }
 }

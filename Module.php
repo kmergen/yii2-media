@@ -16,11 +16,6 @@ class Module extends \yii\base\Module
   public $controllerNamespace = 'kmergen\media\controllers';
   public $defaultRoute = 'media/index';
 
-  /**
-   * @var integer The time in days to go until the softdeledet files will hard deleted via a cron action
-   * @see kmergen\media\CronAction
-   */
-  public $timespanDeleteDeletedFiles = 600; // days
 
   /**
    * @var integer The time in days until the temporary files will hard deleted via a cron action

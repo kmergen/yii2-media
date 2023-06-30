@@ -53,7 +53,7 @@ In your configuration file set the following:
 ]
 ```
 
-Now you can everywhere in your application e.g. get a thumb with "Yii::$app->imageOld->thumbOld('path/to/original/image', '$thumbStyle')".
+Now you can everywhere in your application e.g. get a thumb with "Yii::$app->image->thumb('path/to/original/image', '$thumbStyle')".
 
 ### 4. Upload files with integrated dropzone widget
 
