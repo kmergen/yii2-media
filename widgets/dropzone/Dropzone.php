@@ -38,8 +38,8 @@ class Dropzone extends \yii\base\Widget
         parent::init();
 
         if (!extension_loaded('imagick')) {
-            throw new \Exception('Media upload widget need an loaded Imagick PHP extension.');
             Yii::error('PHP Imagick not installed.');
+            throw new \Exception('Media upload widget need an loaded Imagick PHP extension.');
         }
 
         DropzoneAsset::register($this->getView());
@@ -48,7 +48,6 @@ class Dropzone extends \yii\base\Widget
             $this->pluginOptions['previewTemplate'] = $this->render('preview-template');
         }
     }
-
 
     /**
      * {@inheritdoc}
